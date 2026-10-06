@@ -108,8 +108,8 @@
       border-radius: 3px;
     }
     .qr-container {
-      width: 140px;
-      height: 140px;
+      width: 135px;
+      height: 135px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -142,41 +142,58 @@
 
   <div class="no-print">
     <div>
-      <h1>🪪 Participant ID Cards (Offline Ready)</h1>
-      <p>Each QR code encodes the plain Participant ID (e.g., <code>SOT001</code>). Print directly on A4 paper or cardstock.</p>
+      <h1>🪪 Participant ID Badges</h1>
+      <p>Scan with your iPhone Camera to open the participant's record on GitHub Pages.</p>
     </div>
-    <button class="btn" onclick="window.print()">🖨️ Print ID Badges</button>
+    <div style="display:flex; gap:10px;">
+      <a href="index.html" class="btn" style="background:#475569; text-decoration:none;">Dashboard</a>
+      <button class="btn" onclick="window.print()">🖨️ Print ID Badges</button>
+    </div>
   </div>
 
   <div class="badge-grid" id="badgeContainer"></div>
 
   <script>
-    // Load participants from data.json or fallback list
+    // Compute permanent link pointing to participant.html
+    function getParticipantUrl(id) {
+      const base = window.location.href.split("?")[0].split("#")[0].replace(/\/(print-cards\.html)?$/, "");
+      return `${base}/participant.html?id=${encodeURIComponent(id)}`;
+    }
+
     async function loadAndRender() {
       let list = [];
+      const STORAGE_KEY = "socioOthon_shared_participants";
+
       try {
-        const res = await fetch("/api/participants");
+        const res = await fetch("./api/participants");
         if (res.ok) list = await res.json();
       } catch (e) {}
 
       if (!list || list.length === 0) {
-        list = [
-          { id: "SOT001", name: "Participant 001" },
-          { id: "SOT002", name: "Participant 002" },
-          { id: "SOT003", name: "Participant 003" },
-          { id: "SOT004", name: "Participant 004" },
-          { id: "SOT005", name: "Participant 005" }
-        ];
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          list = JSON.parse(saved);
+        } else {
+          list = [
+            { id: "SOT001", name: "Participant 001" },
+            { id: "SOT002", name: "Participant 002" },
+            { id: "SOT003", name: "Participant 003" },
+            { id: "SOT004", name: "Participant 004" },
+            { id: "SOT005", name: "Participant 005" }
+          ];
+        }
       }
 
       const container = document.getElementById("badgeContainer");
       container.innerHTML = "";
 
-      list.forEach((p, index) => {
+      list.forEach((p) => {
         const card = document.createElement("div");
         card.className = "card";
 
         const qrId = `qr-badge-${p.id}`;
+        const pUrl = getParticipantUrl(p.id);
+
         card.innerHTML = `
           <div class="card-info">
             <div class="event-tag">SOCIO-O-THON</div>
@@ -187,14 +204,15 @@
               <div class="check-box-item"><span class="square"></span> Accom.</div>
               <div class="check-box-item"><span class="square"></span> Food</div>
             </div>
+            <div style="margin-top:8px; font-size:10px; color:#94a3b8; word-break:break-all;">${pUrl}</div>
           </div>
           <div class="qr-container" id="${qrId}"></div>
         `;
         container.appendChild(card);
 
-        // QR Code generates ONLY the plain ID, completely offline-friendly
+        // QR Code generates the real permanent HTTPS web link
         new QRCode(document.getElementById(qrId), {
-          text: p.id,
+          text: pUrl,
           width: 130,
           height: 130,
           correctLevel: QRCode.CorrectLevel.M
