@@ -1,6 +1,13 @@
-const STORAGE_KEY = "socioOthon_shared_participants";
+// ==========================================
+// CONFIGURATION: Admin PIN
+// You can easily change this PIN anytime!
+// ==========================================
+const ADMIN_PIN = "1234";
 
-// ── Extract participant ID from query param (?id=SOT001) or path (/p/SOT001) ──
+const STORAGE_KEY = "socioOthon_shared_participants";
+const AUTH_KEY = "socioOthon_admin_auth";
+
+// Extract participant ID from query param (?id=SOT001) or path (/p/SOT001)
 const urlParams = new URLSearchParams(window.location.search);
 let participantId = urlParams.get("id");
 
@@ -12,25 +19,52 @@ if (!participantId) {
   }
 }
 
-const panel = document.getElementById("participantPanel");
-const notFound = document.getElementById("notFound");
+const lockPanel = document.getElementById("lockPanel");
+const participantPanel = document.getElementById("participantPanel");
+const notFoundPanel = document.getElementById("notFound");
+const pinInput = document.getElementById("pinInput");
+const pinError = document.getElementById("pinError");
 
-async function init() {
+// Check if this device is already authenticated
+function isAuthenticated() {
+  return localStorage.getItem(AUTH_KEY) === "true";
+}
+
+function submitPin() {
+  const entered = pinInput.value.trim();
+  if (entered === ADMIN_PIN) {
+    // Remember authorization on this browser so you don't have to enter PIN every single scan
+    localStorage.setItem(AUTH_KEY, "true");
+    pinError.textContent = "";
+    unlockApp();
+  } else {
+    pinError.textContent = "Incorrect PIN. Please try again.";
+    pinInput.value = "";
+    pinInput.focus();
+  }
+}
+
+function unlockApp() {
+  lockPanel.classList.add("hidden");
+  loadParticipant();
+}
+
+async function loadParticipant() {
   if (!participantId) {
-    panel.classList.add("hidden");
-    notFound.classList.remove("hidden");
+    participantPanel.classList.add("hidden");
+    notFoundPanel.classList.remove("hidden");
     return;
   }
 
   let participant = null;
 
-  // Try fetching from local server if active
+  // Try fetching from server if running
   try {
     const res = await fetch(`./api/participant/${encodeURIComponent(participantId)}`);
     if (res.ok) participant = await res.json();
   } catch (e) {}
 
-  // Fallback to localStorage (for GitHub Pages static hosting)
+  // Fallback to local storage (for GitHub Pages static hosting)
   if (!participant) {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
     participant = saved.find(p => p.id.toUpperCase() === participantId.toUpperCase());
@@ -48,11 +82,12 @@ async function init() {
   }
 
   if (!participant) {
-    panel.classList.add("hidden");
-    notFound.classList.remove("hidden");
+    participantPanel.classList.add("hidden");
+    notFoundPanel.classList.remove("hidden");
     return;
   }
 
+  participantPanel.classList.remove("hidden");
   document.getElementById("participantId").textContent = participant.id;
   document.getElementById("participantName").textContent = participant.name;
 
@@ -92,7 +127,7 @@ async function init() {
       if (saveRes.ok) saved = true;
     } catch (e) {}
 
-    // Always update localStorage
+    // Update localStorage
     const localList = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
     const item = localList.find(p => p.id === participant.id);
     if (item) {
@@ -117,4 +152,10 @@ async function init() {
   updateBadge();
 }
 
-init();
+// Initial entry check
+if (isAuthenticated()) {
+  unlockApp();
+} else {
+  lockPanel.classList.remove("hidden");
+  participantPanel.classList.add("hidden");
+}

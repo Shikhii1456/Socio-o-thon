@@ -5,6 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Participant | Socio-O-Thon</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .lock-screen {
+      text-align: center;
+      padding: 30px 20px;
+    }
+    .lock-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+    .pin-input {
+      font-size: 24px;
+      letter-spacing: 8px;
+      text-align: center;
+      width: 180px;
+      padding: 12px;
+      margin: 16px auto;
+      display: block;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      font-family: monospace;
+    }
+    .pin-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .pin-error {
+      color: #d92d20;
+      font-size: 13px;
+      margin-top: 8px;
+      min-height: 18px;
+    }
+  </style>
 </head>
 <body>
   <header class="topbar">
@@ -12,17 +44,42 @@
       <div class="eyebrow">SOCIO-O-THON</div>
       <h1>Participant Record</h1>
     </div>
-    <a class="home-link" href="/">All Participants</a>
+    <a class="home-link" href="index.html">All Participants</a>
   </header>
 
   <main class="container narrow">
+    <!-- Security Lock Panel -->
+    <div id="lockPanel" class="panel lock-screen">
+      <div class="lock-icon">🔒</div>
+      <h2>Organizer Access Only</h2>
+      <p class="muted">Enter your Admin PIN to view and update this participant's checklist.</p>
+      
+      <form id="pinForm" onsubmit="event.preventDefault(); submitPin();">
+        <input 
+          type="password" 
+          id="pinInput" 
+          class="pin-input" 
+          inputmode="numeric" 
+          pattern="[0-9]*" 
+          maxlength="8" 
+          placeholder="••••" 
+          autocomplete="off"
+          autofocus 
+        />
+        <button class="button" type="submit" style="width: 180px;">Unlock</button>
+      </form>
+      <div id="pinError" class="pin-error"></div>
+    </div>
+
+    <!-- Participant Not Found Panel -->
     <div id="notFound" class="panel hidden">
       <h2>Participant not found</h2>
       <p>Check the QR code or participant ID.</p>
-      <a class="button" href="/">Return to dashboard</a>
+      <a class="button" href="index.html">Return to dashboard</a>
     </div>
 
-    <section id="participantPanel" class="panel">
+    <!-- Protected Participant Checklist Panel -->
+    <section id="participantPanel" class="panel hidden">
       <div class="participant-heading">
         <div>
           <p class="eyebrow">PARTICIPANT ID</p>
@@ -59,7 +116,7 @@
       </div>
 
       <div class="actions">
-        <a class="button secondary" href="/">← Back</a>
+        <a class="button secondary" href="index.html">← Dashboard</a>
         <button class="button" id="saveButton" type="button">Save status</button>
       </div>
 
