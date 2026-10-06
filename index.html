@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Socio-O-Thon Participants</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">SOCIO-O-THON</div>
+      <h1>Participant Management</h1>
+    </div>
+    <nav style="display:flex; gap:10px; align-items:center;">
+      <a class="home-link" href="/print-cards.html" target="_blank">🖨️ Print Badges</a>
+      <a class="home-link" href="/offline-scanner.html" target="_blank">📱 Offline Phone App</a>
+      <a class="home-link" href="/">Dashboard</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">PARTICIPANT QR SYSTEM</p>
+        <h2>Scan a QR to open its participant record.</h2>
+        <p>Each QR uses the same domain and a unique participant ID.</p>
+      </div>
+      <div class="count-card">
+        <strong id="participantCount">5</strong>
+        <span>Participants</span>
+      </div>
+    </section>
+
+    <section class="toolbar">
+      <input id="search" type="search" placeholder="Search participant ID or name..." />
+      <button id="addDemo" type="button">Add participant</button>
+    </section>
+
+    <section id="participantGrid" class="grid"></section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

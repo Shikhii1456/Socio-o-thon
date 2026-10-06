@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Participant | Socio-O-Thon</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    // GitHub Pages 404.html trick:
+    // When someone visits /p/SOT001, GitHub serves this 404.html.
+    // We extract the path and redirect to participant.html with the ID as a query param.
+    (function() {
+      var path = window.location.pathname;
+      // Match /p/<ID> or /repo-name/p/<ID>
+      var match = path.match(/\/p\/([^\/\?#]+)/);
+      if (match) {
+        var id = match[1];
+        // Find the base path (repo name prefix on GitHub Pages)
+        var base = path.substring(0, path.indexOf('/p/'));
+        window.location.replace(base + '/participant.html?id=' + encodeURIComponent(id));
+      } else {
+        // Not a participant route, show generic 404
+        document.addEventListener('DOMContentLoaded', function() {
+          document.body.innerHTML = '<div style="text-align:center;padding:60px 20px;font-family:system-ui;"><h1>Page not found</h1><p><a href="./">Go to Dashboard</a></p></div>';
+        });
+      }
+    })();
+  </script>
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
+</html>

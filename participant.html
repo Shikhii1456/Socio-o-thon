@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Participant | Socio-O-Thon</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">SOCIO-O-THON</div>
+      <h1>Participant Record</h1>
+    </div>
+    <a class="home-link" href="/">All Participants</a>
+  </header>
+
+  <main class="container narrow">
+    <div id="notFound" class="panel hidden">
+      <h2>Participant not found</h2>
+      <p>Check the QR code or participant ID.</p>
+      <a class="button" href="/">Return to dashboard</a>
+    </div>
+
+    <section id="participantPanel" class="panel">
+      <div class="participant-heading">
+        <div>
+          <p class="eyebrow">PARTICIPANT ID</p>
+          <h2 id="participantId"></h2>
+          <p id="participantName" class="muted"></p>
+        </div>
+        <div id="statusBadge" class="badge">0 / 3 completed</div>
+      </div>
+
+      <div class="checklist">
+        <label class="check-row">
+          <input type="checkbox" id="kit" />
+          <span>
+            <strong>Kit received</strong>
+            <small>Mark when the participant has received their kit.</small>
+          </span>
+        </label>
+
+        <label class="check-row">
+          <input type="checkbox" id="accommodation" />
+          <span>
+            <strong>Accommodation</strong>
+            <small>Mark when accommodation has been assigned/confirmed.</small>
+          </span>
+        </label>
+
+        <label class="check-row">
+          <input type="checkbox" id="food" />
+          <span>
+            <strong>Food</strong>
+            <small>Mark when the food arrangement is completed.</small>
+          </span>
+        </label>
+      </div>
+
+      <div class="actions">
+        <a class="button secondary" href="/">← Back</a>
+        <button class="button" id="saveButton" type="button">Save status</button>
+      </div>
+
+      <p id="saveMessage" class="save-message"></p>
+    </section>
+  </main>
+
+  <script src="participant.js"></script>
+</body>
+</html>

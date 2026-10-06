@@ -1,0 +1,9 @@
+{
+  "participants": [
+    { "id": "SOT001", "name": "Participant 001", "status": { "kit": false, "accommodation": false, "food": false } },
+    { "id": "SOT002", "name": "Participant 002", "status": { "kit": false, "accommodation": false, "food": false } },
+    { "id": "SOT003", "name": "Participant 003", "status": { "kit": false, "accommodation": false, "food": false } },
+    { "id": "SOT004", "name": "Participant 004", "status": { "kit": false, "accommodation": false, "food": false } },
+    { "id": "SOT005", "name": "Participant 005", "status": { "kit": false, "accommodation": false, "food": false } }
+  ]
+}
