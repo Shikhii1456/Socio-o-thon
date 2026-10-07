@@ -96,6 +96,7 @@
       align-items: center;
       justify-content: space-between;
       page-break-inside: avoid;
+      position: relative;
     }
     .card-info {
       flex: 1;
@@ -149,12 +150,31 @@
       background: #fff;
     }
 
+    .card-tools {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .badge-btn {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #334155;
+    }
+    .badge-btn:hover { background: #e2e8f0; }
+    .badge-btn-del { color: #dc2626; border-color: #fca5a5; }
+    .badge-btn-del:hover { background: #fee2e2; }
+
     @media print {
       body {
         background: #fff;
         padding: 0;
       }
-      .no-print {
+      .no-print, .card-tools {
         display: none !important;
       }
       .badge-grid {
@@ -176,7 +196,7 @@
     <div class="header-row">
       <div>
         <h1>🪪 Participant ID Badges</h1>
-        <p>Connected to live cloud database. Scan with iPhone camera to view and mark status.</p>
+        <p>Edit participant details, print badges, or export to Excel anytime.</p>
       </div>
       <div style="display:flex; gap:8px;">
         <a href="index.html" class="btn btn-secondary">Dashboard</a>
@@ -222,13 +242,23 @@
       if (saved) {
         try { return JSON.parse(saved); } catch (e) {}
       }
-      return [
-        { id: "SOT001", name: "Participant 001", status: { kit: false, accommodation: false, food: false } },
-        { id: "SOT002", name: "Participant 002", status: { kit: false, accommodation: false, food: false } },
-        { id: "SOT003", name: "Participant 003", status: { kit: false, accommodation: false, food: false } },
-        { id: "SOT004", name: "Participant 004", status: { kit: false, accommodation: false, food: false } },
-        { id: "SOT005", name: "Participant 005", status: { kit: false, accommodation: false, food: false } }
-      ];
+      return [];
+    }
+
+    async function syncToCloud(list) {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+      try {
+        await fetch(CLOUD_DB_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: "socio-o-thon-db",
+            data: { participants: list }
+          })
+        });
+      } catch (e) {
+        console.error("Cloud sync error:", e);
+      }
     }
 
     async function loadAndRender() {
@@ -236,7 +266,6 @@
       const container = document.getElementById("badgeContainer");
       container.innerHTML = "";
 
-      // Prefill next suggested ID in add box
       const nextNum = participantsList.length + 1;
       document.getElementById("newId").value = `SOT${String(nextNum).padStart(3, "0")}`;
 
@@ -257,7 +286,10 @@
               <div class="check-box-item"><span class="square"></span> Accom.</div>
               <div class="check-box-item"><span class="square"></span> Food</div>
             </div>
-            <div style="margin-top:8px; font-size:10px; color:#94a3b8; word-break:break-all;">${pUrl}</div>
+            <div class="card-tools">
+              <button class="badge-btn edit-badge-btn">✏️ Edit ID/Name</button>
+              <button class="badge-btn badge-btn-del del-badge-btn">🗑️ Delete</button>
+            </div>
           </div>
           <div class="qr-container" id="${qrId}"></div>
         `;
@@ -268,6 +300,33 @@
           width: 130,
           height: 130,
           correctLevel: QRCode.CorrectLevel.M
+        });
+
+        // Edit button
+        card.querySelector(".edit-badge-btn").addEventListener("click", async () => {
+          const newId = prompt("Update Participant ID:", p.id);
+          if (!newId || !newId.trim()) return;
+          const newName = prompt("Update Participant Name:", p.name);
+          if (!newName || !newName.trim()) return;
+
+          const trimmedId = newId.trim().toUpperCase();
+          if (trimmedId !== p.id.toUpperCase() && participantsList.find(x => x.id.toUpperCase() === trimmedId)) {
+            alert("Error: Another participant already has ID " + trimmedId);
+            return;
+          }
+
+          p.id = trimmedId;
+          p.name = newName.trim();
+          await syncToCloud(participantsList);
+          await loadAndRender();
+        });
+
+        // Delete button
+        card.querySelector(".del-badge-btn").addEventListener("click", async () => {
+          if (!confirm(`Are you sure you want to remove badge for ${p.id} (${p.name})?`)) return;
+          participantsList = participantsList.filter(x => x.id.toUpperCase() !== p.id.toUpperCase());
+          await syncToCloud(participantsList);
+          await loadAndRender();
         });
       });
     }
@@ -285,24 +344,15 @@
       addBtn.disabled = true;
 
       const list = await fetchParticipants();
-      if (!list.find(p => p.id === id)) {
+      if (!list.find(p => p.id.toUpperCase() === id)) {
         list.push({
           id: id,
           name: name,
           status: { kit: false, accommodation: false, food: false }
         });
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
-
-        try {
-          await fetch(CLOUD_DB_URL, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: "socio-o-thon-db",
-              data: { participants: list }
-            })
-          });
-        } catch (e) {}
+        await syncToCloud(list);
+      } else {
+        alert("Participant with ID " + id + " already exists!");
       }
 
       nameInput.value = "";

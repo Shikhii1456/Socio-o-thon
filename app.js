@@ -24,7 +24,6 @@ async function fetchParticipantsFromCloud() {
   } catch (err) {
     console.warn("Could not reach cloud database, using local cache:", err);
   }
-  // Fallback to cached localStorage
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (saved) {
     try { return JSON.parse(saved); } catch (e) {}
@@ -33,7 +32,6 @@ async function fetchParticipantsFromCloud() {
 }
 
 async function saveParticipantsToCloud(list) {
-  // Always update local cache instantly
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
   try {
     await fetch(CLOUD_DB_URL, {
@@ -69,6 +67,34 @@ async function addParticipant(id, name) {
   return { ok: true };
 }
 
+async function updateParticipantInfo(oldId, newId, newName) {
+  const list = await fetchParticipantsFromCloud();
+  const target = list.find(p => p.id.toUpperCase() === oldId.toUpperCase());
+  if (!target) return false;
+
+  // Check if changing ID to an already existing ID
+  if (oldId.toUpperCase() !== newId.toUpperCase()) {
+    const duplicate = list.find(p => p.id.toUpperCase() === newId.toUpperCase());
+    if (duplicate) {
+      alert("Error: Another participant already has ID " + newId);
+      return false;
+    }
+  }
+
+  target.id = newId.toUpperCase();
+  target.name = newName.trim();
+  await saveParticipantsToCloud(list);
+  return true;
+}
+
+async function deleteParticipant(id) {
+  if (!confirm(`Are you sure you want to delete participant ${id}?`)) return false;
+  const list = await fetchParticipantsFromCloud();
+  const filtered = list.filter(p => p.id.toUpperCase() !== id.toUpperCase());
+  await saveParticipantsToCloud(filtered);
+  return true;
+}
+
 function participantUrl(id) {
   const base = window.location.href.split("?")[0].split("#")[0].replace(/\/(index\.html)?$/, "");
   return `${base}/participant.html?id=${encodeURIComponent(id)}`;
@@ -100,11 +126,17 @@ function render(list) {
 
     const qrId = `qr-${p.id}`;
     card.innerHTML = `
-      <div class="participant-meta">
-        <span class="id-pill">${p.id}</span>
-        <span class="badge small ${statusClass}">${completed}/3</span>
-        <h3>${escapeHtml(p.name)}</h3>
+      <div class="participant-meta" style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <span class="id-pill">${p.id}</span>
+          <span class="badge small ${statusClass}">${completed}/3</span>
+        </div>
+        <div style="display:flex; gap:4px;">
+          <button class="button small secondary edit-btn" style="padding:4px 8px; font-size:11px;" title="Edit Name/ID">✏️ Edit</button>
+          <button class="button small secondary del-btn" style="padding:4px 8px; font-size:11px; color:#ef4444;" title="Delete">🗑️</button>
+        </div>
       </div>
+      <h3 style="text-align:left; margin-top:8px;">${escapeHtml(p.name)}</h3>
       <div class="qr" id="${qrId}"></div>
       <div class="card-actions">
         <a class="button small" href="${pUrl}">Open record</a>
@@ -119,6 +151,24 @@ function render(list) {
       width: 180,
       height: 180,
       correctLevel: QRCode.CorrectLevel.M
+    });
+
+    // Edit button click handler
+    card.querySelector(".edit-btn").addEventListener("click", async () => {
+      const newId = prompt("Update Participant ID:", p.id);
+      if (!newId || !newId.trim()) return;
+      const newName = prompt("Update Participant Name:", p.name);
+      if (!newName || !newName.trim()) return;
+
+      await updateParticipantInfo(p.id, newId.trim(), newName.trim());
+      await init();
+    });
+
+    // Delete button click handler
+    card.querySelector(".del-btn").addEventListener("click", async () => {
+      if (await deleteParticipant(p.id)) {
+        await init();
+      }
     });
   });
 
