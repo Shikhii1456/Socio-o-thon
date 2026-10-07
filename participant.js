@@ -1,10 +1,10 @@
 // ==========================================
 // CONFIGURATION: Admin PIN
-// You can easily change this PIN anytime!
 // ==========================================
 const ADMIN_PIN = "1234";
 
-const STORAGE_KEY = "socioOthon_shared_participants";
+const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a1156100f012a9";
+const LOCAL_STORAGE_KEY = "socioOthon_shared_participants";
 const AUTH_KEY = "socioOthon_admin_auth";
 
 // Extract participant ID from query param (?id=SOT001) or path (/p/SOT001)
@@ -25,7 +25,6 @@ const notFoundPanel = document.getElementById("notFound");
 const pinInput = document.getElementById("pinInput");
 const pinError = document.getElementById("pinError");
 
-// Check if this device is already authenticated
 function isAuthenticated() {
   return localStorage.getItem(AUTH_KEY) === "true";
 }
@@ -33,7 +32,6 @@ function isAuthenticated() {
 function submitPin() {
   const entered = pinInput.value.trim();
   if (entered === ADMIN_PIN) {
-    // Remember authorization on this browser so you don't have to enter PIN every single scan
     localStorage.setItem(AUTH_KEY, "true");
     pinError.textContent = "";
     unlockApp();
@@ -49,6 +47,60 @@ function unlockApp() {
   loadParticipant();
 }
 
+async function fetchParticipants() {
+  try {
+    const res = await fetch(CLOUD_DB_URL);
+    if (res.ok) {
+      const json = await res.json();
+      if (json && json.data && Array.isArray(json.data.participants)) {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(json.data.participants));
+        return json.data.participants;
+      }
+    }
+  } catch (err) {
+    console.warn("Using local cache:", err);
+  }
+  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (saved) {
+    try { return JSON.parse(saved); } catch (e) {}
+  }
+  return [];
+}
+
+async function updateCloudStatus(targetId, newStatus) {
+  const list = await fetchParticipants();
+  let found = list.find(p => p.id.toUpperCase() === targetId.toUpperCase());
+  if (found) {
+    found.status = newStatus;
+  } else {
+    found = {
+      id: targetId.toUpperCase(),
+      name: "Participant " + targetId.toUpperCase(),
+      status: newStatus
+    };
+    list.push(found);
+  }
+
+  // Update local cache immediately
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+
+  // Sync to shared cloud database
+  try {
+    await fetch(CLOUD_DB_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "socio-o-thon-db",
+        data: { participants: list }
+      })
+    });
+    return true;
+  } catch (e) {
+    console.error("Cloud sync error:", e);
+    return false;
+  }
+}
+
 async function loadParticipant() {
   if (!participantId) {
     participantPanel.classList.add("hidden");
@@ -56,35 +108,18 @@ async function loadParticipant() {
     return;
   }
 
-  let participant = null;
+  const list = await fetchParticipants();
+  let participant = list.find(p => p.id.toUpperCase() === participantId.toUpperCase());
 
-  // Try fetching from server if running
-  try {
-    const res = await fetch(`./api/participant/${encodeURIComponent(participantId)}`);
-    if (res.ok) participant = await res.json();
-  } catch (e) {}
-
-  // Fallback to local storage (for GitHub Pages static hosting)
+  // Auto-create on first scan if doesn't exist yet
   if (!participant) {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    participant = saved.find(p => p.id.toUpperCase() === participantId.toUpperCase());
-    
-    // Auto-create entry if scanning valid ID format
-    if (!participant && participantId) {
-      participant = {
-        id: participantId.toUpperCase(),
-        name: "Participant " + participantId.toUpperCase(),
-        status: { kit: false, accommodation: false, food: false }
-      };
-      saved.push(participant);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
-    }
-  }
-
-  if (!participant) {
-    participantPanel.classList.add("hidden");
-    notFoundPanel.classList.remove("hidden");
-    return;
+    participant = {
+      id: participantId.toUpperCase(),
+      name: "Participant " + participantId.toUpperCase(),
+      status: { kit: false, accommodation: false, food: false }
+    };
+    list.push(participant);
+    updateCloudStatus(participant.id, participant.status);
   }
 
   participantPanel.classList.remove("hidden");
@@ -109,50 +144,32 @@ async function loadParticipant() {
     document.getElementById(id).addEventListener("change", updateBadge);
   });
 
-  document.getElementById("saveButton").addEventListener("click", async () => {
+  const saveBtn = document.getElementById("saveButton");
+  saveBtn.addEventListener("click", async () => {
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving...";
+
     const newState = {
       kit: document.getElementById("kit").checked,
       accommodation: document.getElementById("accommodation").checked,
       food: document.getElementById("food").checked,
     };
 
-    // Try server update
-    let saved = false;
-    try {
-      const saveRes = await fetch(`./api/participant/${encodeURIComponent(participant.id)}/status`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newState),
-      });
-      if (saveRes.ok) saved = true;
-    } catch (e) {}
-
-    // Update localStorage
-    const localList = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    const item = localList.find(p => p.id === participant.id);
-    if (item) {
-      item.status = newState;
-    } else {
-      localList.push({ id: participant.id, name: participant.name, status: newState });
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(localList));
-    saved = true;
+    const ok = await updateCloudStatus(participant.id, newState);
 
     const msg = document.getElementById("saveMessage");
-    if (saved) {
-      msg.textContent = "✅ Status saved!";
-      msg.style.color = "#067647";
-    } else {
-      msg.textContent = "❌ Failed to save.";
-      msg.style.color = "#d92d20";
-    }
-    setTimeout(() => (msg.textContent = ""), 2500);
+    msg.textContent = ok ? "✅ Status synced to cloud!" : "⚠️ Saved locally (offline)";
+    msg.style.color = ok ? "#067647" : "#d97706";
+
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save status";
+
+    setTimeout(() => (msg.textContent = ""), 3000);
   });
 
   updateBadge();
 }
 
-// Initial entry check
 if (isAuthenticated()) {
   unlockApp();
 } else {

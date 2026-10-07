@@ -1,6 +1,9 @@
-const STORAGE_KEY = "socioOthon_shared_participants";
+// Shared Cloud Database Integration for Socio-O-Thon
+// ID: ff808181a09d98f701a1156100f012a9
+const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a1156100f012a9";
+const LOCAL_STORAGE_KEY = "socioOthon_shared_participants";
 
-const initialParticipants = [
+const defaultSeed = [
   { id: "SOT001", name: "Participant 001", status: { kit: false, accommodation: false, food: false } },
   { id: "SOT002", name: "Participant 002", status: { kit: false, accommodation: false, food: false } },
   { id: "SOT003", name: "Participant 003", status: { kit: false, accommodation: false, food: false } },
@@ -8,49 +11,71 @@ const initialParticipants = [
   { id: "SOT005", name: "Participant 005", status: { kit: false, accommodation: false, food: false } }
 ];
 
-async function getParticipants() {
-  // If running with local Node.js server
+async function fetchParticipantsFromCloud() {
   try {
-    const res = await fetch("./api/participants");
-    if (res.ok) return await res.json();
-  } catch (e) {}
-
-  // Otherwise fallback to localStorage (for GitHub Pages static hosting)
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialParticipants));
-    return [...initialParticipants];
+    const res = await fetch(CLOUD_DB_URL);
+    if (res.ok) {
+      const json = await res.json();
+      if (json && json.data && Array.isArray(json.data.participants)) {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(json.data.participants));
+        return json.data.participants;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not reach cloud database, using local cache:", err);
   }
-  return JSON.parse(saved);
+  // Fallback to cached localStorage
+  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (saved) {
+    try { return JSON.parse(saved); } catch (e) {}
+  }
+  return defaultSeed;
+}
+
+async function saveParticipantsToCloud(list) {
+  // Always update local cache instantly
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+  try {
+    await fetch(CLOUD_DB_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "socio-o-thon-db",
+        data: { participants: list }
+      })
+    });
+    return true;
+  } catch (err) {
+    console.error("Failed to sync to cloud:", err);
+    return false;
+  }
+}
+
+async function getParticipants() {
+  return await fetchParticipantsFromCloud();
 }
 
 async function addParticipant(id, name) {
-  try {
-    const res = await fetch("./api/participants", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, name }),
+  const list = await fetchParticipantsFromCloud();
+  const existing = list.find(p => p.id.toUpperCase() === id.toUpperCase());
+  if (!existing) {
+    list.push({
+      id: id.toUpperCase(),
+      name: name || `Participant ${id.toUpperCase()}`,
+      status: { kit: false, accommodation: false, food: false }
     });
-    if (res.ok) return await res.json();
-  } catch (e) {}
-
-  // Fallback to localStorage
-  const list = await getParticipants();
-  if (!list.find(p => p.id === id)) {
-    list.push({ id, name, status: { kit: false, accommodation: false, food: false } });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    await saveParticipantsToCloud(list);
   }
   return { ok: true };
 }
 
 function participantUrl(id) {
-  // Generates permanent direct URL compatible with both local and GitHub Pages
   const base = window.location.href.split("?")[0].split("#")[0].replace(/\/(index\.html)?$/, "");
   return `${base}/participant.html?id=${encodeURIComponent(id)}`;
 }
 
 function escapeHtml(value) {
-  return value.replace(/[&<>"']/g, ch => ({
+  return String(value).replace(/[&<>"']/g, ch => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
   }[ch]));
 }
@@ -69,7 +94,7 @@ function render(list) {
     const card = document.createElement("article");
     card.className = "participant-card";
 
-    const completed = [p.status.kit, p.status.accommodation, p.status.food].filter(Boolean).length;
+    const completed = [p.status && p.status.kit, p.status && p.status.accommodation, p.status && p.status.food].filter(Boolean).length;
     const statusClass = completed === 3 ? "complete" : "";
     const pUrl = participantUrl(p.id);
 
@@ -107,6 +132,28 @@ function render(list) {
   });
 }
 
+function exportExcelCSV() {
+  const list = allParticipants;
+  let csv = "\uFEFFParticipant ID,Name,Kit Received,Accommodation,Food Received,Total Completed\n";
+  list.forEach(p => {
+    const kit = p.status && p.status.kit ? "YES" : "NO";
+    const acc = p.status && p.status.accommodation ? "YES" : "NO";
+    const food = p.status && p.status.food ? "YES" : "NO";
+    const total = [p.status && p.status.kit, p.status && p.status.accommodation, p.status && p.status.food].filter(Boolean).length;
+    csv += `"${p.id}","${p.name.replace(/"/g, '""')}","${kit}","${acc}","${food}","${total}/3"\n`;
+  });
+  
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Socio-O-Thon-Participants-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 let allParticipants = [];
 
 async function init() {
@@ -123,10 +170,29 @@ document.getElementById("search").addEventListener("input", e => {
   ));
 });
 
+// Modal / prompt for adding participant cleanly
 document.getElementById("addDemo").addEventListener("click", async () => {
-  const nextNumber = allParticipants.length + 1;
-  const id = `SOT${String(nextNumber).padStart(3, "0")}`;
-  const name = `Participant ${String(nextNumber).padStart(3, "0")}`;
-  await addParticipant(id, name);
+  const nextNum = allParticipants.length + 1;
+  const defaultId = `SOT${String(nextNum).padStart(3, "0")}`;
+  
+  const id = prompt("Enter Participant ID (e.g. SOT006):", defaultId);
+  if (!id) return;
+  
+  const name = prompt("Enter Participant Name:", `Participant ${id.trim().toUpperCase()}`);
+  if (!name) return;
+
+  const btn = document.getElementById("addDemo");
+  btn.textContent = "Adding...";
+  btn.disabled = true;
+
+  await addParticipant(id.trim().toUpperCase(), name.trim());
   await init();
+
+  btn.textContent = "+ Add Participant";
+  btn.disabled = false;
 });
+
+const exportBtn = document.getElementById("exportCsvBtn");
+if (exportBtn) {
+  exportBtn.addEventListener("click", exportExcelCSV);
+}

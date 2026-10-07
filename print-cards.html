@@ -18,35 +18,67 @@
       max-width: 900px;
       margin: 0 auto 24px;
       background: #fff;
-      padding: 18px 24px;
+      padding: 20px 24px;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .header-row {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      gap: 12px;
     }
-    .no-print h1 {
-      margin: 0;
-      font-size: 20px;
+    .header-row h1 { margin: 0; font-size: 20px; }
+    .header-row p { margin: 4px 0 0; color: #666; font-size: 13px; }
+    
+    .actions-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
     }
-    .no-print p {
-      margin: 4px 0 0;
-      color: #666;
-      font-size: 13px;
+
+    .add-form {
+      display: flex;
+      flex: 1;
+      gap: 8px;
+      min-width: 300px;
     }
+    .add-form input {
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .input-id { width: 110px; text-transform: uppercase; font-weight: 700; }
+    .input-name { flex: 1; }
+
     .btn {
       background: #111827;
       color: white;
       border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
+      padding: 9px 16px;
+      border-radius: 6px;
       font-weight: 600;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     .btn:hover { background: #374151; }
+    .btn-green { background: #059669; }
+    .btn-green:hover { background: #047857; }
+    .btn-secondary { background: #475569; }
+    .btn-secondary:hover { background: #334155; }
+
     .badge-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -141,53 +173,74 @@
 <body>
 
   <div class="no-print">
-    <div>
-      <h1>🪪 Participant ID Badges</h1>
-      <p>Scan with your iPhone Camera to open the participant's record on GitHub Pages.</p>
+    <div class="header-row">
+      <div>
+        <h1>🪪 Participant ID Badges</h1>
+        <p>Connected to live cloud database. Scan with iPhone camera to view and mark status.</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <a href="index.html" class="btn btn-secondary">Dashboard</a>
+        <button class="btn btn-green" onclick="exportExcelCSV()">📥 Export to Excel (CSV)</button>
+        <button class="btn" onclick="window.print()">🖨️ Print All Badges</button>
+      </div>
     </div>
-    <div style="display:flex; gap:10px;">
-      <a href="index.html" class="btn" style="background:#475569; text-decoration:none;">Dashboard</a>
-      <button class="btn" onclick="window.print()">🖨️ Print ID Badges</button>
+
+    <!-- Inline Add Participant Form directly on Print Badges page -->
+    <div class="actions-bar">
+      <form class="add-form" id="addBadgeForm" onsubmit="event.preventDefault(); handleAddParticipant();">
+        <input type="text" id="newId" class="input-id" placeholder="ID (e.g. SOT006)" required />
+        <input type="text" id="newName" class="input-name" placeholder="Participant Full Name" required />
+        <button type="submit" id="addBtn" class="btn" style="background:#2563eb;">+ Add Badge</button>
+      </form>
     </div>
   </div>
 
   <div class="badge-grid" id="badgeContainer"></div>
 
   <script>
-    // Compute permanent link pointing to participant.html
+    const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a1156100f012a9";
+    const LOCAL_STORAGE_KEY = "socioOthon_shared_participants";
+    let participantsList = [];
+
     function getParticipantUrl(id) {
       const base = window.location.href.split("?")[0].split("#")[0].replace(/\/(print-cards\.html)?$/, "");
       return `${base}/participant.html?id=${encodeURIComponent(id)}`;
     }
 
-    async function loadAndRender() {
-      let list = [];
-      const STORAGE_KEY = "socioOthon_shared_participants";
-
+    async function fetchParticipants() {
       try {
-        const res = await fetch("./api/participants");
-        if (res.ok) list = await res.json();
-      } catch (e) {}
-
-      if (!list || list.length === 0) {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          list = JSON.parse(saved);
-        } else {
-          list = [
-            { id: "SOT001", name: "Participant 001" },
-            { id: "SOT002", name: "Participant 002" },
-            { id: "SOT003", name: "Participant 003" },
-            { id: "SOT004", name: "Participant 004" },
-            { id: "SOT005", name: "Participant 005" }
-          ];
+        const res = await fetch(CLOUD_DB_URL);
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.data && Array.isArray(json.data.participants)) {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(json.data.participants));
+            return json.data.participants;
+          }
         }
+      } catch (err) {}
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) {}
       }
+      return [
+        { id: "SOT001", name: "Participant 001", status: { kit: false, accommodation: false, food: false } },
+        { id: "SOT002", name: "Participant 002", status: { kit: false, accommodation: false, food: false } },
+        { id: "SOT003", name: "Participant 003", status: { kit: false, accommodation: false, food: false } },
+        { id: "SOT004", name: "Participant 004", status: { kit: false, accommodation: false, food: false } },
+        { id: "SOT005", name: "Participant 005", status: { kit: false, accommodation: false, food: false } }
+      ];
+    }
 
+    async function loadAndRender() {
+      participantsList = await fetchParticipants();
       const container = document.getElementById("badgeContainer");
       container.innerHTML = "";
 
-      list.forEach((p) => {
+      // Prefill next suggested ID in add box
+      const nextNum = participantsList.length + 1;
+      document.getElementById("newId").value = `SOT${String(nextNum).padStart(3, "0")}`;
+
+      participantsList.forEach((p) => {
         const card = document.createElement("div");
         card.className = "card";
 
@@ -210,7 +263,6 @@
         `;
         container.appendChild(card);
 
-        // QR Code generates the real permanent HTTPS web link
         new QRCode(document.getElementById(qrId), {
           text: pUrl,
           width: 130,
@@ -218,6 +270,67 @@
           correctLevel: QRCode.CorrectLevel.M
         });
       });
+    }
+
+    async function handleAddParticipant() {
+      const idInput = document.getElementById("newId");
+      const nameInput = document.getElementById("newName");
+      const addBtn = document.getElementById("addBtn");
+
+      const id = idInput.value.trim().toUpperCase();
+      const name = nameInput.value.trim();
+      if (!id || !name) return;
+
+      addBtn.textContent = "Adding...";
+      addBtn.disabled = true;
+
+      const list = await fetchParticipants();
+      if (!list.find(p => p.id === id)) {
+        list.push({
+          id: id,
+          name: name,
+          status: { kit: false, accommodation: false, food: false }
+        });
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+
+        try {
+          await fetch(CLOUD_DB_URL, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: "socio-o-thon-db",
+              data: { participants: list }
+            })
+          });
+        } catch (e) {}
+      }
+
+      nameInput.value = "";
+      addBtn.textContent = "+ Add Badge";
+      addBtn.disabled = false;
+
+      await loadAndRender();
+    }
+
+    function exportExcelCSV() {
+      let csv = "\uFEFFParticipant ID,Name,Kit Received,Accommodation,Food Received,Total Completed\n";
+      participantsList.forEach(p => {
+        const kit = p.status && p.status.kit ? "YES" : "NO";
+        const acc = p.status && p.status.accommodation ? "YES" : "NO";
+        const food = p.status && p.status.food ? "YES" : "NO";
+        const total = [p.status && p.status.kit, p.status && p.status.accommodation, p.status && p.status.food].filter(Boolean).length;
+        csv += `"${p.id}","${p.name.replace(/"/g, '""')}","${kit}","${acc}","${food}","${total}/3"\n`;
+      });
+      
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Socio-O-Thon-Badges-${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
 
     loadAndRender();
