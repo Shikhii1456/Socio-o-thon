@@ -48,7 +48,7 @@
       display: flex;
       flex: 1;
       gap: 8px;
-      min-width: 300px;
+      min-width: 320px;
     }
     .add-form input {
       padding: 8px 12px;
@@ -57,6 +57,7 @@
       font-size: 14px;
     }
     .input-id { width: 110px; text-transform: uppercase; font-weight: 700; }
+    .input-team { width: 120px; font-weight: 600; }
     .input-name { flex: 1; }
 
     .btn {
@@ -108,19 +109,29 @@
       letter-spacing: 1.5px;
       color: #4f46e5;
       text-transform: uppercase;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .participant-id {
       font-size: 24px;
       font-weight: 800;
       color: #0f172a;
-      margin: 0 0 6px 0;
+      margin: 0 0 4px 0;
+    }
+    .participant-team {
+      font-size: 13px;
+      font-weight: 700;
+      color: #4338ca;
+      background: #e0e7ff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 6px;
     }
     .participant-name {
       font-size: 16px;
-      color: #475569;
-      margin: 0 0 12px 0;
-      font-weight: 500;
+      color: #334155;
+      margin: 0 0 10px 0;
+      font-weight: 600;
     }
     .check-boxes {
       display: flex;
@@ -196,11 +207,12 @@
     <div class="header-row">
       <div>
         <h1>🪪 Participant ID Badges</h1>
-        <p>Edit participant details, print badges, or export to Excel anytime.</p>
+        <p>Badges with Participant Name and Team ID. QR codes link directly to each participant record.</p>
       </div>
       <div style="display:flex; gap:8px;">
+        <a href="sheet-view.html" class="btn" style="background:#2563eb;">📊 Live Sheet</a>
         <a href="index.html" class="btn btn-secondary">Dashboard</a>
-        <button class="btn btn-green" onclick="exportExcelCSV()">📥 Export to Excel (CSV)</button>
+        <button class="btn btn-green" onclick="exportExcelCSV()">📥 Export (CSV)</button>
         <button class="btn" onclick="window.print()">🖨️ Print All Badges</button>
       </div>
     </div>
@@ -209,6 +221,7 @@
     <div class="actions-bar">
       <form class="add-form" id="addBadgeForm" onsubmit="event.preventDefault(); handleAddParticipant();">
         <input type="text" id="newId" class="input-id" placeholder="ID (e.g. SOT006)" required />
+        <input type="text" id="newTeam" class="input-team" placeholder="Team ID / Name" required />
         <input type="text" id="newName" class="input-name" placeholder="Participant Full Name" required />
         <button type="submit" id="addBtn" class="btn" style="background:#2563eb;">+ Add Badge</button>
       </form>
@@ -275,11 +288,13 @@
 
         const qrId = `qr-badge-${p.id}`;
         const pUrl = getParticipantUrl(p.id);
+        const teamText = p.team ? p.team : "Team 1";
 
         card.innerHTML = `
           <div class="card-info">
             <div class="event-tag">SOCIO-O-THON</div>
             <h2 class="participant-id">${p.id}</h2>
+            <div class="participant-team">👥 ${teamText}</div>
             <div class="participant-name">${p.name}</div>
             <div class="check-boxes">
               <div class="check-box-item"><span class="square"></span> Kit</div>
@@ -287,7 +302,7 @@
               <div class="check-box-item"><span class="square"></span> Food</div>
             </div>
             <div class="card-tools">
-              <button class="badge-btn edit-badge-btn">✏️ Edit ID/Name</button>
+              <button class="badge-btn edit-badge-btn">✏️ Edit ID/Team/Name</button>
               <button class="badge-btn badge-btn-del del-badge-btn">🗑️ Delete</button>
             </div>
           </div>
@@ -306,6 +321,8 @@
         card.querySelector(".edit-badge-btn").addEventListener("click", async () => {
           const newId = prompt("Update Participant ID:", p.id);
           if (!newId || !newId.trim()) return;
+          const newTeam = prompt("Update Team ID/Name:", p.team || "");
+          if (newTeam === null) return;
           const newName = prompt("Update Participant Name:", p.name);
           if (!newName || !newName.trim()) return;
 
@@ -316,6 +333,7 @@
           }
 
           p.id = trimmedId;
+          p.team = newTeam.trim();
           p.name = newName.trim();
           await syncToCloud(participantsList);
           await loadAndRender();
@@ -333,10 +351,12 @@
 
     async function handleAddParticipant() {
       const idInput = document.getElementById("newId");
+      const teamInput = document.getElementById("newTeam");
       const nameInput = document.getElementById("newName");
       const addBtn = document.getElementById("addBtn");
 
       const id = idInput.value.trim().toUpperCase();
+      const team = teamInput.value.trim();
       const name = nameInput.value.trim();
       if (!id || !name) return;
 
@@ -347,6 +367,7 @@
       if (!list.find(p => p.id.toUpperCase() === id)) {
         list.push({
           id: id,
+          team: team,
           name: name,
           status: { kit: false, accommodation: false, food: false }
         });
@@ -356,6 +377,7 @@
       }
 
       nameInput.value = "";
+      teamInput.value = "";
       addBtn.textContent = "+ Add Badge";
       addBtn.disabled = false;
 
@@ -363,13 +385,13 @@
     }
 
     function exportExcelCSV() {
-      let csv = "\uFEFFParticipant ID,Name,Kit Received,Accommodation,Food Received,Total Completed\n";
+      let csv = "\uFEFFParticipant ID,Team ID,Name,Kit Received,Accommodation,Food Received,Total Completed\n";
       participantsList.forEach(p => {
         const kit = p.status && p.status.kit ? "YES" : "NO";
         const acc = p.status && p.status.accommodation ? "YES" : "NO";
         const food = p.status && p.status.food ? "YES" : "NO";
         const total = [p.status && p.status.kit, p.status && p.status.accommodation, p.status && p.status.food].filter(Boolean).length;
-        csv += `"${p.id}","${p.name.replace(/"/g, '""')}","${kit}","${acc}","${food}","${total}/3"\n`;
+        csv += `"${p.id}","${(p.team || '').replace(/"/g, '""')}","${p.name.replace(/"/g, '""')}","${kit}","${acc}","${food}","${total}/3"\n`;
       });
       
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });

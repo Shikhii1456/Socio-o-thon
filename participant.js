@@ -1,9 +1,14 @@
 // ==========================================
-// CONFIGURATION: Admin PIN
+// CONFIGURATION: Admin PIN & Endpoints
 // ==========================================
 const ADMIN_PIN = "1234";
 
+// Primary Cloud DB for QR codes
 const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a1156100f012a9";
+
+// Google Apps Script Web App URL (Configured by user or via localStorage)
+const GOOGLE_SHEET_API_URL = localStorage.getItem("socioOthon_google_sheet_url") || "";
+
 const LOCAL_STORAGE_KEY = "socioOthon_shared_participants";
 const AUTH_KEY = "socioOthon_admin_auth";
 
@@ -19,34 +24,74 @@ if (!participantId) {
   }
 }
 
-const lockPanel = document.getElementById("lockPanel");
 const participantPanel = document.getElementById("participantPanel");
 const notFoundPanel = document.getElementById("notFound");
-const pinInput = document.getElementById("pinInput");
-const pinError = document.getElementById("pinError");
+const editStatusBtn = document.getElementById("editStatusBtn");
+const saveButton = document.getElementById("saveButton");
+const authBanner = document.getElementById("authBanner");
+const authStatusText = document.getElementById("authStatusText");
+const unlockBtn = document.getElementById("unlockBtn");
 
-function isAuthenticated() {
+const pinModal = document.getElementById("pinModal");
+const modalPinInput = document.getElementById("modalPinInput");
+const modalPinError = document.getElementById("modalPinError");
+const submitPinBtn = document.getElementById("submitPinBtn");
+const cancelPinBtn = document.getElementById("cancelPinBtn");
+
+let currentParticipant = null;
+
+function isOrganizerAuthenticated() {
   return localStorage.getItem(AUTH_KEY) === "true";
 }
 
-function submitPin() {
-  const entered = pinInput.value.trim();
-  if (entered === ADMIN_PIN) {
-    localStorage.setItem(AUTH_KEY, "true");
-    pinError.textContent = "";
-    unlockApp();
+function setEditModeEnabled(enabled) {
+  const checkboxes = ["kit", "accommodation", "food"];
+  checkboxes.forEach(id => {
+    document.getElementById(id).disabled = !enabled;
+  });
+
+  if (enabled) {
+    editStatusBtn.classList.add("hidden");
+    saveButton.classList.remove("hidden");
+    authBanner.className = "auth-banner unlocked";
+    authStatusText.innerHTML = "✅ <strong>Organizer Mode:</strong> Editing enabled";
+    unlockBtn.textContent = "Lock";
   } else {
-    pinError.textContent = "Incorrect PIN. Please try again.";
-    pinInput.value = "";
-    pinInput.focus();
+    editStatusBtn.classList.remove("hidden");
+    saveButton.classList.add("hidden");
+    authBanner.className = "auth-banner";
+    authStatusText.innerHTML = "👁️ <strong>Viewing Mode:</strong> Details visible (Read-only)";
+    unlockBtn.textContent = "🔒 Organizer Login";
   }
 }
 
-function unlockApp() {
-  lockPanel.classList.add("hidden");
-  loadParticipant();
+function openPinModal() {
+  pinModal.classList.remove("hidden");
+  modalPinInput.value = "";
+  modalPinError.textContent = "";
+  modalPinInput.focus();
 }
 
+function closePinModal() {
+  pinModal.classList.add("hidden");
+  modalPinInput.value = "";
+  modalPinError.textContent = "";
+}
+
+function verifyPin() {
+  const entered = modalPinInput.value.trim();
+  if (entered === ADMIN_PIN) {
+    localStorage.setItem(AUTH_KEY, "true");
+    closePinModal();
+    setEditModeEnabled(true);
+  } else {
+    modalPinError.textContent = "Incorrect PIN. Try again.";
+    modalPinInput.value = "";
+    modalPinInput.focus();
+  }
+}
+
+// ── Cloud Database Retrieval ──
 async function fetchParticipants() {
   try {
     const res = await fetch(CLOUD_DB_URL);
@@ -67,6 +112,31 @@ async function fetchParticipants() {
   return [];
 }
 
+// ── Real-Time Sync to Google Sheet ──
+async function syncToGoogleSheet(participant, newStatus) {
+  const sheetUrl = localStorage.getItem("socioOthon_google_sheet_url");
+  if (!sheetUrl) return; // If user hasn't configured Sheet webhook yet, skip
+
+  try {
+    await fetch(sheetUrl, {
+      method: "POST",
+      mode: "no-cors", // Google Apps Script handles no-cors gracefully
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "sync_status",
+        id: participant.id,
+        name: participant.name,
+        team: participant.team || "",
+        status: newStatus
+      })
+    });
+    console.log("Synced to Google Sheet in real time");
+  } catch (e) {
+    console.warn("Google Sheet sync error:", e);
+  }
+}
+
+// ── Update QR Cloud Status ──
 async function updateCloudStatus(targetId, newStatus) {
   const list = await fetchParticipants();
   let found = list.find(p => p.id.toUpperCase() === targetId.toUpperCase());
@@ -81,10 +151,8 @@ async function updateCloudStatus(targetId, newStatus) {
     list.push(found);
   }
 
-  // Update local cache immediately
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
 
-  // Sync to shared cloud database
   try {
     await fetch(CLOUD_DB_URL, {
       method: "PUT",
@@ -109,25 +177,31 @@ async function loadParticipant() {
   }
 
   const list = await fetchParticipants();
-  let participant = list.find(p => p.id.toUpperCase() === participantId.toUpperCase());
+  currentParticipant = list.find(p => p.id.toUpperCase() === participantId.toUpperCase());
 
-  // Auto-create on first scan if doesn't exist yet
-  if (!participant) {
-    participant = {
-      id: participantId.toUpperCase(),
-      name: "Participant " + participantId.toUpperCase(),
-      status: { kit: false, accommodation: false, food: false }
-    };
-    list.push(participant);
-    updateCloudStatus(participant.id, participant.status);
+  // If not found, show not found
+  if (!currentParticipant) {
+    participantPanel.classList.add("hidden");
+    notFoundPanel.classList.remove("hidden");
+    return;
   }
 
   participantPanel.classList.remove("hidden");
-  document.getElementById("participantId").textContent = participant.id;
-  document.getElementById("participantName").textContent = participant.name;
+  notFoundPanel.classList.add("hidden");
 
-  const state = participant.status || { kit: false, accommodation: false, food: false };
+  // Populate Participant Info Instantly
+  document.getElementById("participantId").textContent = currentParticipant.id;
+  document.getElementById("participantName").textContent = currentParticipant.name;
 
+  const teamEl = document.getElementById("participantTeam");
+  if (currentParticipant.team) {
+    teamEl.textContent = `Team: ${currentParticipant.team}`;
+    teamEl.classList.remove("hidden");
+  } else {
+    teamEl.classList.add("hidden");
+  }
+
+  const state = currentParticipant.status || { kit: false, accommodation: false, food: false };
   document.getElementById("kit").checked = !!state.kit;
   document.getElementById("accommodation").checked = !!state.accommodation;
   document.getElementById("food").checked = !!state.food;
@@ -144,35 +218,60 @@ async function loadParticipant() {
     document.getElementById(id).addEventListener("change", updateBadge);
   });
 
-  const saveBtn = document.getElementById("saveButton");
-  saveBtn.addEventListener("click", async () => {
-    saveBtn.disabled = true;
-    saveBtn.textContent = "Saving...";
-
-    const newState = {
-      kit: document.getElementById("kit").checked,
-      accommodation: document.getElementById("accommodation").checked,
-      food: document.getElementById("food").checked,
-    };
-
-    const ok = await updateCloudStatus(participant.id, newState);
-
-    const msg = document.getElementById("saveMessage");
-    msg.textContent = ok ? "✅ Status synced to cloud!" : "⚠️ Saved locally (offline)";
-    msg.style.color = ok ? "#067647" : "#d97706";
-
-    saveBtn.disabled = false;
-    saveBtn.textContent = "Save status";
-
-    setTimeout(() => (msg.textContent = ""), 3000);
-  });
-
   updateBadge();
+  setEditModeEnabled(isOrganizerAuthenticated());
 }
 
-if (isAuthenticated()) {
-  unlockApp();
-} else {
-  lockPanel.classList.remove("hidden");
-  participantPanel.classList.add("hidden");
-}
+// ── Event Handlers ──
+editStatusBtn.addEventListener("click", () => {
+  if (isOrganizerAuthenticated()) {
+    setEditModeEnabled(true);
+  } else {
+    openPinModal();
+  }
+});
+
+unlockBtn.addEventListener("click", () => {
+  if (isOrganizerAuthenticated()) {
+    // Lock / Logout
+    localStorage.removeItem(AUTH_KEY);
+    setEditModeEnabled(false);
+  } else {
+    openPinModal();
+  }
+});
+
+submitPinBtn.addEventListener("click", verifyPin);
+modalPinInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") verifyPin();
+});
+cancelPinBtn.addEventListener("click", closePinModal);
+
+saveButton.addEventListener("click", async () => {
+  saveButton.disabled = true;
+  saveButton.textContent = "Saving...";
+
+  const newState = {
+    kit: document.getElementById("kit").checked,
+    accommodation: document.getElementById("accommodation").checked,
+    food: document.getElementById("food").checked,
+  };
+
+  // 1. Save to cloud DB
+  const ok = await updateCloudStatus(currentParticipant.id, newState);
+
+  // 2. Real-time sync directly into Google Sheet
+  await syncToGoogleSheet(currentParticipant, newState);
+
+  const msg = document.getElementById("saveMessage");
+  msg.textContent = ok ? "✅ Saved & Synced to Google Sheet!" : "⚠️ Saved locally";
+  msg.style.color = ok ? "#067647" : "#d97706";
+
+  saveButton.disabled = false;
+  saveButton.textContent = "💾 Save & Sync to Sheet";
+
+  setTimeout(() => (msg.textContent = ""), 3000);
+});
+
+// Load on start
+loadParticipant();

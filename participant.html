@@ -6,123 +6,173 @@
   <title>Participant | Socio-O-Thon</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    .lock-screen {
-      text-align: center;
-      padding: 30px 20px;
+    .team-badge {
+      display: inline-block;
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 4px;
     }
-    .lock-icon {
-      font-size: 48px;
-      margin-bottom: 12px;
+    .status-view-tag {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    .auth-banner {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+    .auth-banner.unlocked {
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+      color: #065f46;
+    }
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-box {
+      background: #fff;
+      padding: 24px;
+      border-radius: 12px;
+      max-width: 320px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
     .pin-input {
-      font-size: 24px;
-      letter-spacing: 8px;
+      font-size: 22px;
+      letter-spacing: 6px;
       text-align: center;
-      width: 180px;
-      padding: 12px;
-      margin: 16px auto;
+      width: 160px;
+      padding: 10px;
+      margin: 14px auto;
       display: block;
-      border: 2px solid var(--line);
-      border-radius: 12px;
-      font-family: monospace;
-    }
-    .pin-input:focus {
-      outline: none;
-      border-color: var(--accent);
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
     }
     .pin-error {
-      color: #d92d20;
-      font-size: 13px;
-      margin-top: 8px;
-      min-height: 18px;
+      color: #dc2626;
+      font-size: 12px;
+      margin-top: 6px;
+      min-height: 16px;
     }
+    .edit-mode-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .mode-view { background: #f1f5f9; color: #475569; }
+    .mode-edit { background: #dcfce7; color: #166534; }
   </style>
 </head>
 <body>
   <header class="topbar">
     <div>
       <div class="eyebrow">SOCIO-O-THON</div>
-      <h1>Participant Record</h1>
+      <h1>Participant Details</h1>
     </div>
-    <a class="home-link" href="index.html">All Participants</a>
+    <nav style="display:flex; gap:10px; align-items:center;">
+      <a class="home-link" href="sheet-view.html">📊 Live Sheet</a>
+      <a class="home-link" href="print-cards.html">🖨️ Badges</a>
+      <a class="home-link" href="index.html">Dashboard</a>
+    </nav>
   </header>
 
   <main class="container narrow">
-    <!-- Security Lock Panel -->
-    <div id="lockPanel" class="panel lock-screen">
-      <div class="lock-icon">🔒</div>
-      <h2>Organizer Access Only</h2>
-      <p class="muted">Enter your Admin PIN to view and update this participant's checklist.</p>
-      
-      <form id="pinForm" onsubmit="event.preventDefault(); submitPin();">
-        <input 
-          type="password" 
-          id="pinInput" 
-          class="pin-input" 
-          inputmode="numeric" 
-          pattern="[0-9]*" 
-          maxlength="8" 
-          placeholder="••••" 
-          autocomplete="off"
-          autofocus 
-        />
-        <button class="button" type="submit" style="width: 180px;">Unlock</button>
-      </form>
-      <div id="pinError" class="pin-error"></div>
-    </div>
-
     <!-- Participant Not Found Panel -->
     <div id="notFound" class="panel hidden">
-      <h2>Participant not found</h2>
-      <p>Check the QR code or participant ID.</p>
+      <h2>Participant Not Found</h2>
+      <p>Please check the participant ID or QR code.</p>
       <a class="button" href="index.html">Return to dashboard</a>
     </div>
 
-    <!-- Protected Participant Checklist Panel -->
-    <section id="participantPanel" class="panel hidden">
+    <!-- Participant Details & Status Panel (Instant Open, No Password to View) -->
+    <section id="participantPanel" class="panel">
+      <!-- Organizer Mode Banner -->
+      <div class="auth-banner" id="authBanner">
+        <span id="authStatusText">👁️ Viewing Mode (Public)</span>
+        <button id="unlockBtn" class="button small secondary" type="button" style="padding:4px 10px; font-size:12px;">🔒 Organizer Login</button>
+      </div>
+
       <div class="participant-heading">
         <div>
           <p class="eyebrow">PARTICIPANT ID</p>
-          <h2 id="participantId"></h2>
-          <p id="participantName" class="muted"></p>
+          <h2 id="participantId">...</h2>
+          <p id="participantName" class="muted" style="font-size:17px; margin-top:2px;"></p>
+          <div id="participantTeam" class="team-badge hidden"></div>
         </div>
         <div id="statusBadge" class="badge">0 / 3 completed</div>
       </div>
 
       <div class="checklist">
         <label class="check-row">
-          <input type="checkbox" id="kit" />
+          <input type="checkbox" id="kit" disabled />
           <span>
             <strong>Kit received</strong>
-            <small>Mark when the participant has received their kit.</small>
+            <small>Mark when kit has been handed over.</small>
           </span>
         </label>
 
         <label class="check-row">
-          <input type="checkbox" id="accommodation" />
+          <input type="checkbox" id="accommodation" disabled />
           <span>
             <strong>Accommodation</strong>
-            <small>Mark when accommodation has been assigned/confirmed.</small>
+            <small>Mark when accommodation is assigned/confirmed.</small>
           </span>
         </label>
 
         <label class="check-row">
-          <input type="checkbox" id="food" />
+          <input type="checkbox" id="food" disabled />
           <span>
             <strong>Food</strong>
-            <small>Mark when the food arrangement is completed.</small>
+            <small>Mark when food arrangement is completed.</small>
           </span>
         </label>
       </div>
 
-      <div class="actions">
-        <a class="button secondary" href="index.html">← Dashboard</a>
-        <button class="button" id="saveButton" type="button">Save status</button>
+      <div class="actions" style="margin-top:20px;">
+        <a class="button secondary" href="index.html">← Back</a>
+        <button class="button" id="editStatusBtn" type="button">✏️ Edit Status</button>
+        <button class="button hidden" id="saveButton" type="button" style="background:#059669;">💾 Save & Sync to Sheet</button>
       </div>
 
       <p id="saveMessage" class="save-message"></p>
     </section>
   </main>
+
+  <!-- Password Prompt Modal (Only shown when clicking Edit) -->
+  <div id="pinModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3>🔒 Organizer Verification</h3>
+      <p style="font-size:13px; color:#64748b; margin:6px 0 12px;">Enter your Admin PIN to make changes to this participant's status.</p>
+      <input type="password" id="modalPinInput" class="pin-input" inputmode="numeric" maxlength="8" placeholder="••••" />
+      <div id="modalPinError" class="pin-error"></div>
+      <div style="display:flex; gap:8px; justify-content:center; margin-top:10px;">
+        <button class="button secondary small" id="cancelPinBtn" type="button">Cancel</button>
+        <button class="button small" id="submitPinBtn" type="button">Verify & Edit</button>
+      </div>
+    </div>
+  </div>
 
   <script src="participant.js"></script>
 </body>
