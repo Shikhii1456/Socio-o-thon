@@ -5,7 +5,7 @@ const ADMIN_PIN = "1234";
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1_l9WvZ9ZJzhhij0QR0IRe388gP2lt-RNctH2qeErW9U/export?format=csv";
 const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw7p21WbHuWVn3iclq8PUCjpfDZrCXQEkpZMuV8TruuZtNcIJjzU1zw5hNEiVtJqUVg/exec";
 
-const LOCAL_STORAGE_KEY = "socioOthon_participants_v3";
+const LOCAL_STORAGE_KEY = "socioOthon_participants_v4";
 const AUTH_KEY = "socioOthon_admin_auth";
 
 // Extract participant ID from query param (?id=SOT001) or path (/p/SOT001)
@@ -50,7 +50,6 @@ function setEditModeEnabled(enabled) {
   const nameEdit = document.getElementById("nameEditContainer");
   const editIdInput = document.getElementById("editParticipantIdInput");
   const editNameInput = document.getElementById("editParticipantNameInput");
-  const editTeamInput = document.getElementById("editParticipantTeamInput");
 
   if (enabled) {
     editStatusBtn.classList.add("hidden");
@@ -70,7 +69,6 @@ function setEditModeEnabled(enabled) {
       nameView.classList.add("hidden");
       nameEdit.classList.remove("hidden");
       if (editNameInput) editNameInput.value = currentParticipant.name;
-      if (editTeamInput) editTeamInput.value = currentParticipant.team || "";
     }
   } else {
     editStatusBtn.classList.remove("hidden");
@@ -162,8 +160,7 @@ function parseParticipantsFromCSV(csvText) {
   const headers = rows[0].map(h => h.trim());
   const idCol = headers.findIndex(h => /participant\s*id/i.test(h));
   const nameCol = headers.findIndex(h => /^name$/i.test(h));
-  const teamCol = headers.findIndex(h => /team/i.test(h));
-  const kitCol = headers.findIndex(h => /kit/i.test(h));
+    const kitCol = headers.findIndex(h => /kit/i.test(h));
   const accCol = headers.findIndex(h => /accommodation/i.test(h));
   const foodCol = headers.findIndex(h => /food/i.test(h));
 
@@ -174,8 +171,7 @@ function parseParticipantsFromCSV(csvText) {
     if (!rawId) continue;
     const id = rawId.toUpperCase();
     const name = (nameCol !== -1 && r[nameCol]) ? r[nameCol].trim() : (r[1] ? r[1].trim() : ("Participant " + id));
-    const team = (teamCol !== -1 && r[teamCol]) ? r[teamCol].trim() : (r[2] ? r[2].trim() : "");
-
+    
     const status = {
       kit: kitCol !== -1 ? isTruthy(r[kitCol]) : isTruthy(r[3]),
       accommodation: accCol !== -1 ? isTruthy(r[accCol]) : isTruthy(r[4]),
@@ -184,16 +180,16 @@ function parseParticipantsFromCSV(csvText) {
 
     const fields = {};
     for (let c = 0; c < headers.length; c++) {
-      if (c === idCol || c === nameCol || c === teamCol || c === kitCol || c === accCol || c === foodCol) continue;
+      if (c === idCol || c === nameCol || c === kitCol || c === accCol || c === foodCol) continue;
       const h = headers[c];
-      if (!h || /last\s*updated/i.test(h)) continue;
+      if (!h || /last\s*updated/i.test(h) || /team/i.test(h)) continue;
       const val = r[c] ? r[c].trim() : "";
       if (val) {
         fields[h] = val;
       }
     }
 
-    list.push({ id, name, team, status, fields });
+    list.push({ id, name, status, fields });
   }
   return list;
 }
@@ -277,7 +273,6 @@ async function fetchParticipants() {
   {
     "id": "SOT001",
     "name": "Purushottam sam sunder",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -291,7 +286,6 @@ async function fetchParticipants() {
   {
     "id": "SOT002",
     "name": "Rahul Pradhan",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -305,7 +299,6 @@ async function fetchParticipants() {
   {
     "id": "SOT003",
     "name": "NAGABATHULA SASIDHAR",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -319,7 +312,6 @@ async function fetchParticipants() {
   {
     "id": "SOT004",
     "name": "Sourya Sritam Sarangi",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -333,7 +325,6 @@ async function fetchParticipants() {
   {
     "id": "SOT005",
     "name": "Himanshu Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -347,7 +338,6 @@ async function fetchParticipants() {
   {
     "id": "SOT006",
     "name": "Jahnavi Chaurasia",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -361,7 +351,6 @@ async function fetchParticipants() {
   {
     "id": "SOT007",
     "name": "Umang Shankar Kishore",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -375,7 +364,6 @@ async function fetchParticipants() {
   {
     "id": "SOT008",
     "name": "Priyanshu Kumar Patel",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -389,7 +377,6 @@ async function fetchParticipants() {
   {
     "id": "SOT009",
     "name": "Atharva Singh Baghel",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -403,7 +390,6 @@ async function fetchParticipants() {
   {
     "id": "SOT010",
     "name": "Krishna Kumar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -417,7 +403,6 @@ async function fetchParticipants() {
   {
     "id": "SOT011",
     "name": "Bhanu Pratap Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -431,7 +416,6 @@ async function fetchParticipants() {
   {
     "id": "SOT012",
     "name": "Shankracharya Bharti",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -445,7 +429,6 @@ async function fetchParticipants() {
   {
     "id": "SOT013",
     "name": "Saumya Sharma",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -459,7 +442,6 @@ async function fetchParticipants() {
   {
     "id": "SOT014",
     "name": "Sumit Kumar Patel",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -473,7 +455,6 @@ async function fetchParticipants() {
   {
     "id": "SOT015",
     "name": "Bathula Sanoj",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -487,7 +468,6 @@ async function fetchParticipants() {
   {
     "id": "SOT016",
     "name": "M. Gireesh Vema Rao",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -501,7 +481,6 @@ async function fetchParticipants() {
   {
     "id": "SOT017",
     "name": "Suryansh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -515,7 +494,6 @@ async function fetchParticipants() {
   {
     "id": "SOT018",
     "name": "HIMANSHU PANDEY",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -529,7 +507,6 @@ async function fetchParticipants() {
   {
     "id": "SOT019",
     "name": "ANUSTHA SHARMA",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -543,7 +520,6 @@ async function fetchParticipants() {
   {
     "id": "SOT020",
     "name": "AKASH JOSHI",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -557,7 +533,6 @@ async function fetchParticipants() {
   {
     "id": "SOT021",
     "name": "Kashvee Mehta",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -571,7 +546,6 @@ async function fetchParticipants() {
   {
     "id": "SOT022",
     "name": "Utkarsh Kumar Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -585,7 +559,6 @@ async function fetchParticipants() {
   {
     "id": "SOT023",
     "name": "Tiwari Mayank",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -599,7 +572,6 @@ async function fetchParticipants() {
   {
     "id": "SOT024",
     "name": "Prativa Sahoo",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -613,7 +585,6 @@ async function fetchParticipants() {
   {
     "id": "SOT025",
     "name": "Abhijeet Kumar Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -627,7 +598,6 @@ async function fetchParticipants() {
   {
     "id": "SOT026",
     "name": "ISHIKA SINGH",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -641,7 +611,6 @@ async function fetchParticipants() {
   {
     "id": "SOT027",
     "name": "Aditya Gupta",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -655,7 +624,6 @@ async function fetchParticipants() {
   {
     "id": "SOT028",
     "name": "Ayush Mishra",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -669,7 +637,6 @@ async function fetchParticipants() {
   {
     "id": "SOT029",
     "name": "Alok Sahu",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -683,7 +650,6 @@ async function fetchParticipants() {
   {
     "id": "SOT030",
     "name": "SARTHAK AGRAWAL",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -697,7 +663,6 @@ async function fetchParticipants() {
   {
     "id": "SOT031",
     "name": "rudresh kumar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -711,7 +676,6 @@ async function fetchParticipants() {
   {
     "id": "SOT032",
     "name": "Pratik Kumar Yadav",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -725,7 +689,6 @@ async function fetchParticipants() {
   {
     "id": "SOT033",
     "name": "pranjal gautam",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -739,7 +702,6 @@ async function fetchParticipants() {
   {
     "id": "SOT034",
     "name": "Kartikey Agnihotri",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -753,7 +715,6 @@ async function fetchParticipants() {
   {
     "id": "SOT035",
     "name": "Kajal Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -767,7 +728,6 @@ async function fetchParticipants() {
   {
     "id": "SOT036",
     "name": "Avika Chauhan",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -781,7 +741,6 @@ async function fetchParticipants() {
   {
     "id": "SOT037",
     "name": "Vaibhavi Shukla",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -795,7 +754,6 @@ async function fetchParticipants() {
   {
     "id": "SOT038",
     "name": "Kalash Mishra",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -809,7 +767,6 @@ async function fetchParticipants() {
   {
     "id": "SOT039",
     "name": "Anirudh Mishra",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -823,7 +780,6 @@ async function fetchParticipants() {
   {
     "id": "SOT040",
     "name": "Aditya Dhanraj",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -837,7 +793,6 @@ async function fetchParticipants() {
   {
     "id": "SOT041",
     "name": "Priyanshi Maurya",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -851,7 +806,6 @@ async function fetchParticipants() {
   {
     "id": "SOT042",
     "name": "Nainshi Yadav",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -865,7 +819,6 @@ async function fetchParticipants() {
   {
     "id": "SOT043",
     "name": "Tushar Periwal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -879,7 +832,6 @@ async function fetchParticipants() {
   {
     "id": "SOT044",
     "name": "Dipesh Sikhwal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -893,7 +845,6 @@ async function fetchParticipants() {
   {
     "id": "SOT045",
     "name": "ADITYA RAJ",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -907,7 +858,6 @@ async function fetchParticipants() {
   {
     "id": "SOT046",
     "name": "KANISHK KRISHAN",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -921,7 +871,6 @@ async function fetchParticipants() {
   {
     "id": "SOT047",
     "name": "AYUSHMAAN KESARWANI",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -935,7 +884,6 @@ async function fetchParticipants() {
   {
     "id": "SOT048",
     "name": "SANDIHYA SATYA",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -949,7 +897,6 @@ async function fetchParticipants() {
   {
     "id": "SOT049",
     "name": "ADITYA SHARMA",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -963,7 +910,6 @@ async function fetchParticipants() {
   {
     "id": "SOT050",
     "name": "Vedika Bhatnagar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -977,7 +923,6 @@ async function fetchParticipants() {
   {
     "id": "SOT051",
     "name": "Divya Shahi",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -991,7 +936,6 @@ async function fetchParticipants() {
   {
     "id": "SOT052",
     "name": "Srishti Katiyar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1005,7 +949,6 @@ async function fetchParticipants() {
   {
     "id": "SOT053",
     "name": "garima negi",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1019,7 +962,6 @@ async function fetchParticipants() {
   {
     "id": "SOT054",
     "name": "B.Nanda kishore",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1033,7 +975,6 @@ async function fetchParticipants() {
   {
     "id": "SOT055",
     "name": "DOMMETI TEJA SRIVARDHAN",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1047,7 +988,6 @@ async function fetchParticipants() {
   {
     "id": "SOT056",
     "name": "YATHARTH SRIVASTAVA",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1061,7 +1001,6 @@ async function fetchParticipants() {
   {
     "id": "SOT057",
     "name": "Gitanjali",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1075,7 +1014,6 @@ async function fetchParticipants() {
   {
     "id": "SOT058",
     "name": "Tiyasa Kundu",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1089,7 +1027,6 @@ async function fetchParticipants() {
   {
     "id": "SOT059",
     "name": "Soumya Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1103,7 +1040,6 @@ async function fetchParticipants() {
   {
     "id": "SOT060",
     "name": "MADHURI KUMARI",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1117,7 +1053,6 @@ async function fetchParticipants() {
   {
     "id": "SOT061",
     "name": "Pranav Mahajan",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1131,7 +1066,6 @@ async function fetchParticipants() {
   {
     "id": "SOT062",
     "name": "Aryan Kushwaha",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1145,7 +1079,6 @@ async function fetchParticipants() {
   {
     "id": "SOT063",
     "name": "Devansh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1159,7 +1092,6 @@ async function fetchParticipants() {
   {
     "id": "SOT064",
     "name": "Kalavala Maneesh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1173,7 +1105,6 @@ async function fetchParticipants() {
   {
     "id": "SOT065",
     "name": "Prince Prajapati",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1187,7 +1118,6 @@ async function fetchParticipants() {
   {
     "id": "SOT066",
     "name": "Deepak Kumar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1201,7 +1131,6 @@ async function fetchParticipants() {
   {
     "id": "SOT067",
     "name": "P Darshit",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1215,7 +1144,6 @@ async function fetchParticipants() {
   {
     "id": "SOT068",
     "name": "Jaiditya Sinha",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1229,7 +1157,6 @@ async function fetchParticipants() {
   {
     "id": "SOT069",
     "name": "Sriwanth Reddy",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1243,7 +1170,6 @@ async function fetchParticipants() {
   {
     "id": "SOT070",
     "name": "Aditya Deshmukh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1257,7 +1183,6 @@ async function fetchParticipants() {
   {
     "id": "SOT071",
     "name": "Krishna Agrawal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1271,7 +1196,6 @@ async function fetchParticipants() {
   {
     "id": "SOT072",
     "name": "Nimish Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1285,7 +1209,6 @@ async function fetchParticipants() {
   {
     "id": "SOT073",
     "name": "Devesh Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1299,7 +1222,6 @@ async function fetchParticipants() {
   {
     "id": "SOT074",
     "name": "SANKALP",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1313,7 +1235,6 @@ async function fetchParticipants() {
   {
     "id": "SOT075",
     "name": "Vaibhav Nehra",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1327,7 +1248,6 @@ async function fetchParticipants() {
   {
     "id": "SOT076",
     "name": "Maittri Tripathi",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1341,7 +1261,6 @@ async function fetchParticipants() {
   {
     "id": "SOT077",
     "name": "Ayush Kumar Srivastava",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1355,7 +1274,6 @@ async function fetchParticipants() {
   {
     "id": "SOT078",
     "name": "Divyansh Ojha",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1369,7 +1287,6 @@ async function fetchParticipants() {
   {
     "id": "SOT079",
     "name": "Amber Pal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1383,7 +1300,6 @@ async function fetchParticipants() {
   {
     "id": "SOT080",
     "name": "Nilim Choudhury",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1397,7 +1313,6 @@ async function fetchParticipants() {
   {
     "id": "SOT081",
     "name": "Disha Agarwal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1411,7 +1326,6 @@ async function fetchParticipants() {
   {
     "id": "SOT082",
     "name": "Aman Raj",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1425,7 +1339,6 @@ async function fetchParticipants() {
   {
     "id": "SOT083",
     "name": "Monali Tiwari",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1439,7 +1352,6 @@ async function fetchParticipants() {
   {
     "id": "SOT084",
     "name": "Prajukta Jana",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1452,7 +1364,6 @@ async function fetchParticipants() {
   {
     "id": "SOT085",
     "name": "Dipti Kumari",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1465,7 +1376,6 @@ async function fetchParticipants() {
   {
     "id": "SOT086",
     "name": "Dimpy Bhattacharjee",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1478,7 +1388,6 @@ async function fetchParticipants() {
   {
     "id": "SOT087",
     "name": "Shikhar Gupta",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1492,7 +1401,6 @@ async function fetchParticipants() {
   {
     "id": "SOT088",
     "name": "Dev Jangid",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1505,7 +1413,6 @@ async function fetchParticipants() {
   {
     "id": "SOT089",
     "name": "Chirantan Toley",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1518,7 +1425,6 @@ async function fetchParticipants() {
   {
     "id": "SOT090",
     "name": "Gourav Yadav",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1531,7 +1437,6 @@ async function fetchParticipants() {
   {
     "id": "SOT091",
     "name": "VISHWA P",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1545,7 +1450,6 @@ async function fetchParticipants() {
   {
     "id": "SOT092",
     "name": "SHAMYUKTHA S",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1559,7 +1463,6 @@ async function fetchParticipants() {
   {
     "id": "SOT093",
     "name": "NIRANJAN A M",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1573,7 +1476,6 @@ async function fetchParticipants() {
   {
     "id": "SOT094",
     "name": "SUHASHINI V A",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1587,7 +1489,6 @@ async function fetchParticipants() {
   {
     "id": "SOT095",
     "name": "Raghubir Rai",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1601,7 +1502,6 @@ async function fetchParticipants() {
   {
     "id": "SOT096",
     "name": "Ayush Kumar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1614,7 +1514,6 @@ async function fetchParticipants() {
   {
     "id": "SOT097",
     "name": "Anil Suthar N",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1627,7 +1526,6 @@ async function fetchParticipants() {
   {
     "id": "SOT098",
     "name": "Abhinav Jaiswal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1640,7 +1538,6 @@ async function fetchParticipants() {
   {
     "id": "SOT099",
     "name": "SIDDHARTH SINGH",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1654,7 +1551,6 @@ async function fetchParticipants() {
   {
     "id": "SOT100",
     "name": "Kratika Gupta",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1668,7 +1564,6 @@ async function fetchParticipants() {
   {
     "id": "SOT101",
     "name": "Swati Yadav",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1682,7 +1577,6 @@ async function fetchParticipants() {
   {
     "id": "SOT102",
     "name": "Rachit Aggarwal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1696,7 +1590,6 @@ async function fetchParticipants() {
   {
     "id": "SOT103",
     "name": "HITEN Bansal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1710,7 +1603,6 @@ async function fetchParticipants() {
   {
     "id": "SOT104",
     "name": "Aditya Pratap Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1724,7 +1616,6 @@ async function fetchParticipants() {
   {
     "id": "SOT105",
     "name": "Aditya Awasthi",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1738,7 +1629,6 @@ async function fetchParticipants() {
   {
     "id": "SOT106",
     "name": "Prashant Lavania",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1752,7 +1642,6 @@ async function fetchParticipants() {
   {
     "id": "SOT107",
     "name": "Dipak Kumar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1766,7 +1655,6 @@ async function fetchParticipants() {
   {
     "id": "SOT108",
     "name": "Sourya Sarangi",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1780,7 +1668,6 @@ async function fetchParticipants() {
   {
     "id": "SOT109",
     "name": "Rahul Pradhan",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1794,7 +1681,6 @@ async function fetchParticipants() {
   {
     "id": "SOT110",
     "name": "DIVYANSHU Raj Raj",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1808,7 +1694,6 @@ async function fetchParticipants() {
   {
     "id": "SOT111",
     "name": "Harshit Anand",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1822,7 +1707,6 @@ async function fetchParticipants() {
   {
     "id": "SOT112",
     "name": "Sana Arora",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1836,7 +1720,6 @@ async function fetchParticipants() {
   {
     "id": "SOT113",
     "name": "NIKHIL KUMAR GAUTAM",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1850,7 +1733,6 @@ async function fetchParticipants() {
   {
     "id": "SOT114",
     "name": "OMJEE OJHA",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1864,7 +1746,6 @@ async function fetchParticipants() {
   {
     "id": "SOT115",
     "name": "DIPAK OJHA",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1878,7 +1759,6 @@ async function fetchParticipants() {
   {
     "id": "SOT116",
     "name": "ANANYA PANDEY",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1892,7 +1772,6 @@ async function fetchParticipants() {
   {
     "id": "SOT117",
     "name": "RUDRANSH MISHRA",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1906,7 +1785,6 @@ async function fetchParticipants() {
   {
     "id": "SOT118",
     "name": "Saumya Ganeshe",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1920,7 +1798,6 @@ async function fetchParticipants() {
   {
     "id": "SOT119",
     "name": "Riya Chaudhary",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1934,7 +1811,6 @@ async function fetchParticipants() {
   {
     "id": "SOT120",
     "name": "ABHISHEK kumar kumar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1948,7 +1824,6 @@ async function fetchParticipants() {
   {
     "id": "SOT121",
     "name": "Narendra Girjaram Bambarde",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1962,7 +1837,6 @@ async function fetchParticipants() {
   {
     "id": "SOT122",
     "name": "SREEHARINARAYANAN v s",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1976,7 +1850,6 @@ async function fetchParticipants() {
   {
     "id": "SOT123",
     "name": "Priyal Shende",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1990,7 +1863,6 @@ async function fetchParticipants() {
   {
     "id": "SOT124",
     "name": "Karan Gupta",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -2004,7 +1876,6 @@ async function fetchParticipants() {
   {
     "id": "SOT125",
     "name": "Akanksha Yadav",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -2018,7 +1889,6 @@ async function fetchParticipants() {
   {
     "id": "SOT126",
     "name": "Himmat Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -2032,7 +1902,6 @@ async function fetchParticipants() {
   {
     "id": "SOT127",
     "name": "NILOY SAMADDER",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -2060,8 +1929,7 @@ async function syncToGoogleSheet(participant, newStatus, fields) {
         action: "sync_status",
         id: participant.id,
         name: participant.name,
-        team: participant.team || "",
-        status: newStatus,
+                status: newStatus,
         fields: fields || {}
       })
     });
@@ -2283,16 +2151,6 @@ async function loadParticipant() {
   const nameEl = document.getElementById("participantName");
   if (nameEl) nameEl.textContent = currentParticipant.name;
 
-  const teamEl = document.getElementById("participantTeam");
-  if (teamEl) {
-    if (currentParticipant.team) {
-      teamEl.textContent = `Team: ${currentParticipant.team}`;
-      teamEl.classList.remove("hidden");
-    } else {
-      teamEl.classList.add("hidden");
-    }
-  }
-
   setEditModeEnabled(isOrganizerAuthenticated());
 }
 
@@ -2340,10 +2198,9 @@ saveButton.addEventListener("click", async () => {
   });
   currentParticipant.fields = updatedFields;
 
-  // Collect edited Name, ID, Team if in organizer mode
+  // Collect edited Name, ID if in organizer mode
   const editIdInput = document.getElementById("editParticipantIdInput");
   const editNameInput = document.getElementById("editParticipantNameInput");
-  const editTeamInput = document.getElementById("editParticipantTeamInput");
   const oldId = currentParticipant.id;
 
   if (editNameInput && editNameInput.value.trim()) {
@@ -2351,9 +2208,6 @@ saveButton.addEventListener("click", async () => {
   }
   if (editIdInput && editIdInput.value.trim()) {
     currentParticipant.id = editIdInput.value.trim().toUpperCase();
-  }
-  if (editTeamInput) {
-    currentParticipant.team = editTeamInput.value.trim();
   }
 
   // 1. Save to local storage cache immediately
@@ -2374,15 +2228,6 @@ saveButton.addEventListener("click", async () => {
   if (idEl) idEl.textContent = currentParticipant.id;
   const nameEl = document.getElementById("participantName");
   if (nameEl) nameEl.textContent = currentParticipant.name;
-  const teamEl = document.getElementById("participantTeam");
-  if (teamEl) {
-    if (currentParticipant.team) {
-      teamEl.textContent = `Team: ${currentParticipant.team}`;
-      teamEl.classList.remove("hidden");
-    } else {
-      teamEl.classList.add("hidden");
-    }
-  }
 
   // Update browser URL bar seamlessly if ID changed so refreshing page doesn't break
   if (currentParticipant.id !== oldId) {

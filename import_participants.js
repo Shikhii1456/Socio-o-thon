@@ -80,7 +80,6 @@ async function run() {
     const emailCol = headers.findIndex(h => /email|mail|e-mail/i.test(h));
     const contactCol = headers.findIndex(h => /contact|phone|mobile|whatsapp|number/i.test(h));
     const idCol = headers.findIndex(h => /^(participant\s*id|id|sot\s*id)$/i.test(h));
-    const teamCol = headers.findIndex(h => /team/i.test(h));
 
     console.log(`Detected columns -> Name: [Col ${nameCol}], Email: [Col ${emailCol}], Contact: [Col ${contactCol}], Team: [Col ${teamCol}], ID: [Col ${idCol}]`);
 
@@ -92,7 +91,6 @@ async function run() {
       const rawName = nameCol !== -1 && row[nameCol] ? row[nameCol].trim() : '';
       const rawEmail = emailCol !== -1 && row[emailCol] ? row[emailCol].trim() : '';
       const rawContact = contactCol !== -1 && row[contactCol] ? row[contactCol].trim() : '';
-      const rawTeam = teamCol !== -1 && row[teamCol] ? row[teamCol].trim() : '';
 
       if (!rawName && !rawEmail && !rawContact) continue;
 
@@ -108,7 +106,6 @@ async function run() {
       participants.push({
         id: pid,
         name: rawName || `Participant ${pid}`,
-        team: rawTeam || '',
         status: {
           kit: false,
           accommodation: false,
@@ -141,7 +138,6 @@ async function run() {
             action: 'sync_status',
             id: p.id,
             name: p.name,
-            team: p.team || '',
             status: p.status,
             fields: p.fields
           })

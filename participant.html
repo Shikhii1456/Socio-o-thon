@@ -6,16 +6,6 @@
   <title>Participant | Socio-O-Thon</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    .team-badge {
-      display: inline-block;
-      background: #e0e7ff;
-      color: #3730a3;
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      margin-top: 4px;
-    }
     .auth-banner {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
@@ -163,11 +153,9 @@
 
           <div id="nameViewContainer" style="margin-top:6px;">
             <p id="participantName" class="muted" style="font-size:18px; font-weight:600; color:#1e293b; margin:0;"></p>
-            <div id="participantTeam" class="team-badge hidden"></div>
           </div>
-          <div id="nameEditContainer" class="hidden" style="margin-top:6px; display:flex; flex-direction:column; gap:6px;">
+          <div id="nameEditContainer" class="hidden" style="margin-top:6px;">
             <input type="text" id="editParticipantNameInput" placeholder="Participant Name" style="font-size:16px; font-weight:600; padding:6px 10px; border:2px solid #2563eb; border-radius:6px; width:220px;" />
-            <input type="text" id="editParticipantTeamInput" placeholder="Team ID (Optional)" style="font-size:14px; padding:4px 8px; border:1px solid #cbd5e1; border-radius:6px; width:200px;" />
           </div>
         </div>
         <div id="statusBadge" class="badge">0 / 3 completed</div>

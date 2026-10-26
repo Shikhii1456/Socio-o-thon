@@ -2,13 +2,12 @@
 const ADMIN_PIN = "1234";
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1_l9WvZ9ZJzhhij0QR0IRe388gP2lt-RNctH2qeErW9U/export?format=csv";
 const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw7p21WbHuWVn3iclq8PUCjpfDZrCXQEkpZMuV8TruuZtNcIJjzU1zw5hNEiVtJqUVg/exec";
-const LOCAL_STORAGE_KEY = "socioOthon_participants_v3";
+const LOCAL_STORAGE_KEY = "socioOthon_participants_v4";
 
 const defaultSeed = [
   {
     "id": "SOT001",
     "name": "Purushottam sam sunder",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -22,7 +21,6 @@ const defaultSeed = [
   {
     "id": "SOT002",
     "name": "Rahul Pradhan",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -36,7 +34,6 @@ const defaultSeed = [
   {
     "id": "SOT003",
     "name": "NAGABATHULA SASIDHAR",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -50,7 +47,6 @@ const defaultSeed = [
   {
     "id": "SOT004",
     "name": "Sourya Sritam Sarangi",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -64,7 +60,6 @@ const defaultSeed = [
   {
     "id": "SOT005",
     "name": "Himanshu Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -78,7 +73,6 @@ const defaultSeed = [
   {
     "id": "SOT006",
     "name": "Jahnavi Chaurasia",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -92,7 +86,6 @@ const defaultSeed = [
   {
     "id": "SOT007",
     "name": "Umang Shankar Kishore",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -106,7 +99,6 @@ const defaultSeed = [
   {
     "id": "SOT008",
     "name": "Priyanshu Kumar Patel",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -120,7 +112,6 @@ const defaultSeed = [
   {
     "id": "SOT009",
     "name": "Atharva Singh Baghel",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -134,7 +125,6 @@ const defaultSeed = [
   {
     "id": "SOT010",
     "name": "Krishna Kumar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -148,7 +138,6 @@ const defaultSeed = [
   {
     "id": "SOT011",
     "name": "Bhanu Pratap Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -162,7 +151,6 @@ const defaultSeed = [
   {
     "id": "SOT012",
     "name": "Shankracharya Bharti",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -176,7 +164,6 @@ const defaultSeed = [
   {
     "id": "SOT013",
     "name": "Saumya Sharma",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -190,7 +177,6 @@ const defaultSeed = [
   {
     "id": "SOT014",
     "name": "Sumit Kumar Patel",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -204,7 +190,6 @@ const defaultSeed = [
   {
     "id": "SOT015",
     "name": "Bathula Sanoj",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -218,7 +203,6 @@ const defaultSeed = [
   {
     "id": "SOT016",
     "name": "M. Gireesh Vema Rao",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -232,7 +216,6 @@ const defaultSeed = [
   {
     "id": "SOT017",
     "name": "Suryansh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -246,7 +229,6 @@ const defaultSeed = [
   {
     "id": "SOT018",
     "name": "HIMANSHU PANDEY",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -260,7 +242,6 @@ const defaultSeed = [
   {
     "id": "SOT019",
     "name": "ANUSTHA SHARMA",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -274,7 +255,6 @@ const defaultSeed = [
   {
     "id": "SOT020",
     "name": "AKASH JOSHI",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -288,7 +268,6 @@ const defaultSeed = [
   {
     "id": "SOT021",
     "name": "Kashvee Mehta",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -302,7 +281,6 @@ const defaultSeed = [
   {
     "id": "SOT022",
     "name": "Utkarsh Kumar Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -316,7 +294,6 @@ const defaultSeed = [
   {
     "id": "SOT023",
     "name": "Tiwari Mayank",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -330,7 +307,6 @@ const defaultSeed = [
   {
     "id": "SOT024",
     "name": "Prativa Sahoo",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -344,7 +320,6 @@ const defaultSeed = [
   {
     "id": "SOT025",
     "name": "Abhijeet Kumar Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -358,7 +333,6 @@ const defaultSeed = [
   {
     "id": "SOT026",
     "name": "ISHIKA SINGH",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -372,7 +346,6 @@ const defaultSeed = [
   {
     "id": "SOT027",
     "name": "Aditya Gupta",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -386,7 +359,6 @@ const defaultSeed = [
   {
     "id": "SOT028",
     "name": "Ayush Mishra",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -400,7 +372,6 @@ const defaultSeed = [
   {
     "id": "SOT029",
     "name": "Alok Sahu",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -414,7 +385,6 @@ const defaultSeed = [
   {
     "id": "SOT030",
     "name": "SARTHAK AGRAWAL",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -428,7 +398,6 @@ const defaultSeed = [
   {
     "id": "SOT031",
     "name": "rudresh kumar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -442,7 +411,6 @@ const defaultSeed = [
   {
     "id": "SOT032",
     "name": "Pratik Kumar Yadav",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -456,7 +424,6 @@ const defaultSeed = [
   {
     "id": "SOT033",
     "name": "pranjal gautam",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -470,7 +437,6 @@ const defaultSeed = [
   {
     "id": "SOT034",
     "name": "Kartikey Agnihotri",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -484,7 +450,6 @@ const defaultSeed = [
   {
     "id": "SOT035",
     "name": "Kajal Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -498,7 +463,6 @@ const defaultSeed = [
   {
     "id": "SOT036",
     "name": "Avika Chauhan",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -512,7 +476,6 @@ const defaultSeed = [
   {
     "id": "SOT037",
     "name": "Vaibhavi Shukla",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -526,7 +489,6 @@ const defaultSeed = [
   {
     "id": "SOT038",
     "name": "Kalash Mishra",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -540,7 +502,6 @@ const defaultSeed = [
   {
     "id": "SOT039",
     "name": "Anirudh Mishra",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -554,7 +515,6 @@ const defaultSeed = [
   {
     "id": "SOT040",
     "name": "Aditya Dhanraj",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -568,7 +528,6 @@ const defaultSeed = [
   {
     "id": "SOT041",
     "name": "Priyanshi Maurya",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -582,7 +541,6 @@ const defaultSeed = [
   {
     "id": "SOT042",
     "name": "Nainshi Yadav",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -596,7 +554,6 @@ const defaultSeed = [
   {
     "id": "SOT043",
     "name": "Tushar Periwal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -610,7 +567,6 @@ const defaultSeed = [
   {
     "id": "SOT044",
     "name": "Dipesh Sikhwal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -624,7 +580,6 @@ const defaultSeed = [
   {
     "id": "SOT045",
     "name": "ADITYA RAJ",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -638,7 +593,6 @@ const defaultSeed = [
   {
     "id": "SOT046",
     "name": "KANISHK KRISHAN",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -652,7 +606,6 @@ const defaultSeed = [
   {
     "id": "SOT047",
     "name": "AYUSHMAAN KESARWANI",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -666,7 +619,6 @@ const defaultSeed = [
   {
     "id": "SOT048",
     "name": "SANDIHYA SATYA",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -680,7 +632,6 @@ const defaultSeed = [
   {
     "id": "SOT049",
     "name": "ADITYA SHARMA",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -694,7 +645,6 @@ const defaultSeed = [
   {
     "id": "SOT050",
     "name": "Vedika Bhatnagar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -708,7 +658,6 @@ const defaultSeed = [
   {
     "id": "SOT051",
     "name": "Divya Shahi",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -722,7 +671,6 @@ const defaultSeed = [
   {
     "id": "SOT052",
     "name": "Srishti Katiyar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -736,7 +684,6 @@ const defaultSeed = [
   {
     "id": "SOT053",
     "name": "garima negi",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -750,7 +697,6 @@ const defaultSeed = [
   {
     "id": "SOT054",
     "name": "B.Nanda kishore",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -764,7 +710,6 @@ const defaultSeed = [
   {
     "id": "SOT055",
     "name": "DOMMETI TEJA SRIVARDHAN",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -778,7 +723,6 @@ const defaultSeed = [
   {
     "id": "SOT056",
     "name": "YATHARTH SRIVASTAVA",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -792,7 +736,6 @@ const defaultSeed = [
   {
     "id": "SOT057",
     "name": "Gitanjali",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -806,7 +749,6 @@ const defaultSeed = [
   {
     "id": "SOT058",
     "name": "Tiyasa Kundu",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -820,7 +762,6 @@ const defaultSeed = [
   {
     "id": "SOT059",
     "name": "Soumya Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -834,7 +775,6 @@ const defaultSeed = [
   {
     "id": "SOT060",
     "name": "MADHURI KUMARI",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -848,7 +788,6 @@ const defaultSeed = [
   {
     "id": "SOT061",
     "name": "Pranav Mahajan",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -862,7 +801,6 @@ const defaultSeed = [
   {
     "id": "SOT062",
     "name": "Aryan Kushwaha",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -876,7 +814,6 @@ const defaultSeed = [
   {
     "id": "SOT063",
     "name": "Devansh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -890,7 +827,6 @@ const defaultSeed = [
   {
     "id": "SOT064",
     "name": "Kalavala Maneesh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -904,7 +840,6 @@ const defaultSeed = [
   {
     "id": "SOT065",
     "name": "Prince Prajapati",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -918,7 +853,6 @@ const defaultSeed = [
   {
     "id": "SOT066",
     "name": "Deepak Kumar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -932,7 +866,6 @@ const defaultSeed = [
   {
     "id": "SOT067",
     "name": "P Darshit",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -946,7 +879,6 @@ const defaultSeed = [
   {
     "id": "SOT068",
     "name": "Jaiditya Sinha",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -960,7 +892,6 @@ const defaultSeed = [
   {
     "id": "SOT069",
     "name": "Sriwanth Reddy",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -974,7 +905,6 @@ const defaultSeed = [
   {
     "id": "SOT070",
     "name": "Aditya Deshmukh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -988,7 +918,6 @@ const defaultSeed = [
   {
     "id": "SOT071",
     "name": "Krishna Agrawal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1002,7 +931,6 @@ const defaultSeed = [
   {
     "id": "SOT072",
     "name": "Nimish Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1016,7 +944,6 @@ const defaultSeed = [
   {
     "id": "SOT073",
     "name": "Devesh Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1030,7 +957,6 @@ const defaultSeed = [
   {
     "id": "SOT074",
     "name": "SANKALP",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1044,7 +970,6 @@ const defaultSeed = [
   {
     "id": "SOT075",
     "name": "Vaibhav Nehra",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1058,7 +983,6 @@ const defaultSeed = [
   {
     "id": "SOT076",
     "name": "Maittri Tripathi",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1072,7 +996,6 @@ const defaultSeed = [
   {
     "id": "SOT077",
     "name": "Ayush Kumar Srivastava",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1086,7 +1009,6 @@ const defaultSeed = [
   {
     "id": "SOT078",
     "name": "Divyansh Ojha",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1100,7 +1022,6 @@ const defaultSeed = [
   {
     "id": "SOT079",
     "name": "Amber Pal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1114,7 +1035,6 @@ const defaultSeed = [
   {
     "id": "SOT080",
     "name": "Nilim Choudhury",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1128,7 +1048,6 @@ const defaultSeed = [
   {
     "id": "SOT081",
     "name": "Disha Agarwal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1142,7 +1061,6 @@ const defaultSeed = [
   {
     "id": "SOT082",
     "name": "Aman Raj",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1156,7 +1074,6 @@ const defaultSeed = [
   {
     "id": "SOT083",
     "name": "Monali Tiwari",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1170,7 +1087,6 @@ const defaultSeed = [
   {
     "id": "SOT084",
     "name": "Prajukta Jana",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1183,7 +1099,6 @@ const defaultSeed = [
   {
     "id": "SOT085",
     "name": "Dipti Kumari",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1196,7 +1111,6 @@ const defaultSeed = [
   {
     "id": "SOT086",
     "name": "Dimpy Bhattacharjee",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1209,7 +1123,6 @@ const defaultSeed = [
   {
     "id": "SOT087",
     "name": "Shikhar Gupta",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1223,7 +1136,6 @@ const defaultSeed = [
   {
     "id": "SOT088",
     "name": "Dev Jangid",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1236,7 +1148,6 @@ const defaultSeed = [
   {
     "id": "SOT089",
     "name": "Chirantan Toley",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1249,7 +1160,6 @@ const defaultSeed = [
   {
     "id": "SOT090",
     "name": "Gourav Yadav",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1262,7 +1172,6 @@ const defaultSeed = [
   {
     "id": "SOT091",
     "name": "VISHWA P",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1276,7 +1185,6 @@ const defaultSeed = [
   {
     "id": "SOT092",
     "name": "SHAMYUKTHA S",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1290,7 +1198,6 @@ const defaultSeed = [
   {
     "id": "SOT093",
     "name": "NIRANJAN A M",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1304,7 +1211,6 @@ const defaultSeed = [
   {
     "id": "SOT094",
     "name": "SUHASHINI V A",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1318,7 +1224,6 @@ const defaultSeed = [
   {
     "id": "SOT095",
     "name": "Raghubir Rai",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1332,7 +1237,6 @@ const defaultSeed = [
   {
     "id": "SOT096",
     "name": "Ayush Kumar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1345,7 +1249,6 @@ const defaultSeed = [
   {
     "id": "SOT097",
     "name": "Anil Suthar N",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1358,7 +1261,6 @@ const defaultSeed = [
   {
     "id": "SOT098",
     "name": "Abhinav Jaiswal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1371,7 +1273,6 @@ const defaultSeed = [
   {
     "id": "SOT099",
     "name": "SIDDHARTH SINGH",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1385,7 +1286,6 @@ const defaultSeed = [
   {
     "id": "SOT100",
     "name": "Kratika Gupta",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1399,7 +1299,6 @@ const defaultSeed = [
   {
     "id": "SOT101",
     "name": "Swati Yadav",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1413,7 +1312,6 @@ const defaultSeed = [
   {
     "id": "SOT102",
     "name": "Rachit Aggarwal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1427,7 +1325,6 @@ const defaultSeed = [
   {
     "id": "SOT103",
     "name": "HITEN Bansal",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1441,7 +1338,6 @@ const defaultSeed = [
   {
     "id": "SOT104",
     "name": "Aditya Pratap Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1455,7 +1351,6 @@ const defaultSeed = [
   {
     "id": "SOT105",
     "name": "Aditya Awasthi",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1469,7 +1364,6 @@ const defaultSeed = [
   {
     "id": "SOT106",
     "name": "Prashant Lavania",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1483,7 +1377,6 @@ const defaultSeed = [
   {
     "id": "SOT107",
     "name": "Dipak Kumar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1497,7 +1390,6 @@ const defaultSeed = [
   {
     "id": "SOT108",
     "name": "Sourya Sarangi",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1511,7 +1403,6 @@ const defaultSeed = [
   {
     "id": "SOT109",
     "name": "Rahul Pradhan",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1525,7 +1416,6 @@ const defaultSeed = [
   {
     "id": "SOT110",
     "name": "DIVYANSHU Raj Raj",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1539,7 +1429,6 @@ const defaultSeed = [
   {
     "id": "SOT111",
     "name": "Harshit Anand",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1553,7 +1442,6 @@ const defaultSeed = [
   {
     "id": "SOT112",
     "name": "Sana Arora",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1567,7 +1455,6 @@ const defaultSeed = [
   {
     "id": "SOT113",
     "name": "NIKHIL KUMAR GAUTAM",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1581,7 +1468,6 @@ const defaultSeed = [
   {
     "id": "SOT114",
     "name": "OMJEE OJHA",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1595,7 +1481,6 @@ const defaultSeed = [
   {
     "id": "SOT115",
     "name": "DIPAK OJHA",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1609,7 +1494,6 @@ const defaultSeed = [
   {
     "id": "SOT116",
     "name": "ANANYA PANDEY",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1623,7 +1507,6 @@ const defaultSeed = [
   {
     "id": "SOT117",
     "name": "RUDRANSH MISHRA",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1637,7 +1520,6 @@ const defaultSeed = [
   {
     "id": "SOT118",
     "name": "Saumya Ganeshe",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1651,7 +1533,6 @@ const defaultSeed = [
   {
     "id": "SOT119",
     "name": "Riya Chaudhary",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1665,7 +1546,6 @@ const defaultSeed = [
   {
     "id": "SOT120",
     "name": "ABHISHEK kumar kumar",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1679,7 +1559,6 @@ const defaultSeed = [
   {
     "id": "SOT121",
     "name": "Narendra Girjaram Bambarde",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1693,7 +1572,6 @@ const defaultSeed = [
   {
     "id": "SOT122",
     "name": "SREEHARINARAYANAN v s",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1707,7 +1585,6 @@ const defaultSeed = [
   {
     "id": "SOT123",
     "name": "Priyal Shende",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1721,7 +1598,6 @@ const defaultSeed = [
   {
     "id": "SOT124",
     "name": "Karan Gupta",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1735,7 +1611,6 @@ const defaultSeed = [
   {
     "id": "SOT125",
     "name": "Akanksha Yadav",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1749,7 +1624,6 @@ const defaultSeed = [
   {
     "id": "SOT126",
     "name": "Himmat Singh",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1763,7 +1637,6 @@ const defaultSeed = [
   {
     "id": "SOT127",
     "name": "NILOY SAMADDER",
-    "team": "",
     "status": {
       "kit": false,
       "accommodation": false,
@@ -1830,8 +1703,7 @@ function parseParticipantsFromCSV(csvText) {
   const headers = rows[0].map(h => h.trim());
   const idCol = headers.findIndex(h => /participant\s*id/i.test(h));
   const nameCol = headers.findIndex(h => /^name$/i.test(h));
-  const teamCol = headers.findIndex(h => /team/i.test(h));
-  const kitCol = headers.findIndex(h => /kit/i.test(h));
+    const kitCol = headers.findIndex(h => /kit/i.test(h));
   const accCol = headers.findIndex(h => /accommodation/i.test(h));
   const foodCol = headers.findIndex(h => /food/i.test(h));
 
@@ -1842,8 +1714,7 @@ function parseParticipantsFromCSV(csvText) {
     if (!rawId) continue;
     const id = rawId.toUpperCase();
     const name = (nameCol !== -1 && r[nameCol]) ? r[nameCol].trim() : (r[1] ? r[1].trim() : ("Participant " + id));
-    const team = (teamCol !== -1 && r[teamCol]) ? r[teamCol].trim() : (r[2] ? r[2].trim() : "");
-
+    
     const status = {
       kit: kitCol !== -1 ? isTruthy(r[kitCol]) : isTruthy(r[3]),
       accommodation: accCol !== -1 ? isTruthy(r[accCol]) : isTruthy(r[4]),
@@ -1852,16 +1723,16 @@ function parseParticipantsFromCSV(csvText) {
 
     const fields = {};
     for (let c = 0; c < headers.length; c++) {
-      if (c === idCol || c === nameCol || c === teamCol || c === kitCol || c === accCol || c === foodCol) continue;
+      if (c === idCol || c === nameCol || c === kitCol || c === accCol || c === foodCol) continue;
       const h = headers[c];
-      if (!h || /last\s*updated/i.test(h)) continue;
+      if (!h || /last\s*updated/i.test(h) || /team/i.test(h)) continue;
       const val = r[c] ? r[c].trim() : "";
       if (val) {
         fields[h] = val;
       }
     }
 
-    list.push({ id, name, team, status, fields });
+    list.push({ id, name, status, fields });
   }
   return list;
 }
@@ -1876,8 +1747,7 @@ async function syncParticipantToGoogleSheet(p) {
         action: "sync_status",
         id: p.id,
         name: p.name,
-        team: p.team || "",
-        status: p.status || {},
+                status: p.status || {},
         fields: p.fields || {}
       })
     });
@@ -1973,14 +1843,13 @@ async function getParticipants() {
   return await fetchParticipantsFromCloud();
 }
 
-async function addParticipant(id, name, team) {
+async function addParticipant(id, name) {
   const list = await fetchParticipantsFromCloud();
   const existing = list.find(p => p.id.toUpperCase() === id.toUpperCase());
   if (!existing) {
     recordState(list);
     const newParticipant = {
       id: id.toUpperCase(),
-      team: team || "Team 1",
       name: name || `Participant ${id.toUpperCase()}`,
       status: { kit: false, accommodation: false, food: false },
       fields: {}
@@ -1992,7 +1861,7 @@ async function addParticipant(id, name, team) {
   return { ok: true };
 }
 
-async function updateParticipantInfo(oldId, newId, newName, newTeam) {
+async function updateParticipantInfo(oldId, newId, newName) {
   const list = await fetchParticipantsFromCloud();
   const target = list.find(p => p.id.toUpperCase() === oldId.toUpperCase());
   if (!target) return false;
@@ -2008,7 +1877,6 @@ async function updateParticipantInfo(oldId, newId, newName, newTeam) {
   recordState(list);
   target.id = newId.toUpperCase();
   target.name = newName.trim();
-  target.team = newTeam.trim();
   await saveParticipantsToCloud(list);
   await syncParticipantToGoogleSheet(target);
   return true;
@@ -2077,7 +1945,7 @@ function render(list) {
     // Controls only visible when unlocked by organizer with PIN!
     const organizerControls = isOrganizerUnlocked
       ? `<div style="display:flex; gap:4px;">
-           <button class="button small secondary edit-btn" style="padding:4px 8px; font-size:11px;" title="Edit Name/ID/Team">✏️ Edit</button>
+           <button class="button small secondary edit-btn" style="padding:4px 8px; font-size:11px;" title="Edit Name/ID">✏️ Edit</button>
            <button class="button small secondary del-btn" style="padding:4px 8px; font-size:11px; color:#ef4444;" title="Delete">🗑️</button>
          </div>`
       : "";
@@ -2114,12 +1982,10 @@ function render(list) {
       card.querySelector(".edit-btn").addEventListener("click", async () => {
         const newId = prompt("Update Participant ID:", p.id);
         if (!newId || !newId.trim()) return;
-        const newTeam = prompt("Update Team ID / Name:", p.team || "");
-        if (newTeam === null) return;
         const newName = prompt("Update Participant Name:", p.name);
         if (!newName || !newName.trim()) return;
 
-        await updateParticipantInfo(p.id, newId.trim(), newName.trim(), newTeam.trim());
+        await updateParticipantInfo(p.id, newId.trim(), newName.trim());
         await init();
       });
 
@@ -2149,7 +2015,7 @@ function exportExcelCSV() {
   });
   const fieldKeysArr = Array.from(customFieldKeys);
 
-  let csv = "\uFEFFParticipant ID,Team ID,Name,Kit Received,Accommodation,Food Received";
+  let csv = "\uFEFFParticipant ID,Name,Kit Received,Accommodation,Food Received";
   fieldKeysArr.forEach(k => csv += `,${k}`);
   csv += ",Total Checks Completed\n";
 
@@ -2160,7 +2026,7 @@ function exportExcelCSV() {
     const checks = p.status ? Object.values(p.status) : [];
     const completed = checks.filter(Boolean).length;
     
-    let line = `"${p.id}","${(p.team || '').replace(/"/g, '""')}","${p.name.replace(/"/g, '""')}","${kit}","${acc}","${food}"`;
+    let line = `"${p.id}","${p.name.replace(/"/g, '""')}","${kit}","${acc}","${food}"`;
     
     fieldKeysArr.forEach(k => {
       const val = (p.fields && p.fields[k]) ? p.fields[k] : "";
@@ -2196,7 +2062,6 @@ document.getElementById("search").addEventListener("input", e => {
   render(allParticipants.filter(p =>
     p.id.toLowerCase().includes(q) ||
     p.name.toLowerCase().includes(q) ||
-    (p.team && p.team.toLowerCase().includes(q)) ||
     (p.fields && Object.values(p.fields).some(v => String(v).toLowerCase().includes(q)))
   ));
 });
@@ -2304,11 +2169,8 @@ addParticipantBtn.addEventListener("click", async () => {
   const nextNum = allParticipants.length + 1;
   const defaultId = `SOT${String(nextNum).padStart(3, "0")}`;
   
-  const id = prompt("Enter Participant ID (e.g. SOT006):", defaultId);
+  const id = prompt("Enter Participant ID (e.g. SOT128):", defaultId);
   if (!id) return;
-
-  const team = prompt("Enter Team ID / Name:", `Team ${Math.ceil(nextNum / 2)}`);
-  if (team === null) return;
   
   const name = prompt("Enter Participant Name:", `Participant ${id.trim().toUpperCase()}`);
   if (!name) return;
@@ -2316,7 +2178,7 @@ addParticipantBtn.addEventListener("click", async () => {
   addParticipantBtn.textContent = "Adding...";
   addParticipantBtn.disabled = true;
 
-  await addParticipant(id.trim().toUpperCase(), name.trim(), team.trim());
+  await addParticipant(id.trim().toUpperCase(), name.trim());
   await init();
 
   addParticipantBtn.textContent = "➕ Add Participant";
