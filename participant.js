@@ -6,8 +6,8 @@ const ADMIN_PIN = "1234";
 // Primary Cloud DB for QR codes
 const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a1156100f012a9";
 
-// Google Apps Script Web App URL (Configured by user or via localStorage)
-const GOOGLE_SHEET_API_URL = localStorage.getItem("socioOthon_google_sheet_url") || "";
+// Google Apps Script Web App URL (Live Connected Google Sheet)
+const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw7p21WbHuWVn3iclq8PUCjpfDZrCXQEkpZMuV8TruuZtNcIJjzU1zw5hNEiVtJqUVg/exec";
 
 const LOCAL_STORAGE_KEY = "socioOthon_shared_participants";
 const AUTH_KEY = "socioOthon_admin_auth";
@@ -114,8 +114,8 @@ async function fetchParticipants() {
 
 // ── Real-Time Sync to Google Sheet ──
 async function syncToGoogleSheet(participant, newStatus) {
-  const sheetUrl = localStorage.getItem("socioOthon_google_sheet_url");
-  if (!sheetUrl) return; // If user hasn't configured Sheet webhook yet, skip
+  const sheetUrl = GOOGLE_SHEET_API_URL || localStorage.getItem("socioOthon_google_sheet_url");
+  if (!sheetUrl) return;
 
   try {
     await fetch(sheetUrl, {
