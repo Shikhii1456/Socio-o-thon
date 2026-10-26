@@ -141,10 +141,6 @@ function render(list) {
           <span class="id-pill">${p.id}</span>
           <span class="badge small ${statusClass}">${completed}/${totalChecks}</span>
         </div>
-        <div style="display:flex; gap:4px;">
-          <button class="button small secondary edit-btn" style="padding:4px 8px; font-size:11px;" title="Edit Name/ID/Team">✏️ Edit</button>
-          <button class="button small secondary del-btn" style="padding:4px 8px; font-size:11px; color:#ef4444;" title="Delete">🗑️</button>
-        </div>
       </div>
       <div style="text-align:left; margin-top:8px;">
         <span style="font-size:12px; font-weight:700; color:#4338ca; background:#e0e7ff; padding:2px 6px; border-radius:4px;">👥 ${escapeHtml(p.team || 'Team 1')}</span>
@@ -153,7 +149,7 @@ function render(list) {
       </div>
       <div class="qr" id="${qrId}"></div>
       <div class="card-actions">
-        <a class="button small" href="${pUrl}">Open / Edit Record</a>
+        <a class="button small" href="${pUrl}">👁️ View Record</a>
         <button class="button small secondary copy-btn" data-url="${pUrl}">Copy QR link</button>
       </div>
       <div class="url">${pUrl}</div>
@@ -167,25 +163,6 @@ function render(list) {
       correctLevel: QRCode.CorrectLevel.M
     });
 
-    // Edit button click handler
-    card.querySelector(".edit-btn").addEventListener("click", async () => {
-      const newId = prompt("Update Participant ID:", p.id);
-      if (!newId || !newId.trim()) return;
-      const newTeam = prompt("Update Team ID / Name:", p.team || "");
-      if (newTeam === null) return;
-      const newName = prompt("Update Participant Name:", p.name);
-      if (!newName || !newName.trim()) return;
-
-      await updateParticipantInfo(p.id, newId.trim(), newName.trim(), newTeam.trim());
-      await init();
-    });
-
-    // Delete button click handler
-    card.querySelector(".del-btn").addEventListener("click", async () => {
-      if (await deleteParticipant(p.id)) {
-        await init();
-      }
-    });
   });
 
   document.querySelectorAll(".copy-btn").forEach(btn => {
@@ -258,30 +235,6 @@ document.getElementById("search").addEventListener("input", e => {
     (p.team && p.team.toLowerCase().includes(q)) ||
     (p.fields && Object.values(p.fields).some(v => String(v).toLowerCase().includes(q)))
   ));
-});
-
-document.getElementById("addDemo").addEventListener("click", async () => {
-  const nextNum = allParticipants.length + 1;
-  const defaultId = `SOT${String(nextNum).padStart(3, "0")}`;
-  
-  const id = prompt("Enter Participant ID (e.g. SOT006):", defaultId);
-  if (!id) return;
-
-  const team = prompt("Enter Team ID / Name:", `Team ${Math.ceil(nextNum / 2)}`);
-  if (team === null) return;
-  
-  const name = prompt("Enter Participant Name:", `Participant ${id.trim().toUpperCase()}`);
-  if (!name) return;
-
-  const btn = document.getElementById("addDemo");
-  btn.textContent = "Adding...";
-  btn.disabled = true;
-
-  await addParticipant(id.trim().toUpperCase(), name.trim(), team.trim());
-  await init();
-
-  btn.textContent = "+ Add participant";
-  btn.disabled = false;
 });
 
 const exportBtn = document.getElementById("exportCsvBtn");
