@@ -1,22 +1,58 @@
 // ==========================================
-// CONFIGURATION: Sheet Admin Password
-// Separate from QR scanning PIN (1234)
-// Give this password ONLY to committee members allowed to edit the sheet
+// Digital Google Sheet Client Script
+// Full Google Sheets Interface with Dynamic Columns and Rows
 // ==========================================
 const SHEET_ADMIN_PASSWORD = "5678";
-
 const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a1156100f012a9";
 const LOCAL_STORAGE_KEY = "socioOthon_shared_participants";
 const SHEET_AUTH_KEY = "socioOthon_sheet_admin_auth";
+const CUSTOM_COLUMNS_KEY = "socioOthon_sheet_custom_columns";
+const EXTRA_SHEET_DATA_KEY = "socioOthon_sheet_extra_data";
 
-let rowsData = [];
-let pendingEditId = null;
+// Default columns like Google Sheets
+const DEFAULT_COLUMNS = [
+  { key: "id", label: "Participant ID", width: "130px" },
+  { key: "team", label: "Team ID", width: "120px" },
+  { key: "name", label: "Participant Name", width: "200px" },
+  { key: "kit", label: "Kit Received", width: "120px", isBoolean: true },
+  { key: "accommodation", label: "Accommodation", width: "130px", isBoolean: true },
+  { key: "food", label: "Food Received", width: "120px", isBoolean: true }
+];
 
-function isSheetAdminAuthenticated() {
+let columns = [];
+let sheetRows = [];
+let selectedCell = null;
+let selectedRowIndex = null;
+
+function isUnlocked() {
   return localStorage.getItem(SHEET_AUTH_KEY) === "true";
 }
 
-async function fetchSheetData() {
+function loadColumns() {
+  const saved = localStorage.getItem(CUSTOM_COLUMNS_KEY);
+  if (saved) {
+    try {
+      columns = JSON.parse(saved);
+      return;
+    } catch (e) {}
+  }
+  columns = [...DEFAULT_COLUMNS];
+}
+
+function saveColumns() {
+  localStorage.setItem(CUSTOM_COLUMNS_KEY, JSON.stringify(columns));
+}
+
+function getColumnLetter(index) {
+  let letter = "";
+  while (index >= 0) {
+    letter = String.fromCharCode((index % 26) + 65) + letter;
+    index = Math.floor(index / 26) - 1;
+  }
+  return letter;
+}
+
+async function fetchLiveCloudData() {
   try {
     const res = await fetch(CLOUD_DB_URL);
     if (res.ok) {
@@ -26,207 +62,364 @@ async function fetchSheetData() {
         return json.data.participants;
       }
     }
-  } catch (e) {
-    console.warn("Using local cache:", e);
-  }
+  } catch (e) {}
   const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
   return cached ? JSON.parse(cached) : [];
 }
 
-function renderTable(list) {
-  const tbody = document.getElementById("sheetBody");
-  tbody.innerHTML = "";
-  document.getElementById("rowCount").textContent = `${list.length} Participants`;
+function buildGrid(filterQuery = "") {
+  const thead = document.getElementById("sheetThead");
+  const tbody = document.getElementById("sheetTbody");
+  const unlocked = isUnlocked();
 
-  if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#64748b;">No records found.</td></tr>`;
-    return;
-  }
-
-  const isUnlocked = isSheetAdminAuthenticated();
-
-  list.forEach(p => {
-    const tr = document.createElement("tr");
-
-    const kitPill = p.status && p.status.kit
-      ? `<span class="status-pill pill-yes">YES</span>`
-      : `<span class="status-pill pill-no">NO</span>`;
-
-    const accPill = p.status && p.status.accommodation
-      ? `<span class="status-pill pill-yes">YES</span>`
-      : `<span class="status-pill pill-no">NO</span>`;
-
-    const foodPill = p.status && p.status.food
-      ? `<span class="status-pill pill-yes">YES</span>`
-      : `<span class="status-pill pill-no">NO</span>`;
-
-    const actionHtml = isUnlocked
-      ? `<button class="button small secondary edit-row-btn" data-id="${p.id}" style="padding:3px 8px; font-size:11px;">✏️ Edit</button>`
-      : `<button class="button small secondary lock-row-btn" data-id="${p.id}" style="padding:3px 8px; font-size:11px; color:#64748b;">🔒 Locked</button>`;
-
-    tr.innerHTML = `
-      <td><strong>${p.id}</strong></td>
-      <td>${p.name || "-"}</td>
-      <td><span style="font-size:12px; font-weight:600; color:#4338ca;">${p.team || "Team 1"}</span></td>
-      <td>${kitPill}</td>
-      <td>${accPill}</td>
-      <td>${foodPill}</td>
-      <td>${actionHtml}</td>
+  // Top Column Letter Row (A, B, C, D...) & Name
+  let headHtml = `<tr><th class="gs-corner"></th>`;
+  columns.forEach((col, idx) => {
+    const letter = getColumnLetter(idx);
+    headHtml += `
+      <th class="gs-th" style="width:${col.width || '140px'};">
+        <div style="font-size:10px; color:#94a3b8; font-weight:700;">${letter}</div>
+        <div style="font-size:12px; color:#1e293b; margin-top:2px;">${col.label}</div>
+      </th>
     `;
+  });
+  headHtml += `</tr>`;
+  thead.innerHTML = headHtml;
+
+  // Render Rows
+  tbody.innerHTML = "";
+  const filtered = filterQuery
+    ? sheetRows.filter(r => {
+        return Object.values(r).some(val =>
+          String(val).toLowerCase().includes(filterQuery.toLowerCase())
+        );
+      })
+    : sheetRows;
+
+  document.getElementById("statsCounter").textContent = `${filtered.length} Rows | ${columns.length} Columns`;
+
+  filtered.forEach((row, rowIdx) => {
+    const tr = document.createElement("tr");
+    if (selectedRowIndex === rowIdx) tr.style.background = "#eff6ff";
+
+    // Row Number (1, 2, 3...)
+    let trHtml = `<td class="gs-row-num" data-row-idx="${rowIdx}">${rowIdx + 1}</td>`;
+
+    columns.forEach((col, colIdx) => {
+      const colLetter = getColumnLetter(colIdx);
+      const cellCoordinate = `${colLetter}${rowIdx + 1}`;
+      let val = row[col.key];
+
+      if (col.isBoolean) {
+        // Boolean check from QR status
+        const isTrue = val === true || String(val).toUpperCase() === "TRUE" || String(val).toUpperCase() === "YES";
+        const pillClass = isTrue ? "status-true" : "status-false";
+        const pillText = isTrue ? "TRUE" : "FALSE";
+        trHtml += `
+          <td class="gs-td" 
+              data-cell-id="${cellCoordinate}" 
+              data-col-key="${col.key}" 
+              data-row-idx="${rowIdx}" 
+              tabindex="0"
+              style="text-align:center;">
+            <span class="status-badge ${pillClass}">${pillText}</span>
+          </td>
+        `;
+      } else {
+        const displayVal = (val === undefined || val === null) ? "" : String(val);
+        trHtml += `
+          <td class="gs-td" 
+              data-cell-id="${cellCoordinate}" 
+              data-col-key="${col.key}" 
+              data-row-idx="${rowIdx}" 
+              contenteditable="${unlocked ? 'true' : 'false'}" 
+              tabindex="0">
+            ${displayVal}
+          </td>
+        `;
+      }
+    });
+
+    tr.innerHTML = trHtml;
     tbody.appendChild(tr);
   });
 
-  // Action listeners
-  document.querySelectorAll(".edit-row-btn").forEach(btn => {
-    btn.addEventListener("click", () => handleEditRow(btn.dataset.id));
+  attachCellEvents();
+}
+
+function attachCellEvents() {
+  const cells = document.querySelectorAll("td.gs-td");
+  const formulaInput = document.getElementById("formulaInput");
+  const selectedCellId = document.getElementById("selectedCellId");
+
+  cells.forEach(cell => {
+    cell.addEventListener("click", () => {
+      document.querySelectorAll("td.gs-td.selected").forEach(c => c.classList.remove("selected"));
+      cell.classList.add("selected");
+      selectedCell = cell;
+
+      const cellId = cell.dataset.cellId;
+      selectedCellId.textContent = cellId;
+
+      const rowIdx = parseInt(cell.dataset.rowIdx, 10);
+      const colKey = cell.dataset.colKey;
+      selectedRowIndex = rowIdx;
+
+      const currentVal = sheetRows[rowIdx] ? (sheetRows[rowIdx][colKey] || "") : "";
+      formulaInput.value = currentVal;
+    });
+
+    // Handle in-cell direct typing when unlocked
+    if (isUnlocked()) {
+      cell.addEventListener("blur", () => {
+        const rowIdx = parseInt(cell.dataset.rowIdx, 10);
+        const colKey = cell.dataset.colKey;
+        const col = columns.find(c => c.key === colKey);
+        if (!col || col.isBoolean) return;
+
+        const newVal = cell.innerText.trim();
+        if (sheetRows[rowIdx]) {
+          sheetRows[rowIdx][colKey] = newVal;
+          saveExtraData();
+          formulaInput.value = newVal;
+        }
+      });
+
+      // Toggle boolean cell on double click
+      cell.addEventListener("dblclick", () => {
+        const rowIdx = parseInt(cell.dataset.rowIdx, 10);
+        const colKey = cell.dataset.colKey;
+        const col = columns.find(c => c.key === colKey);
+        if (col && col.isBoolean) {
+          const cur = sheetRows[rowIdx][colKey];
+          sheetRows[rowIdx][colKey] = !cur;
+          buildGrid();
+        }
+      });
+    }
   });
 
-  document.querySelectorAll(".lock-row-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      pendingEditId = btn.dataset.id;
-      openPinModal();
+  // Row header click to select whole row
+  document.querySelectorAll("td.gs-row-num").forEach(numCell => {
+    numCell.addEventListener("click", () => {
+      selectedRowIndex = parseInt(numCell.dataset.rowIdx, 10);
+      buildGrid();
     });
   });
 }
 
-function openPinModal() {
-  document.getElementById("sheetPinModal").classList.remove("hidden");
-  document.getElementById("sheetPinInput").value = "";
-  document.getElementById("sheetPinError").textContent = "";
-  document.getElementById("sheetPinInput").focus();
+function saveExtraData() {
+  localStorage.setItem(EXTRA_SHEET_DATA_KEY, JSON.stringify(sheetRows));
 }
 
-function closePinModal() {
-  document.getElementById("sheetPinModal").classList.add("hidden");
-  pendingEditId = null;
+// Merge cloud participants with extra custom sheet data
+async function loadFullSheetData() {
+  const cloudList = await fetchLiveCloudData();
+  const savedExtra = localStorage.getItem(EXTRA_SHEET_DATA_KEY);
+  let extraRows = [];
+  if (savedExtra) {
+    try { extraRows = JSON.parse(savedExtra); } catch (e) {}
+  }
+
+  // Create unified rows
+  const merged = [];
+  cloudList.forEach((p, idx) => {
+    const extra = extraRows.find(e => e.id === p.id) || {};
+    merged.push({
+      id: p.id,
+      team: p.team || extra.team || "Team 1",
+      name: p.name || extra.name || "",
+      kit: p.status && p.status.kit,
+      accommodation: p.status && p.status.accommodation,
+      food: p.status && p.status.food,
+      ...extra
+    });
+  });
+
+  // Append any locally added custom rows not in cloud
+  extraRows.forEach(extra => {
+    if (extra.id && !merged.some(m => m.id === extra.id)) {
+      merged.push(extra);
+    }
+  });
+
+  sheetRows = merged;
+  buildGrid();
+}
+
+// ── Toolbar Actions (Add Row, Add Column, Export) ──
+
+function handleAddRow() {
+  if (!isUnlocked()) {
+    openPasswordModal();
+    return;
+  }
+  const nextNum = sheetRows.length + 1;
+  const newRow = {
+    id: `SOT${String(nextNum).padStart(3, "0")}`,
+    team: "Team 1",
+    name: `Participant ${String(nextNum).padStart(3, "0")}`,
+    kit: false,
+    accommodation: false,
+    food: false
+  };
+  sheetRows.push(newRow);
+  saveExtraData();
+  buildGrid();
+}
+
+function handleAddColumn() {
+  if (!isUnlocked()) {
+    openPasswordModal();
+    return;
+  }
+  const colName = prompt("Enter New Column Header Name (e.g. T-Shirt Size, College, Payment Status):");
+  if (!colName || !colName.trim()) return;
+
+  const key = "col_" + Date.now();
+  columns.push({
+    key: key,
+    label: colName.trim(),
+    width: "150px",
+    isBoolean: false
+  });
+  saveColumns();
+  buildGrid();
+}
+
+function handleDeleteRow() {
+  if (!isUnlocked()) {
+    openPasswordModal();
+    return;
+  }
+  if (selectedRowIndex === null || !sheetRows[selectedRowIndex]) {
+    alert("Please click a row number on the left first to select it for deletion.");
+    return;
+  }
+  const target = sheetRows[selectedRowIndex];
+  if (!confirm(`Delete Row ${selectedRowIndex + 1} (${target.id} - ${target.name}) from sheet?`)) return;
+
+  sheetRows.splice(selectedRowIndex, 1);
+  selectedRowIndex = null;
+  saveExtraData();
+  buildGrid();
+}
+
+function exportCsv() {
+  let csv = "\uFEFF";
+  // Header row
+  csv += columns.map(c => `"${c.label.replace(/"/g, '""')}"`).join(",") + "\n";
+  // Rows
+  sheetRows.forEach(row => {
+    const line = columns.map(col => {
+      let val = row[col.key];
+      if (col.isBoolean) {
+        val = val ? "TRUE" : "FALSE";
+      }
+      return `"${String(val || '').replace(/"/g, '""')}"`;
+    }).join(",");
+    csv += line + "\n";
+  });
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Socio-O-Thon-GoogleSheet-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// ── Password Modal Handling ──
+function openPasswordModal() {
+  document.getElementById("pwdModal").classList.remove("hidden");
+  document.getElementById("sheetPwdInput").value = "";
+  document.getElementById("pwdError").textContent = "";
+  document.getElementById("sheetPwdInput").focus();
+}
+
+function closePasswordModal() {
+  document.getElementById("pwdModal").classList.add("hidden");
 }
 
 function verifyPassword() {
-  const val = document.getElementById("sheetPinInput").value.trim();
-  if (val === SHEET_ADMIN_PASSWORD) {
+  const entered = document.getElementById("sheetPwdInput").value.trim();
+  if (entered === SHEET_ADMIN_PASSWORD) {
     localStorage.setItem(SHEET_AUTH_KEY, "true");
-    closePinModal();
-    updateAuthUi();
-    renderTable(rowsData);
-    if (pendingEditId) {
-      handleEditRow(pendingEditId);
-    }
+    closePasswordModal();
+    updateLockUi();
+    buildGrid();
   } else {
-    document.getElementById("sheetPinError").textContent = "Incorrect password.";
+    document.getElementById("pwdError").textContent = "Incorrect committee password.";
   }
 }
 
-function updateAuthUi() {
-  const isUnlocked = isSheetAdminAuthenticated();
-  const toggleBtn = document.getElementById("adminEditToggleBtn");
-  if (isUnlocked) {
-    toggleBtn.textContent = "🔓 Editing Unlocked (Lock)";
-    toggleBtn.style.background = "#059669";
+function updateLockUi() {
+  const btn = document.getElementById("lockToggleBtn");
+  if (isUnlocked()) {
+    btn.textContent = "🔓 Sheet Unlocked (Click to Lock)";
+    btn.style.background = "#2563eb";
+    btn.style.borderColor = "#2563eb";
   } else {
-    toggleBtn.textContent = "🔒 Sheet Edit Access";
-    toggleBtn.style.background = "#2563eb";
+    btn.textContent = "🔒 Unlock Sheet (Password: 5678)";
+    btn.style.background = "#0f9d58";
+    btn.style.borderColor = "#0f9d58";
   }
 }
 
-async function handleEditRow(id) {
-  const p = rowsData.find(x => x.id.toUpperCase() === id.toUpperCase());
-  if (!p) return;
+// ── Event Listeners ──
+document.getElementById("addRowBtn").addEventListener("click", handleAddRow);
+document.getElementById("addColBtn").addEventListener("click", handleAddColumn);
+document.getElementById("deleteRowBtn").addEventListener("click", handleDeleteRow);
+document.getElementById("exportCsvBtn").addEventListener("click", exportCsv);
 
-  const newName = prompt(`Edit Name for ${p.id}:`, p.name);
-  if (newName === null) return;
-
-  const newTeam = prompt(`Edit Team for ${p.id}:`, p.team || "");
-  if (newTeam === null) return;
-
-  p.name = newName.trim();
-  p.team = newTeam.trim();
-
-  // Save changes locally in sheet view
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(rowsData));
-  renderTable(rowsData);
-
-  // Send to Google Sheet script if connected
-  const sheetUrl = localStorage.getItem("socioOthon_google_sheet_url");
-  if (sheetUrl) {
-    try {
-      fetch(sheetUrl, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "edit_sheet",
-          password: SHEET_ADMIN_PASSWORD,
-          id: p.id,
-          newName: p.name,
-          newTeam: p.team
-        })
-      });
-    } catch (e) {}
-  }
-
-  // NOTE: Requirement 5: "changes made in the sheet must not reflect on the qr cloud details"
-  // Therefore, we intentionally do NOT update CLOUD_DB_URL here!
-  alert(`Updated ${p.id} on the sheet! (Cloud QR details kept separate)`);
-}
-
-async function init() {
-  updateAuthUi();
-  rowsData = await fetchSheetData();
-  renderTable(rowsData);
-
-  // Auto-refresh every 10 seconds to catch real-time QR scans
-  setInterval(async () => {
-    rowsData = await fetchSheetData();
-    const query = document.getElementById("sheetSearch").value.toLowerCase().trim();
-    if (query) {
-      filterTable(query);
-    } else {
-      renderTable(rowsData);
-    }
-  }, 10000);
-}
-
-function filterTable(q) {
-  const filtered = rowsData.filter(p =>
-    p.id.toLowerCase().includes(q) ||
-    (p.name && p.name.toLowerCase().includes(q)) ||
-    (p.team && p.team.toLowerCase().includes(q))
-  );
-  renderTable(filtered);
-}
-
-document.getElementById("sheetSearch").addEventListener("input", (e) => {
-  filterTable(e.target.value.toLowerCase().trim());
+document.getElementById("searchBox").addEventListener("input", (e) => {
+  buildGrid(e.target.value.trim());
 });
 
-document.getElementById("refreshBtn").addEventListener("click", async () => {
-  rowsData = await fetchSheetData();
-  renderTable(rowsData);
-});
-
-document.getElementById("adminEditToggleBtn").addEventListener("click", () => {
-  if (isSheetAdminAuthenticated()) {
+document.getElementById("lockToggleBtn").addEventListener("click", () => {
+  if (isUnlocked()) {
     localStorage.removeItem(SHEET_AUTH_KEY);
-    updateAuthUi();
-    renderTable(rowsData);
+    updateLockUi();
+    buildGrid();
   } else {
-    openPinModal();
+    openPasswordModal();
   }
 });
 
-document.getElementById("submitSheetPinBtn").addEventListener("click", verifyPassword);
-document.getElementById("sheetPinInput").addEventListener("keydown", (e) => {
+document.getElementById("submitPwdBtn").addEventListener("click", verifyPassword);
+document.getElementById("sheetPwdInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") verifyPassword();
 });
-document.getElementById("cancelSheetPinBtn").addEventListener("click", closePinModal);
+document.getElementById("cancelPwdBtn").addEventListener("click", closePasswordModal);
 
-document.getElementById("editWebhookBtn").addEventListener("click", () => {
-  const cur = localStorage.getItem("socioOthon_google_sheet_url") || "";
-  const next = prompt("Enter your Google Apps Script Web App URL:", cur);
-  if (next !== null) {
-    localStorage.setItem("socioOthon_google_sheet_url", next.trim());
-    alert("Google Sheet Web App URL updated!");
+// Auto-refresh from QR scans every 10 seconds
+setInterval(async () => {
+  const cloudList = await fetchLiveCloudData();
+  let updated = false;
+  cloudList.forEach(p => {
+    const existing = sheetRows.find(r => r.id === p.id);
+    if (existing) {
+      if (
+        existing.kit !== (p.status && p.status.kit) ||
+        existing.accommodation !== (p.status && p.status.accommodation) ||
+        existing.food !== (p.status && p.status.food)
+      ) {
+        existing.kit = p.status && p.status.kit;
+        existing.accommodation = p.status && p.status.accommodation;
+        existing.food = p.status && p.status.food;
+        updated = true;
+      }
+    }
+  });
+  if (updated) {
+    const q = document.getElementById("searchBox").value.trim();
+    buildGrid(q);
   }
-});
+}, 8000);
 
-init();
+// Initialize
+loadColumns();
+updateLockUi();
+loadFullSheetData();

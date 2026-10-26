@@ -3,57 +3,269 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Socio-O-Thon - Digital Google Sheet View</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Socio-O-Thon - Google Sheet Attendance</title>
   <style>
-    .sheet-card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-      padding: 20px;
-      margin-top: 20px;
-    }
-    .sheet-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-      margin-top: 14px;
-    }
-    .sheet-table th {
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: #f8fafc;
-      color: #334155;
-      font-weight: 700;
-      text-align: left;
-      padding: 10px 12px;
-      border-bottom: 2px solid #e2e8f0;
-      position: sticky;
-      top: 0;
-    }
-    .sheet-table td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #f1f5f9;
       color: #1e293b;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
-    .sheet-table tr:hover {
-      background: #f8fafc;
+
+    /* Google Sheets Top Chrome */
+    .gs-header {
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .status-pill {
-      display: inline-block;
+    .gs-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .gs-icon {
+      width: 32px;
+      height: 32px;
+      background: #0f9d58;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 18px;
+    }
+    .gs-title-area h1 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .gs-status-badge {
+      font-size: 11px;
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
       padding: 2px 8px;
       border-radius: 999px;
+      font-weight: 600;
+    }
+    .gs-menu-links {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .gs-menu-links a, .gs-menu-links button {
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      color: #334155;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .gs-menu-links button.primary {
+      background: #0f9d58;
+      border-color: #0f9d58;
+      color: #fff;
+      font-weight: 600;
+    }
+    .gs-menu-links button.primary:hover { background: #0b8043; }
+
+    /* Google Sheets Toolbar */
+    .gs-toolbar {
+      background: #edf2f7;
+      border-bottom: 1px solid #cbd5e1;
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .gs-tool-btn {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .gs-tool-btn:hover { background: #f1f5f9; }
+    .gs-tool-btn.active {
+      background: #dcfce7;
+      border-color: #86efac;
+      color: #166534;
+    }
+    .gs-search {
+      padding: 5px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 12px;
+      width: 220px;
+    }
+
+    /* Formula Bar */
+    .gs-formula-bar {
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 4px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+    .gs-cell-name {
+      font-weight: 700;
+      color: #64748b;
+      min-width: 45px;
+      font-family: monospace;
+    }
+    .gs-fx {
+      color: #94a3b8;
+      font-style: italic;
+      font-weight: bold;
+    }
+    .gs-formula-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 13px;
+      color: #0f172a;
+      background: transparent;
+    }
+
+    /* Grid Area */
+    .gs-grid-container {
+      flex: 1;
+      overflow: auto;
+      background: #fff;
+      position: relative;
+    }
+    table.gs-table {
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+      color: #1e293b;
+      width: 100%;
+    }
+
+    /* Headers */
+    th.gs-th {
+      background: #f1f5f9;
+      border-right: 1px solid #cbd5e1;
+      border-bottom: 2px solid #94a3b8;
+      padding: 6px 10px;
+      font-weight: 600;
+      font-size: 12px;
+      color: #475569;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      user-select: none;
+    }
+    th.gs-row-header, td.gs-row-num {
+      width: 45px;
+      text-align: center;
+      background: #f1f5f9;
+      border-right: 1px solid #cbd5e1;
+      border-bottom: 1px solid #e2e8f0;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 11px;
+      position: sticky;
+      left: 0;
+      z-index: 11;
+      user-select: none;
+    }
+    th.gs-corner {
+      position: sticky;
+      left: 0;
+      top: 0;
+      z-index: 20;
+      background: #e2e8f0;
+      border-right: 1px solid #cbd5e1;
+      border-bottom: 2px solid #94a3b8;
+    }
+
+    /* Cells */
+    td.gs-td {
+      border-right: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 5px 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      outline: none;
+    }
+    td.gs-td:focus, td.gs-td.selected {
+      border: 2px solid #2563eb !important;
+      padding: 4px 7px;
+      background: #eff6ff;
+    }
+    td.gs-td[contenteditable="true"]:focus {
+      background: #fff;
+    }
+
+    /* Pills for Boolean Columns */
+    .status-badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 4px;
       font-size: 11px;
       font-weight: 700;
     }
-    .pill-yes { background: #dcfce7; color: #15803d; }
-    .pill-no { background: #fee2e2; color: #b91c1c; }
-    .config-box {
-      background: #f8fafc;
-      border: 1px dashed #cbd5e1;
-      border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 16px;
-      font-size: 13px;
+    .status-true { background: #dcfce7; color: #15803d; }
+    .status-false { background: #fee2e2; color: #b91c1c; }
+
+    /* Bottom Sheet Tabs */
+    .gs-bottom-bar {
+      background: #edf2f7;
+      border-top: 1px solid #cbd5e1;
+      padding: 4px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #475569;
     }
+    .gs-tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .gs-tab {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-bottom: none;
+      padding: 4px 14px;
+      border-radius: 6px 6px 0 0;
+      font-weight: 600;
+      color: #0f9d58;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Modal Overlay */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -72,85 +284,87 @@
       text-align: center;
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
+    .modal-box input {
+      font-size: 20px;
+      letter-spacing: 6px;
+      text-align: center;
+      width: 150px;
+      padding: 8px;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      margin: 12px auto;
+      display: block;
+    }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <div class="eyebrow">SOCIO-O-THON</div>
-      <h1>Digital Google Sheet (Live Attendance)</h1>
+
+  <!-- Google Sheets Style Header -->
+  <header class="gs-header">
+    <div class="gs-brand">
+      <div class="gs-icon">田</div>
+      <div class="gs-title-area">
+        <h1>
+          Socio-O-Thon Attendance Master
+          <span class="gs-status-badge" id="liveSyncStatus">⚡ Live Auto-Syncing</span>
+        </h1>
+      </div>
     </div>
-    <nav style="display:flex; gap:10px; align-items:center;">
-      <a class="home-link" href="print-cards.html">🖨️ Badges</a>
-      <a class="home-link" href="index.html">Dashboard</a>
-    </nav>
+    <div class="gs-menu-links">
+      <a href="print-cards.html">🖨️ ID Badges</a>
+      <a href="index.html">Dashboard</a>
+      <button id="lockToggleBtn" class="primary">🔒 Unlock Sheet (Password: 5678)</button>
+    </div>
   </header>
 
-  <main class="container">
-    <section class="hero">
-      <div>
-        <p class="eyebrow">REAL-TIME ATTENDANCE SPREADSHEET</p>
-        <h2>Live Digital Sheet — Updates Real-Time from Scans</h2>
-        <p>This sheet automatically displays all QR scans live. Direct sheet edits are locked and require an Admin password.</p>
-      </div>
-      <div style="display:flex; gap:10px; align-items:center;">
-        <button id="refreshBtn" class="button secondary">🔄 Refresh Sheet</button>
-        <button id="adminEditToggleBtn" class="button" style="background:#2563eb;">🔒 Sheet Edit Access</button>
-      </div>
-    </section>
+  <!-- Google Sheets Toolbar with Add Column & Row -->
+  <div class="gs-toolbar">
+    <button class="gs-tool-btn" id="addRowBtn">➕ Add Row</button>
+    <button class="gs-tool-btn" id="addColBtn">➕ Add Column</button>
+    <button class="gs-tool-btn" id="deleteRowBtn">🗑️ Delete Selected Row</button>
+    <button class="gs-tool-btn" id="exportCsvBtn">📥 Export CSV</button>
+    <input type="text" id="searchBox" class="gs-search" placeholder="🔍 Search spreadsheet..." />
+    <span style="font-size:12px; color:#64748b; margin-left:auto;" id="statsCounter">Loading records...</span>
+  </div>
 
-    <!-- Google Sheet Webhook Sync Setting -->
-    <div class="config-box">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <div>
-          <strong>🔗 Google Sheet Auto-Sync:</strong>
-          <span id="webhookStatus" style="color:#059669; font-weight:600; margin-left:6px;">Connected & Active</span>
-        </div>
-        <button id="editWebhookBtn" class="button small secondary" style="font-size:12px; padding:4px 10px;">Change Google Script URL</button>
-      </div>
-      <div style="margin-top:6px; color:#64748b; font-size:12px;">
-        Changes made from QR scans update here and in your external Google Sheet automatically in real time. (Edits made inside the Google Sheet do not overwrite cloud QR details).
-      </div>
+  <!-- Formula Bar -->
+  <div class="gs-formula-bar">
+    <div class="gs-cell-name" id="selectedCellId">A1</div>
+    <div class="gs-fx">fx</div>
+    <input type="text" id="formulaInput" class="gs-formula-input" placeholder="Cell contents appear here..." readonly />
+  </div>
+
+  <!-- Spreadsheet Grid -->
+  <div class="gs-grid-container" id="gridContainer">
+    <table class="gs-table" id="sheetTable">
+      <thead id="sheetThead">
+        <!-- Rendered by JS -->
+      </thead>
+      <tbody id="sheetTbody">
+        <!-- Rendered by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Bottom Sheet Tabs -->
+  <footer class="gs-bottom-bar">
+    <div class="gs-tabs">
+      <div class="gs-tab">📄 Sheet 1 (Participants Attendance)</div>
     </div>
+    <div>Live Real-Time Sync Active | Scans directly update Kit, Accom., Food</div>
+  </footer>
 
-    <!-- Live Digital Table -->
-    <div class="sheet-card" style="overflow-x:auto;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <input type="text" id="sheetSearch" placeholder="Search by ID, Name, or Team..." style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; width:280px; font-size:13px;" />
-        <span id="rowCount" style="font-size:13px; color:#64748b; font-weight:600;">0 Participants</span>
-      </div>
-
-      <table class="sheet-table">
-        <thead>
-          <tr>
-            <th>Participant ID</th>
-            <th>Name</th>
-            <th>Team ID</th>
-            <th>Kit Received</th>
-            <th>Accommodation</th>
-            <th>Food Received</th>
-            <th>Actions (Password Protected)</th>
-          </tr>
-        </thead>
-        <tbody id="sheetBody">
-          <tr>
-            <td colspan="7" style="text-align:center; padding:20px; color:#64748b;">Loading live spreadsheet data...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </main>
-
-  <!-- Password Modal for Sheet Edits -->
-  <div id="sheetPinModal" class="modal-overlay hidden">
+  <!-- Password Unlock Modal -->
+  <div id="pwdModal" class="modal-overlay hidden">
     <div class="modal-box">
-      <h3>🔒 Password Required to Edit Sheet</h3>
-      <p style="font-size:13px; color:#64748b; margin:6px 0 12px;">Only authorized organizers with the password can modify records on this sheet.</p>
-      <input type="password" id="sheetPinInput" style="font-size:20px; letter-spacing:6px; text-align:center; width:150px; padding:8px; border:2px solid #cbd5e1; border-radius:8px; margin:10px auto; display:block;" placeholder="••••" />
-      <div id="sheetPinError" style="color:#dc2626; font-size:12px; margin-top:4px; min-height:16px;"></div>
+      <h3>🔒 Sheet Committee Password</h3>
+      <p style="font-size:13px; color:#64748b; margin:6px 0 10px;">Enter committee password to edit cells, add rows, or add custom columns.</p>
+      <input type="password" id="sheetPwdInput" maxlength="8" placeholder="••••" />
+      <div id="pwdError" style="color:#dc2626; font-size:12px; margin-top:4px; min-height:16px;"></div>
       <div style="display:flex; gap:8px; justify-content:center; margin-top:12px;">
-        <button class="button secondary small" id="cancelSheetPinBtn" type="button">Cancel</button>
-        <button class="button small" id="submitSheetPinBtn" type="button">Unlock Editing</button>
+        <button class="gs-tool-btn" id="cancelPwdBtn" type="button">Cancel</button>
+        <button class="gs-tool-btn" id="submitPwdBtn" type="button" style="background:#0f9d58; color:#fff; border-color:#0f9d58;">Unlock</button>
       </div>
     </div>
   </div>
