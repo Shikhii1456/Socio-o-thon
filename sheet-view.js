@@ -1,5 +1,10 @@
-// Digital Google Sheet Client Script
-const ADMIN_PASSWORD = "1234";
+// ==========================================
+// CONFIGURATION: Sheet Admin Password
+// Separate from QR scanning PIN (1234)
+// Give this password ONLY to committee members allowed to edit the sheet
+// ==========================================
+const SHEET_ADMIN_PASSWORD = "5678";
+
 const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a1156100f012a9";
 const LOCAL_STORAGE_KEY = "socioOthon_shared_participants";
 const SHEET_AUTH_KEY = "socioOthon_sheet_admin_auth";
@@ -98,7 +103,7 @@ function closePinModal() {
 
 function verifyPassword() {
   const val = document.getElementById("sheetPinInput").value.trim();
-  if (val === ADMIN_PASSWORD) {
+  if (val === SHEET_ADMIN_PASSWORD) {
     localStorage.setItem(SHEET_AUTH_KEY, "true");
     closePinModal();
     updateAuthUi();
@@ -150,7 +155,7 @@ async function handleEditRow(id) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "edit_sheet",
-          password: ADMIN_PASSWORD,
+          password: SHEET_ADMIN_PASSWORD,
           id: p.id,
           newName: p.name,
           newTeam: p.team

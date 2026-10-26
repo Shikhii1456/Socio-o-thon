@@ -1,7 +1,7 @@
 // Google Apps Script (Paste this in Extensions > Apps Script of your Google Sheet)
 // Sheet URL: https://docs.google.com/spreadsheets/d/1_zD_fr01PiAwEJlb-LOxJh25_og5GP2kvzUdLJWicNM/edit
 
-const ADMIN_PASSWORD = "1234"; // Password required for direct sheet writes/edits
+const SHEET_ADMIN_PASSWORD = "5678"; // Separate password for committee members to edit the sheet
 
 function doGet(e) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
@@ -72,7 +72,7 @@ function doPost(e) {
 
     // ACTION 2: Manual Sheet Row Edit (Protected with Password)
     if (action === "edit_sheet") {
-      if (body.password !== ADMIN_PASSWORD) {
+      if (body.password !== SHEET_ADMIN_PASSWORD) {
         return ContentService.createTextOutput(JSON.stringify({ ok: false, error: "Unauthorized: Invalid password" }))
           .setMimeType(ContentService.MimeType.JSON);
       }
