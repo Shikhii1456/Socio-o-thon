@@ -11,7 +11,18 @@ const defaultSeed = [
   { id: "SOT005", name: "Participant 005", team: "Team 3", status: { kit: false, accommodation: false, food: false }, fields: {} }
 ];
 
-let isOrganizerUnlocked = false; // Never stored in localStorage so it always starts locked for public!
+let isOrganizerUnlocked = false;
+
+// ── Undo & Redo History Stacks ──
+let undoStack = [];
+let redoStack = [];
+
+function recordState(list) {
+  undoStack.push(JSON.stringify(list));
+  if (undoStack.length > 30) undoStack.shift(); // Keep last 30 states
+  redoStack = []; // Clear redo when a new action is performed
+  updateUndoRedoButtons();
+}
 
 async function fetchParticipantsFromCloud() {
   try {
@@ -56,6 +67,7 @@ async function addParticipant(id, name, team) {
   const list = await fetchParticipantsFromCloud();
   const existing = list.find(p => p.id.toUpperCase() === id.toUpperCase());
   if (!existing) {
+    recordState(list);
     list.push({
       id: id.toUpperCase(),
       team: team || "Team 1",
@@ -81,6 +93,7 @@ async function updateParticipantInfo(oldId, newId, newName, newTeam) {
     }
   }
 
+  recordState(list);
   target.id = newId.toUpperCase();
   target.name = newName.trim();
   target.team = newTeam.trim();
@@ -91,6 +104,7 @@ async function updateParticipantInfo(oldId, newId, newName, newTeam) {
 async function deleteParticipant(id) {
   if (!confirm(`Are you sure you want to delete participant ${id}?`)) return false;
   const list = await fetchParticipantsFromCloud();
+  recordState(list);
   const filtered = list.filter(p => p.id.toUpperCase() !== id.toUpperCase());
   await saveParticipantsToCloud(filtered);
   return true;
@@ -275,18 +289,59 @@ const dashPinError = document.getElementById("dashPinError");
 const submitDashPinBtn = document.getElementById("submitDashPinBtn");
 const cancelDashPinBtn = document.getElementById("cancelDashPinBtn");
 
+const undoBtn = document.getElementById("undoBtn");
+const redoBtn = document.getElementById("redoBtn");
+
+function updateUndoRedoButtons() {
+  if (!undoBtn || !redoBtn) return;
+  undoBtn.disabled = undoStack.length === 0;
+  redoBtn.disabled = redoStack.length === 0;
+  undoBtn.style.opacity = undoStack.length === 0 ? "0.5" : "1";
+  redoBtn.style.opacity = redoStack.length === 0 ? "0.5" : "1";
+}
+
+async function handleUndo() {
+  if (undoStack.length === 0) return;
+  const currentJson = JSON.stringify(allParticipants);
+  redoStack.push(currentJson);
+  const previousJson = undoStack.pop();
+  allParticipants = JSON.parse(previousJson);
+  await saveParticipantsToCloud(allParticipants);
+  render(allParticipants);
+  updateUndoRedoButtons();
+}
+
+async function handleRedo() {
+  if (redoStack.length === 0) return;
+  const currentJson = JSON.stringify(allParticipants);
+  undoStack.push(currentJson);
+  const nextJson = redoStack.pop();
+  allParticipants = JSON.parse(nextJson);
+  await saveParticipantsToCloud(allParticipants);
+  render(allParticipants);
+  updateUndoRedoButtons();
+}
+
+if (undoBtn) undoBtn.addEventListener("click", handleUndo);
+if (redoBtn) redoBtn.addEventListener("click", handleRedo);
+
 function updateOrganizerUi() {
   if (isOrganizerUnlocked) {
     organizerToggleBtn.textContent = "🔓 Lock Dashboard";
     organizerToggleBtn.style.background = "#059669";
     organizerModeTag.classList.remove("hidden");
     addParticipantBtn.classList.remove("hidden");
+    if (undoBtn) undoBtn.classList.remove("hidden");
+    if (redoBtn) redoBtn.classList.remove("hidden");
   } else {
     organizerToggleBtn.textContent = "🔒 Organizer Login";
     organizerToggleBtn.style.background = "#2563eb";
     organizerModeTag.classList.add("hidden");
     addParticipantBtn.classList.add("hidden");
+    if (undoBtn) undoBtn.classList.add("hidden");
+    if (redoBtn) redoBtn.classList.add("hidden");
   }
+  updateUndoRedoButtons();
   render(allParticipants);
 }
 
