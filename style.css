@@ -122,20 +122,43 @@ button, .button {
 
 @media print {
   body { background: #fff !important; color: #000 !important; }
-  .topbar, .hero, .toolbar, .card-actions, .url { display: none !important; }
+  .topbar, .hero, .toolbar, .card-actions, .url, .participant-meta, .card-details-extra {
+    display: none !important;
+  }
   .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
   .grid {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 16px !important;
+    gap: 20px !important;
   }
   .participant-card {
-    border: 1.5px solid #94a3b8 !important;
+    border: 1.5px dashed #94a3b8 !important;
     box-shadow: none !important;
-    border-radius: 8px !important;
+    border-radius: 10px !important;
     page-break-inside: avoid !important;
-    padding: 16px !important;
+    padding: 20px !important;
     text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
-  .qr { margin: 10px auto !important; }
+  .print-participant-name {
+    display: block !important;
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    color: #000 !important;
+    text-align: center !important;
+    margin: 0 0 12px 0 !important;
+  }
+  .qr {
+    margin: 0 auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+  .qr img, .qr canvas {
+    display: block !important;
+    margin: 0 auto !important;
+  }
 }

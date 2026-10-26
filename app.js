@@ -168,9 +168,9 @@ function render(list) {
         ${organizerControls}
       </div>
       <div style="text-align:left; margin-top:8px;">
-        <span style="font-size:12px; font-weight:700; color:#4338ca; background:#e0e7ff; padding:2px 6px; border-radius:4px;">👥 ${escapeHtml(p.team || 'Team 1')}</span>
-        <h3 style="margin-top:4px;">${escapeHtml(p.name)}</h3>
-        ${fieldsHtml}
+        <span class="card-details-extra" style="font-size:12px; font-weight:700; color:#4338ca; background:#e0e7ff; padding:2px 6px; border-radius:4px;">👥 ${escapeHtml(p.team || 'Team 1')}</span>
+        <h3 class="print-participant-name" style="margin-top:4px;">${escapeHtml(p.name)}</h3>
+        <div class="card-details-extra">${fieldsHtml}</div>
       </div>
       <div class="qr" id="${qrId}"></div>
       <div class="card-actions">
