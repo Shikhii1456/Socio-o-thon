@@ -123,27 +123,75 @@ async function syncParticipantToGoogleSheet(p) {
 }
 
 async function fetchParticipantsFromCloud() {
+  let baseList = [];
+
+  // 1. Fetch base imported list from data/participants.json
+  try {
+    const res = await fetch("./data/participants.json?_t=" + Date.now());
+    if (res.ok) {
+      const json = await res.json();
+      if (Array.isArray(json) && json.length > 0) {
+        baseList = json;
+      }
+    }
+  } catch (e) {}
+
+  // 2. Fetch live Google Sheet CSV to overlay real-time status updates (kit/accommodation/food)
   try {
     const res = await fetch(GOOGLE_SHEET_CSV_URL + "&_t=" + Date.now());
     if (res.ok) {
       const csv = await res.text();
       const parsed = parseParticipantsFromCSV(csv);
       if (parsed && parsed.length > 0) {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(parsed));
-        return parsed;
+        if (baseList.length === 0) {
+          baseList = parsed;
+        } else {
+          const sheetMap = new Map(parsed.map(p => [p.id.toUpperCase(), p]));
+          baseList = baseList.map(p => {
+            const fromSheet = sheetMap.get(p.id.toUpperCase());
+            if (fromSheet) {
+              return {
+                ...p,
+                status: fromSheet.status || p.status,
+                fields: { ...p.fields, ...fromSheet.fields }
+              };
+            }
+            return p;
+          });
+        }
       }
     }
   } catch (err) {
-    console.warn("Could not load from Google Sheet CSV, trying localStorage:", err);
+    console.warn("Could not load from Google Sheet CSV, using local sources:", err);
   }
 
+  // 3. Overlay any offline or local modifications from localStorage
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (saved) {
     try {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      const localList = JSON.parse(saved);
+      if (Array.isArray(localList) && localList.length > 0) {
+        if (baseList.length === 0) {
+          baseList = localList;
+        } else {
+          const localMap = new Map(localList.map(p => [p.id.toUpperCase(), p]));
+          baseList = baseList.map(p => {
+            const fromLocal = localMap.get(p.id.toUpperCase());
+            if (fromLocal && fromLocal.status) {
+              return { ...p, ...fromLocal };
+            }
+            return p;
+          });
+        }
+      }
     } catch (e) {}
   }
+
+  if (baseList.length > 0) {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(baseList));
+    return baseList;
+  }
+
   return defaultSeed;
 }
 
