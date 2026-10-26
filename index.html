@@ -13,7 +13,7 @@
       <h1>Participant Management</h1>
     </div>
     <nav style="display:flex; gap:10px; align-items:center;">
-      <a class="home-link" href="print-cards.html">🖨️ Print Badges</a>
+      <button onclick="window.print()" class="home-link" style="background:#111827; color:#fff; border:none; cursor:pointer;">🖨️ Print QRs</button>
       <a class="home-link" href="index.html">Dashboard</a>
     </nav>
   </header>
@@ -33,6 +33,7 @@
 
     <section class="toolbar">
       <input id="search" type="search" placeholder="Search participant ID, name, team, email..." />
+      <button onclick="window.print()" type="button" class="button" style="background:#111827;">🖨️ Print QRs</button>
       <button id="exportCsvBtn" type="button" class="button secondary" style="background:#059669; color:#fff; border:none;">📥 Export Excel (CSV)</button>
     </section>
 

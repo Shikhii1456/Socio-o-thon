@@ -119,3 +119,23 @@ button, .button {
   .toolbar { flex-direction: column; }
   .panel { padding: 22px; }
 }
+
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  .topbar, .hero, .toolbar, .card-actions, .url { display: none !important; }
+  .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+  .grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+  .participant-card {
+    border: 1.5px solid #94a3b8 !important;
+    box-shadow: none !important;
+    border-radius: 8px !important;
+    page-break-inside: avoid !important;
+    padding: 16px !important;
+    text-align: center !important;
+  }
+  .qr { margin: 10px auto !important; }
+}
