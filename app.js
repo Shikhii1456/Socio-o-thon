@@ -162,14 +162,12 @@ function render(list) {
     card.innerHTML = `
       <div class="participant-meta" style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
-          <span class="id-pill">${p.id}</span>
           <span class="badge small ${statusClass}">${completed}/${totalChecks}</span>
         </div>
         ${organizerControls}
       </div>
       <div style="text-align:left; margin-top:8px;">
-        <span class="card-details-extra" style="font-size:12px; font-weight:700; color:#4338ca; background:#e0e7ff; padding:2px 6px; border-radius:4px;">👥 ${escapeHtml(p.team || 'Team 1')}</span>
-        <h3 class="print-participant-name" style="margin-top:4px;">${escapeHtml(p.name)}</h3>
+        <h3 class="print-participant-name" style="margin-top:2px;">${escapeHtml(p.name)}</h3>
         <div class="card-details-extra">${fieldsHtml}</div>
       </div>
       <div class="qr" id="${qrId}"></div>
