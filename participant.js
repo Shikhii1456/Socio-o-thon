@@ -37,10 +37,10 @@ const modalPinError = document.getElementById("modalPinError");
 const submitPinBtn = document.getElementById("submitPinBtn");
 const cancelPinBtn = document.getElementById("cancelPinBtn");
 
-let currentParticipant = null;
+let isOrganizerUnlocked = false;
 
 function isOrganizerAuthenticated() {
-  return localStorage.getItem(AUTH_KEY) === "true";
+  return isOrganizerUnlocked;
 }
 
 function setEditModeEnabled(enabled) {
@@ -82,7 +82,7 @@ function closePinModal() {
 function verifyPin() {
   const entered = modalPinInput.value.trim();
   if (entered === ADMIN_PIN) {
-    localStorage.setItem(AUTH_KEY, "true");
+    isOrganizerUnlocked = true;
     closePinModal();
     setEditModeEnabled(true);
   } else {
@@ -374,7 +374,7 @@ editStatusBtn.addEventListener("click", () => {
 
 unlockBtn.addEventListener("click", () => {
   if (isOrganizerAuthenticated()) {
-    localStorage.removeItem(AUTH_KEY);
+    isOrganizerUnlocked = false;
     setEditModeEnabled(false);
   } else {
     openPinModal();
@@ -417,10 +417,12 @@ saveButton.addEventListener("click", async () => {
   msg.textContent = ok ? "✅ Saved & Synced to Google Sheet!" : "⚠️ Saved locally";
   msg.style.color = ok ? "#067647" : "#d97706";
 
-  saveButton.disabled = false;
-  saveButton.textContent = "💾 Save & Sync to Sheet";
-
-  setTimeout(() => (msg.textContent = ""), 3000);
+  // Automatically lock immediately after saving!
+  setTimeout(() => {
+    isOrganizerUnlocked = false;
+    setEditModeEnabled(false);
+    msg.textContent = "";
+  }, 1800);
 });
 
 loadParticipant();
