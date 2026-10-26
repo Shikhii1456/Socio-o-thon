@@ -1,4 +1,5 @@
 // Shared Cloud Database Integration for Socio-O-Thon
+const ADMIN_PIN = "1234";
 const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a1156100f012a9";
 const LOCAL_STORAGE_KEY = "socioOthon_shared_participants";
 
@@ -9,6 +10,8 @@ const defaultSeed = [
   { id: "SOT004", name: "Participant 004", team: "Team 2", status: { kit: false, accommodation: false, food: false }, fields: {} },
   { id: "SOT005", name: "Participant 005", team: "Team 3", status: { kit: false, accommodation: false, food: false }, fields: {} }
 ];
+
+let isOrganizerUnlocked = false; // Never stored in localStorage so it always starts locked for public!
 
 async function fetchParticipantsFromCloud() {
   try {
@@ -124,7 +127,6 @@ function render(list) {
     const statusClass = (completed === totalChecks && totalChecks > 0) ? "complete" : "";
     const pUrl = participantUrl(p.id);
 
-    // Render extra fields preview on dashboard card (e.g. Email, Phone)
     let fieldsHtml = "";
     if (p.fields && Object.keys(p.fields).length > 0) {
       fieldsHtml = `<div style="font-size:12px; color:#64748b; margin-top:6px; line-height:1.4; text-align:left;">`;
@@ -134,6 +136,14 @@ function render(list) {
       fieldsHtml += `</div>`;
     }
 
+    // Controls only visible when unlocked by organizer with PIN!
+    const organizerControls = isOrganizerUnlocked
+      ? `<div style="display:flex; gap:4px;">
+           <button class="button small secondary edit-btn" style="padding:4px 8px; font-size:11px;" title="Edit Name/ID/Team">✏️ Edit</button>
+           <button class="button small secondary del-btn" style="padding:4px 8px; font-size:11px; color:#ef4444;" title="Delete">🗑️</button>
+         </div>`
+      : "";
+
     const qrId = `qr-${p.id}`;
     card.innerHTML = `
       <div class="participant-meta" style="display:flex; justify-content:space-between; align-items:flex-start;">
@@ -141,6 +151,7 @@ function render(list) {
           <span class="id-pill">${p.id}</span>
           <span class="badge small ${statusClass}">${completed}/${totalChecks}</span>
         </div>
+        ${organizerControls}
       </div>
       <div style="text-align:left; margin-top:8px;">
         <span style="font-size:12px; font-weight:700; color:#4338ca; background:#e0e7ff; padding:2px 6px; border-radius:4px;">👥 ${escapeHtml(p.team || 'Team 1')}</span>
@@ -163,6 +174,25 @@ function render(list) {
       correctLevel: QRCode.CorrectLevel.M
     });
 
+    if (isOrganizerUnlocked) {
+      card.querySelector(".edit-btn").addEventListener("click", async () => {
+        const newId = prompt("Update Participant ID:", p.id);
+        if (!newId || !newId.trim()) return;
+        const newTeam = prompt("Update Team ID / Name:", p.team || "");
+        if (newTeam === null) return;
+        const newName = prompt("Update Participant Name:", p.name);
+        if (!newName || !newName.trim()) return;
+
+        await updateParticipantInfo(p.id, newId.trim(), newName.trim(), newTeam.trim());
+        await init();
+      });
+
+      card.querySelector(".del-btn").addEventListener("click", async () => {
+        if (await deleteParticipant(p.id)) {
+          await init();
+        }
+      });
+    }
   });
 
   document.querySelectorAll(".copy-btn").forEach(btn => {
@@ -177,8 +207,6 @@ function render(list) {
 
 function exportExcelCSV() {
   const list = allParticipants;
-  
-  // Find all unique custom field keys and custom checklist keys
   const customFieldKeys = new Set();
   list.forEach(p => {
     if (p.fields) Object.keys(p.fields).forEach(k => customFieldKeys.add(k));
@@ -235,6 +263,87 @@ document.getElementById("search").addEventListener("input", e => {
     (p.team && p.team.toLowerCase().includes(q)) ||
     (p.fields && Object.values(p.fields).some(v => String(v).toLowerCase().includes(q)))
   ));
+});
+
+// ── Organizer Lock / Unlock Handler ──
+const organizerToggleBtn = document.getElementById("organizerToggleBtn");
+const organizerModeTag = document.getElementById("organizerModeTag");
+const addParticipantBtn = document.getElementById("addParticipantBtn");
+const dashPinModal = document.getElementById("dashPinModal");
+const dashPinInput = document.getElementById("dashPinInput");
+const dashPinError = document.getElementById("dashPinError");
+const submitDashPinBtn = document.getElementById("submitDashPinBtn");
+const cancelDashPinBtn = document.getElementById("cancelDashPinBtn");
+
+function updateOrganizerUi() {
+  if (isOrganizerUnlocked) {
+    organizerToggleBtn.textContent = "🔓 Lock Dashboard";
+    organizerToggleBtn.style.background = "#059669";
+    organizerModeTag.classList.remove("hidden");
+    addParticipantBtn.classList.remove("hidden");
+  } else {
+    organizerToggleBtn.textContent = "🔒 Organizer Login";
+    organizerToggleBtn.style.background = "#2563eb";
+    organizerModeTag.classList.add("hidden");
+    addParticipantBtn.classList.add("hidden");
+  }
+  render(allParticipants);
+}
+
+organizerToggleBtn.addEventListener("click", () => {
+  if (isOrganizerUnlocked) {
+    isOrganizerUnlocked = false;
+    updateOrganizerUi();
+  } else {
+    dashPinModal.classList.remove("hidden");
+    dashPinInput.value = "";
+    dashPinError.textContent = "";
+    dashPinInput.focus();
+  }
+});
+
+function verifyDashPin() {
+  if (dashPinInput.value.trim() === ADMIN_PIN) {
+    isOrganizerUnlocked = true;
+    dashPinModal.classList.add("hidden");
+    updateOrganizerUi();
+  } else {
+    dashPinError.textContent = "Incorrect PIN. Try again.";
+    dashPinInput.value = "";
+    dashPinInput.focus();
+  }
+}
+
+submitDashPinBtn.addEventListener("click", verifyDashPin);
+dashPinInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") verifyDashPin();
+});
+cancelDashPinBtn.addEventListener("click", () => {
+  dashPinModal.classList.add("hidden");
+});
+
+addParticipantBtn.addEventListener("click", async () => {
+  if (!isOrganizerUnlocked) return;
+  const nextNum = allParticipants.length + 1;
+  const defaultId = `SOT${String(nextNum).padStart(3, "0")}`;
+  
+  const id = prompt("Enter Participant ID (e.g. SOT006):", defaultId);
+  if (!id) return;
+
+  const team = prompt("Enter Team ID / Name:", `Team ${Math.ceil(nextNum / 2)}`);
+  if (team === null) return;
+  
+  const name = prompt("Enter Participant Name:", `Participant ${id.trim().toUpperCase()}`);
+  if (!name) return;
+
+  addParticipantBtn.textContent = "Adding...";
+  addParticipantBtn.disabled = true;
+
+  await addParticipant(id.trim().toUpperCase(), name.trim(), team.trim());
+  await init();
+
+  addParticipantBtn.textContent = "➕ Add Participant";
+  addParticipantBtn.disabled = false;
 });
 
 const exportBtn = document.getElementById("exportCsvBtn");
