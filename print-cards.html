@@ -216,15 +216,6 @@
       </div>
     </div>
 
-    <!-- Inline Add Participant Form directly on Print Badges page -->
-    <div class="actions-bar">
-      <form class="add-form" id="addBadgeForm" onsubmit="event.preventDefault(); handleAddParticipant();">
-        <input type="text" id="newId" class="input-id" placeholder="ID (e.g. SOT006)" required />
-        <input type="text" id="newTeam" class="input-team" placeholder="Team ID / Name" required />
-        <input type="text" id="newName" class="input-name" placeholder="Participant Full Name" required />
-        <button type="submit" id="addBtn" class="btn" style="background:#2563eb;">+ Add Badge</button>
-      </form>
-    </div>
   </div>
 
   <div class="badge-grid" id="badgeContainer"></div>
@@ -300,10 +291,6 @@
               <div class="check-box-item"><span class="square"></span> Accom.</div>
               <div class="check-box-item"><span class="square"></span> Food</div>
             </div>
-            <div class="card-tools">
-              <button class="badge-btn edit-badge-btn">✏️ Edit ID/Team/Name</button>
-              <button class="badge-btn badge-btn-del del-badge-btn">🗑️ Delete</button>
-            </div>
           </div>
           <div class="qr-container" id="${qrId}"></div>
         `;
@@ -316,71 +303,7 @@
           correctLevel: QRCode.CorrectLevel.M
         });
 
-        // Edit button
-        card.querySelector(".edit-badge-btn").addEventListener("click", async () => {
-          const newId = prompt("Update Participant ID:", p.id);
-          if (!newId || !newId.trim()) return;
-          const newTeam = prompt("Update Team ID/Name:", p.team || "");
-          if (newTeam === null) return;
-          const newName = prompt("Update Participant Name:", p.name);
-          if (!newName || !newName.trim()) return;
-
-          const trimmedId = newId.trim().toUpperCase();
-          if (trimmedId !== p.id.toUpperCase() && participantsList.find(x => x.id.toUpperCase() === trimmedId)) {
-            alert("Error: Another participant already has ID " + trimmedId);
-            return;
-          }
-
-          p.id = trimmedId;
-          p.team = newTeam.trim();
-          p.name = newName.trim();
-          await syncToCloud(participantsList);
-          await loadAndRender();
-        });
-
-        // Delete button
-        card.querySelector(".del-badge-btn").addEventListener("click", async () => {
-          if (!confirm(`Are you sure you want to remove badge for ${p.id} (${p.name})?`)) return;
-          participantsList = participantsList.filter(x => x.id.toUpperCase() !== p.id.toUpperCase());
-          await syncToCloud(participantsList);
-          await loadAndRender();
-        });
       });
-    }
-
-    async function handleAddParticipant() {
-      const idInput = document.getElementById("newId");
-      const teamInput = document.getElementById("newTeam");
-      const nameInput = document.getElementById("newName");
-      const addBtn = document.getElementById("addBtn");
-
-      const id = idInput.value.trim().toUpperCase();
-      const team = teamInput.value.trim();
-      const name = nameInput.value.trim();
-      if (!id || !name) return;
-
-      addBtn.textContent = "Adding...";
-      addBtn.disabled = true;
-
-      const list = await fetchParticipants();
-      if (!list.find(p => p.id.toUpperCase() === id)) {
-        list.push({
-          id: id,
-          team: team,
-          name: name,
-          status: { kit: false, accommodation: false, food: false }
-        });
-        await syncToCloud(list);
-      } else {
-        alert("Participant with ID " + id + " already exists!");
-      }
-
-      nameInput.value = "";
-      teamInput.value = "";
-      addBtn.textContent = "+ Add Badge";
-      addBtn.disabled = false;
-
-      await loadAndRender();
     }
 
     function exportExcelCSV() {
