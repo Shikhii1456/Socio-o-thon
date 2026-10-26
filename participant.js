@@ -44,14 +44,32 @@ function isOrganizerAuthenticated() {
 }
 
 function setEditModeEnabled(enabled) {
+  const idView = document.getElementById("idViewContainer");
+  const idEdit = document.getElementById("idEditContainer");
+  const nameView = document.getElementById("nameViewContainer");
+  const nameEdit = document.getElementById("nameEditContainer");
+  const editIdInput = document.getElementById("editParticipantIdInput");
+  const editNameInput = document.getElementById("editParticipantNameInput");
+
   if (enabled) {
     editStatusBtn.classList.add("hidden");
     saveButton.classList.remove("hidden");
     addFieldBtn.classList.remove("hidden");
     addChecklistBtn.classList.remove("hidden");
     authBanner.className = "auth-banner unlocked";
-    authStatusText.innerHTML = "✅ <strong>Organizer Mode:</strong> Editing & Adding Fields Enabled";
+    authStatusText.innerHTML = "✅ <strong>Organizer Mode:</strong> Name, ID & Info Editing Enabled";
     unlockBtn.textContent = "Lock";
+
+    if (idView && idEdit) {
+      idView.classList.add("hidden");
+      idEdit.classList.remove("hidden");
+      if (editIdInput) editIdInput.value = currentParticipant.id;
+    }
+    if (nameView && nameEdit) {
+      nameView.classList.add("hidden");
+      nameEdit.classList.remove("hidden");
+      if (editNameInput) editNameInput.value = currentParticipant.name;
+    }
   } else {
     editStatusBtn.classList.remove("hidden");
     saveButton.classList.add("hidden");
@@ -60,6 +78,15 @@ function setEditModeEnabled(enabled) {
     authBanner.className = "auth-banner";
     authStatusText.innerHTML = "👁️ <strong>Viewing Mode:</strong> Details visible (Read-only)";
     unlockBtn.textContent = "🔒 Organizer Login";
+
+    if (idView && idEdit) {
+      idView.classList.remove("hidden");
+      idEdit.classList.add("hidden");
+    }
+    if (nameView && nameEdit) {
+      nameView.classList.remove("hidden");
+      nameEdit.classList.add("hidden");
+    }
   }
 
   renderChecklist();
@@ -407,8 +434,52 @@ saveButton.addEventListener("click", async () => {
   });
   currentParticipant.fields = updatedFields;
 
-  // 1. Save to cloud database
-  const ok = await updateCloudParticipant(currentParticipant);
+  // Collect edited Name and ID if in organizer mode
+  const editIdInput = document.getElementById("editParticipantIdInput");
+  const editNameInput = document.getElementById("editParticipantNameInput");
+  const oldId = currentParticipant.id;
+
+  if (editNameInput && editNameInput.value.trim()) {
+    currentParticipant.name = editNameInput.value.trim();
+  }
+  if (editIdInput && editIdInput.value.trim()) {
+    currentParticipant.id = editIdInput.value.trim().toUpperCase();
+  }
+
+  // 1. Save to cloud database (handling ID rename if changed)
+  const list = await fetchParticipants();
+  const idx = list.findIndex(p => p.id.toUpperCase() === oldId.toUpperCase());
+  if (idx !== -1) {
+    list[idx] = currentParticipant;
+  } else {
+    list.push(currentParticipant);
+  }
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+
+  let ok = false;
+  try {
+    await fetch(CLOUD_DB_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "socio-o-thon-db",
+        data: { participants: list }
+      })
+    });
+    ok = true;
+  } catch (e) {
+    ok = false;
+  }
+
+  // Update display values
+  document.getElementById("participantId").textContent = currentParticipant.id;
+  document.getElementById("participantName").textContent = currentParticipant.name;
+
+  // Update browser URL bar seamlessly if ID changed so refreshing page doesn't break
+  if (currentParticipant.id !== oldId) {
+    const newUrl = `${window.location.pathname}?id=${encodeURIComponent(currentParticipant.id)}`;
+    window.history.replaceState(null, "", newUrl);
+  }
 
   // 2. Real-time sync to Google Sheet
   await syncToGoogleSheet(currentParticipant, currentParticipant.status, currentParticipant.fields);
@@ -422,6 +493,8 @@ saveButton.addEventListener("click", async () => {
     isOrganizerUnlocked = false;
     setEditModeEnabled(false);
     msg.textContent = "";
+    saveButton.disabled = false;
+    saveButton.textContent = "💾 Save Updates";
   }, 1800);
 });
 
