@@ -1,14 +1,13 @@
 // Shared Cloud Database Integration for Socio-O-Thon
-// ID: ff808181a09d98f701a1156100f012a9
 const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a1156100f012a9";
 const LOCAL_STORAGE_KEY = "socioOthon_shared_participants";
 
 const defaultSeed = [
-  { id: "SOT001", name: "Participant 001", status: { kit: false, accommodation: false, food: false } },
-  { id: "SOT002", name: "Participant 002", status: { kit: false, accommodation: false, food: false } },
-  { id: "SOT003", name: "Participant 003", status: { kit: false, accommodation: false, food: false } },
-  { id: "SOT004", name: "Participant 004", status: { kit: false, accommodation: false, food: false } },
-  { id: "SOT005", name: "Participant 005", status: { kit: false, accommodation: false, food: false } }
+  { id: "SOT001", name: "Participant 001", team: "Team 1", status: { kit: false, accommodation: false, food: false }, fields: {} },
+  { id: "SOT002", name: "Participant 002", team: "Team 1", status: { kit: false, accommodation: false, food: false }, fields: {} },
+  { id: "SOT003", name: "Participant 003", team: "Team 2", status: { kit: false, accommodation: false, food: false }, fields: {} },
+  { id: "SOT004", name: "Participant 004", team: "Team 2", status: { kit: false, accommodation: false, food: false }, fields: {} },
+  { id: "SOT005", name: "Participant 005", team: "Team 3", status: { kit: false, accommodation: false, food: false }, fields: {} }
 ];
 
 async function fetchParticipantsFromCloud() {
@@ -21,9 +20,7 @@ async function fetchParticipantsFromCloud() {
         return json.data.participants;
       }
     }
-  } catch (err) {
-    console.warn("Could not reach cloud database, using local cache:", err);
-  }
+  } catch (err) {}
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (saved) {
     try { return JSON.parse(saved); } catch (e) {}
@@ -44,7 +41,6 @@ async function saveParticipantsToCloud(list) {
     });
     return true;
   } catch (err) {
-    console.error("Failed to sync to cloud:", err);
     return false;
   }
 }
@@ -53,26 +49,27 @@ async function getParticipants() {
   return await fetchParticipantsFromCloud();
 }
 
-async function addParticipant(id, name) {
+async function addParticipant(id, name, team) {
   const list = await fetchParticipantsFromCloud();
   const existing = list.find(p => p.id.toUpperCase() === id.toUpperCase());
   if (!existing) {
     list.push({
       id: id.toUpperCase(),
+      team: team || "Team 1",
       name: name || `Participant ${id.toUpperCase()}`,
-      status: { kit: false, accommodation: false, food: false }
+      status: { kit: false, accommodation: false, food: false },
+      fields: {}
     });
     await saveParticipantsToCloud(list);
   }
   return { ok: true };
 }
 
-async function updateParticipantInfo(oldId, newId, newName) {
+async function updateParticipantInfo(oldId, newId, newName, newTeam) {
   const list = await fetchParticipantsFromCloud();
   const target = list.find(p => p.id.toUpperCase() === oldId.toUpperCase());
   if (!target) return false;
 
-  // Check if changing ID to an already existing ID
   if (oldId.toUpperCase() !== newId.toUpperCase()) {
     const duplicate = list.find(p => p.id.toUpperCase() === newId.toUpperCase());
     if (duplicate) {
@@ -83,6 +80,7 @@ async function updateParticipantInfo(oldId, newId, newName) {
 
   target.id = newId.toUpperCase();
   target.name = newName.trim();
+  target.team = newTeam.trim();
   await saveParticipantsToCloud(list);
   return true;
 }
@@ -120,26 +118,42 @@ function render(list) {
     const card = document.createElement("article");
     card.className = "participant-card";
 
-    const completed = [p.status && p.status.kit, p.status && p.status.accommodation, p.status && p.status.food].filter(Boolean).length;
-    const statusClass = completed === 3 ? "complete" : "";
+    const checks = p.status ? Object.values(p.status) : [];
+    const completed = checks.filter(Boolean).length;
+    const totalChecks = checks.length || 3;
+    const statusClass = (completed === totalChecks && totalChecks > 0) ? "complete" : "";
     const pUrl = participantUrl(p.id);
+
+    // Render extra fields preview on dashboard card (e.g. Email, Phone)
+    let fieldsHtml = "";
+    if (p.fields && Object.keys(p.fields).length > 0) {
+      fieldsHtml = `<div style="font-size:12px; color:#64748b; margin-top:6px; line-height:1.4; text-align:left;">`;
+      Object.entries(p.fields).forEach(([k, v]) => {
+        if (v) fieldsHtml += `<div><strong>${escapeHtml(k)}:</strong> ${escapeHtml(v)}</div>`;
+      });
+      fieldsHtml += `</div>`;
+    }
 
     const qrId = `qr-${p.id}`;
     card.innerHTML = `
       <div class="participant-meta" style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
           <span class="id-pill">${p.id}</span>
-          <span class="badge small ${statusClass}">${completed}/3</span>
+          <span class="badge small ${statusClass}">${completed}/${totalChecks}</span>
         </div>
         <div style="display:flex; gap:4px;">
-          <button class="button small secondary edit-btn" style="padding:4px 8px; font-size:11px;" title="Edit Name/ID">✏️ Edit</button>
+          <button class="button small secondary edit-btn" style="padding:4px 8px; font-size:11px;" title="Edit Name/ID/Team">✏️ Edit</button>
           <button class="button small secondary del-btn" style="padding:4px 8px; font-size:11px; color:#ef4444;" title="Delete">🗑️</button>
         </div>
       </div>
-      <h3 style="text-align:left; margin-top:8px;">${escapeHtml(p.name)}</h3>
+      <div style="text-align:left; margin-top:8px;">
+        <span style="font-size:12px; font-weight:700; color:#4338ca; background:#e0e7ff; padding:2px 6px; border-radius:4px;">👥 ${escapeHtml(p.team || 'Team 1')}</span>
+        <h3 style="margin-top:4px;">${escapeHtml(p.name)}</h3>
+        ${fieldsHtml}
+      </div>
       <div class="qr" id="${qrId}"></div>
       <div class="card-actions">
-        <a class="button small" href="${pUrl}">Open record</a>
+        <a class="button small" href="${pUrl}">Open / Edit Record</a>
         <button class="button small secondary copy-btn" data-url="${pUrl}">Copy QR link</button>
       </div>
       <div class="url">${pUrl}</div>
@@ -157,10 +171,12 @@ function render(list) {
     card.querySelector(".edit-btn").addEventListener("click", async () => {
       const newId = prompt("Update Participant ID:", p.id);
       if (!newId || !newId.trim()) return;
+      const newTeam = prompt("Update Team ID / Name:", p.team || "");
+      if (newTeam === null) return;
       const newName = prompt("Update Participant Name:", p.name);
       if (!newName || !newName.trim()) return;
 
-      await updateParticipantInfo(p.id, newId.trim(), newName.trim());
+      await updateParticipantInfo(p.id, newId.trim(), newName.trim(), newTeam.trim());
       await init();
     });
 
@@ -184,13 +200,34 @@ function render(list) {
 
 function exportExcelCSV() {
   const list = allParticipants;
-  let csv = "\uFEFFParticipant ID,Name,Kit Received,Accommodation,Food Received,Total Completed\n";
+  
+  // Find all unique custom field keys and custom checklist keys
+  const customFieldKeys = new Set();
+  list.forEach(p => {
+    if (p.fields) Object.keys(p.fields).forEach(k => customFieldKeys.add(k));
+  });
+  const fieldKeysArr = Array.from(customFieldKeys);
+
+  let csv = "\uFEFFParticipant ID,Team ID,Name,Kit Received,Accommodation,Food Received";
+  fieldKeysArr.forEach(k => csv += `,${k}`);
+  csv += ",Total Checks Completed\n";
+
   list.forEach(p => {
     const kit = p.status && p.status.kit ? "YES" : "NO";
     const acc = p.status && p.status.accommodation ? "YES" : "NO";
     const food = p.status && p.status.food ? "YES" : "NO";
-    const total = [p.status && p.status.kit, p.status && p.status.accommodation, p.status && p.status.food].filter(Boolean).length;
-    csv += `"${p.id}","${p.name.replace(/"/g, '""')}","${kit}","${acc}","${food}","${total}/3"\n`;
+    const checks = p.status ? Object.values(p.status) : [];
+    const completed = checks.filter(Boolean).length;
+    
+    let line = `"${p.id}","${(p.team || '').replace(/"/g, '""')}","${p.name.replace(/"/g, '""')}","${kit}","${acc}","${food}"`;
+    
+    fieldKeysArr.forEach(k => {
+      const val = (p.fields && p.fields[k]) ? p.fields[k] : "";
+      line += `,"${String(val).replace(/"/g, '""')}"`;
+    });
+
+    line += `,"${completed}/${checks.length || 3}"\n`;
+    csv += line;
   });
   
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -216,17 +253,22 @@ init();
 document.getElementById("search").addEventListener("input", e => {
   const q = e.target.value.toLowerCase().trim();
   render(allParticipants.filter(p =>
-    p.id.toLowerCase().includes(q) || p.name.toLowerCase().includes(q)
+    p.id.toLowerCase().includes(q) ||
+    p.name.toLowerCase().includes(q) ||
+    (p.team && p.team.toLowerCase().includes(q)) ||
+    (p.fields && Object.values(p.fields).some(v => String(v).toLowerCase().includes(q)))
   ));
 });
 
-// Modal / prompt for adding participant cleanly
 document.getElementById("addDemo").addEventListener("click", async () => {
   const nextNum = allParticipants.length + 1;
   const defaultId = `SOT${String(nextNum).padStart(3, "0")}`;
   
   const id = prompt("Enter Participant ID (e.g. SOT006):", defaultId);
   if (!id) return;
+
+  const team = prompt("Enter Team ID / Name:", `Team ${Math.ceil(nextNum / 2)}`);
+  if (team === null) return;
   
   const name = prompt("Enter Participant Name:", `Participant ${id.trim().toUpperCase()}`);
   if (!name) return;
@@ -235,10 +277,10 @@ document.getElementById("addDemo").addEventListener("click", async () => {
   btn.textContent = "Adding...";
   btn.disabled = true;
 
-  await addParticipant(id.trim().toUpperCase(), name.trim());
+  await addParticipant(id.trim().toUpperCase(), name.trim(), team.trim());
   await init();
 
-  btn.textContent = "+ Add Participant";
+  btn.textContent = "+ Add participant";
   btn.disabled = false;
 });
 

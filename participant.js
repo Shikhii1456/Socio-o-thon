@@ -2,11 +2,7 @@
 // CONFIGURATION: Admin PIN & Endpoints
 // ==========================================
 const ADMIN_PIN = "1234";
-
-// Primary Cloud DB for QR codes
 const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a1156100f012a9";
-
-// Google Apps Script Web App URL (Live Connected Google Sheet)
 const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw7p21WbHuWVn3iclq8PUCjpfDZrCXQEkpZMuV8TruuZtNcIJjzU1zw5hNEiVtJqUVg/exec";
 
 const LOCAL_STORAGE_KEY = "socioOthon_shared_participants";
@@ -32,6 +28,9 @@ const authBanner = document.getElementById("authBanner");
 const authStatusText = document.getElementById("authStatusText");
 const unlockBtn = document.getElementById("unlockBtn");
 
+const addFieldBtn = document.getElementById("addFieldBtn");
+const addChecklistBtn = document.getElementById("addChecklistBtn");
+
 const pinModal = document.getElementById("pinModal");
 const modalPinInput = document.getElementById("modalPinInput");
 const modalPinError = document.getElementById("modalPinError");
@@ -45,24 +44,26 @@ function isOrganizerAuthenticated() {
 }
 
 function setEditModeEnabled(enabled) {
-  const checkboxes = ["kit", "accommodation", "food"];
-  checkboxes.forEach(id => {
-    document.getElementById(id).disabled = !enabled;
-  });
-
   if (enabled) {
     editStatusBtn.classList.add("hidden");
     saveButton.classList.remove("hidden");
+    addFieldBtn.classList.remove("hidden");
+    addChecklistBtn.classList.remove("hidden");
     authBanner.className = "auth-banner unlocked";
-    authStatusText.innerHTML = "✅ <strong>Organizer Mode:</strong> Editing enabled";
+    authStatusText.innerHTML = "✅ <strong>Organizer Mode:</strong> Editing & Adding Fields Enabled";
     unlockBtn.textContent = "Lock";
   } else {
     editStatusBtn.classList.remove("hidden");
     saveButton.classList.add("hidden");
+    addFieldBtn.classList.add("hidden");
+    addChecklistBtn.classList.add("hidden");
     authBanner.className = "auth-banner";
     authStatusText.innerHTML = "👁️ <strong>Viewing Mode:</strong> Details visible (Read-only)";
     unlockBtn.textContent = "🔒 Organizer Login";
   }
+
+  renderChecklist();
+  renderCustomFields();
 }
 
 function openPinModal() {
@@ -91,7 +92,7 @@ function verifyPin() {
   }
 }
 
-// ── Cloud Database Retrieval ──
+// ── Cloud Database Retrieval & Storage ──
 async function fetchParticipants() {
   try {
     const res = await fetch(CLOUD_DB_URL);
@@ -102,53 +103,51 @@ async function fetchParticipants() {
         return json.data.participants;
       }
     }
-  } catch (err) {
-    console.warn("Using local cache:", err);
-  }
+  } catch (err) {}
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (saved) {
     try { return JSON.parse(saved); } catch (e) {}
   }
-  return [];
+  return [
+    { id: "SOT001", name: "Participant 001", team: "Team 1", status: { kit: false, accommodation: false, food: false }, fields: {} },
+    { id: "SOT002", name: "Participant 002", team: "Team 1", status: { kit: false, accommodation: false, food: false }, fields: {} },
+    { id: "SOT003", name: "Participant 003", team: "Team 2", status: { kit: false, accommodation: false, food: false }, fields: {} },
+    { id: "SOT004", name: "Participant 004", team: "Team 2", status: { kit: false, accommodation: false, food: false }, fields: {} },
+    { id: "SOT005", name: "Participant 005", team: "Team 3", status: { kit: false, accommodation: false, food: false }, fields: {} }
+  ];
 }
 
 // ── Real-Time Sync to Google Sheet ──
-async function syncToGoogleSheet(participant, newStatus) {
+async function syncToGoogleSheet(participant, newStatus, fields) {
   const sheetUrl = GOOGLE_SHEET_API_URL || localStorage.getItem("socioOthon_google_sheet_url");
   if (!sheetUrl) return;
 
   try {
     await fetch(sheetUrl, {
       method: "POST",
-      mode: "no-cors", // Google Apps Script handles no-cors gracefully
+      mode: "no-cors",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "sync_status",
         id: participant.id,
         name: participant.name,
         team: participant.team || "",
-        status: newStatus
+        status: newStatus,
+        fields: fields || {}
       })
     });
-    console.log("Synced to Google Sheet in real time");
   } catch (e) {
     console.warn("Google Sheet sync error:", e);
   }
 }
 
-// ── Update QR Cloud Status ──
-async function updateCloudStatus(targetId, newStatus) {
+async function updateCloudParticipant(updated) {
   const list = await fetchParticipants();
-  let found = list.find(p => p.id.toUpperCase() === targetId.toUpperCase());
-  if (found) {
-    found.status = newStatus;
+  const idx = list.findIndex(p => p.id.toUpperCase() === updated.id.toUpperCase());
+  if (idx !== -1) {
+    list[idx] = updated;
   } else {
-    found = {
-      id: targetId.toUpperCase(),
-      name: "Participant " + targetId.toUpperCase(),
-      status: newStatus
-    };
-    list.push(found);
+    list.push(updated);
   }
 
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
@@ -164,10 +163,169 @@ async function updateCloudStatus(targetId, newStatus) {
     });
     return true;
   } catch (e) {
-    console.error("Cloud sync error:", e);
     return false;
   }
 }
+
+// ── Rendering Checklist (Default + Custom Checkboxes) ──
+function renderChecklist() {
+  const container = document.getElementById("checklistContainer");
+  container.innerHTML = "";
+
+  const status = currentParticipant.status || {};
+  const unlocked = isOrganizerAuthenticated();
+
+  const defaultKeys = [
+    { key: "kit", label: "Kit received", desc: "Mark when kit has been handed over." },
+    { key: "accommodation", label: "Accommodation", desc: "Mark when accommodation is assigned/confirmed." },
+    { key: "food", label: "Food arrangement", desc: "Mark when food coupon/token is issued." }
+  ];
+
+  // Combine default with any custom added checklist items
+  const allChecks = [...defaultKeys];
+  Object.keys(status).forEach(k => {
+    if (!defaultKeys.some(d => d.key === k)) {
+      allChecks.push({ key: k, label: k, desc: `Custom attendance item: ${k}` });
+    }
+  });
+
+  allChecks.forEach(item => {
+    const isChecked = !!status[item.key];
+    const row = document.createElement("label");
+    row.className = "check-row";
+
+    const deleteBtn = (unlocked && !defaultKeys.some(d => d.key === item.key))
+      ? `<button type="button" class="field-del-btn" data-del-check="${item.key}" title="Delete this check item">🗑️</button>`
+      : "";
+
+    row.innerHTML = `
+      <input type="checkbox" id="check_${item.key}" ${isChecked ? 'checked' : ''} ${unlocked ? '' : 'disabled'} />
+      <span style="flex:1;">
+        <strong>${item.label}</strong>
+        <small>${item.desc}</small>
+      </span>
+      ${deleteBtn}
+    `;
+    container.appendChild(row);
+  });
+
+  // Attach delete handlers for custom checklist items
+  container.querySelectorAll("[data-del-check]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const k = btn.dataset.delCheck;
+      if (confirm(`Remove checklist item "${k}"?`)) {
+        delete currentParticipant.status[k];
+        renderChecklist();
+        updateBadge();
+      }
+    });
+  });
+
+  // Attach change listeners
+  container.querySelectorAll('input[type="checkbox"]').forEach(input => {
+    input.addEventListener("change", updateBadge);
+  });
+
+  updateBadge();
+}
+
+function updateBadge() {
+  const checkboxes = document.querySelectorAll('#checklistContainer input[type="checkbox"]');
+  const total = checkboxes.length;
+  const completed = Array.from(checkboxes).filter(c => c.checked).length;
+  const badge = document.getElementById("statusBadge");
+  badge.textContent = `${completed} / ${total} completed`;
+  badge.classList.toggle("complete", completed === total && total > 0);
+}
+
+// ── Rendering Custom Text Fields (Email, Phone, College, etc.) ──
+function renderCustomFields() {
+  const container = document.getElementById("customFieldsContainer");
+  container.innerHTML = "";
+
+  const fields = currentParticipant.fields || {};
+  const unlocked = isOrganizerAuthenticated();
+
+  const keys = Object.keys(fields);
+  if (keys.length === 0) {
+    container.innerHTML = `<div style="font-size:13px; color:#94a3b8; padding:8px 0;">No extra fields added yet (e.g. Email, Phone, College).</div>`;
+    return;
+  }
+
+  keys.forEach(k => {
+    const val = fields[k] || "";
+    const row = document.createElement("div");
+    row.className = "field-row";
+
+    if (unlocked) {
+      row.innerHTML = `
+        <span class="field-label">${k}</span>
+        <div style="display:flex; align-items:center; gap:6px; flex:1; justify-content:flex-end;">
+          <input type="text" class="field-input" data-field-key="${k}" value="${val}" placeholder="Enter ${k}..." />
+          <button type="button" class="field-del-btn" data-del-field="${k}" title="Delete field">🗑️</button>
+        </div>
+      `;
+    } else {
+      row.innerHTML = `
+        <span class="field-label">${k}</span>
+        <span class="field-value">${val || '<em style="color:#94a3b8;">Not provided</em>'}</span>
+      `;
+    }
+    container.appendChild(row);
+  });
+
+  if (unlocked) {
+    // Delete field listener
+    container.querySelectorAll("[data-del-field]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const k = btn.dataset.delField;
+        if (confirm(`Delete information field "${k}"?`)) {
+          delete currentParticipant.fields[k];
+          renderCustomFields();
+        }
+      });
+    });
+
+    // Input changes
+    container.querySelectorAll(".field-input").forEach(input => {
+      input.addEventListener("input", (e) => {
+        const k = input.dataset.fieldKey;
+        currentParticipant.fields[k] = e.target.value.trim();
+      });
+    });
+  }
+}
+
+// ── Add New Information Field (Email, Phone, College, etc.) ──
+addFieldBtn.addEventListener("click", () => {
+  if (!isOrganizerAuthenticated()) return;
+  const fieldName = prompt("Enter Field Name (e.g. Email, Phone Number, College, Food Preference):");
+  if (!fieldName || !fieldName.trim()) return;
+
+  const key = fieldName.trim();
+  if (!currentParticipant.fields) currentParticipant.fields = {};
+  if (currentParticipant.fields[key] !== undefined) {
+    alert("Field already exists!");
+    return;
+  }
+
+  const initialVal = prompt(`Enter ${key} for ${currentParticipant.name}:`, "");
+  currentParticipant.fields[key] = initialVal !== null ? initialVal.trim() : "";
+  renderCustomFields();
+});
+
+// ── Add New Checkbox Item ──
+addChecklistBtn.addEventListener("click", () => {
+  if (!isOrganizerAuthenticated()) return;
+  const checkName = prompt("Enter New Checkbox Name (e.g. ID Card Issued, Certificate Given, T-Shirt):");
+  if (!checkName || !checkName.trim()) return;
+
+  const key = checkName.trim();
+  if (!currentParticipant.status) currentParticipant.status = {};
+  currentParticipant.status[key] = false;
+  renderChecklist();
+});
 
 async function loadParticipant() {
   if (!participantId) {
@@ -179,17 +337,18 @@ async function loadParticipant() {
   const list = await fetchParticipants();
   currentParticipant = list.find(p => p.id.toUpperCase() === participantId.toUpperCase());
 
-  // If not found, show not found
   if (!currentParticipant) {
     participantPanel.classList.add("hidden");
     notFoundPanel.classList.remove("hidden");
     return;
   }
 
+  if (!currentParticipant.fields) currentParticipant.fields = {};
+  if (!currentParticipant.status) currentParticipant.status = {};
+
   participantPanel.classList.remove("hidden");
   notFoundPanel.classList.add("hidden");
 
-  // Populate Participant Info Instantly
   document.getElementById("participantId").textContent = currentParticipant.id;
   document.getElementById("participantName").textContent = currentParticipant.name;
 
@@ -201,24 +360,6 @@ async function loadParticipant() {
     teamEl.classList.add("hidden");
   }
 
-  const state = currentParticipant.status || { kit: false, accommodation: false, food: false };
-  document.getElementById("kit").checked = !!state.kit;
-  document.getElementById("accommodation").checked = !!state.accommodation;
-  document.getElementById("food").checked = !!state.food;
-
-  function updateBadge() {
-    const checks = ["kit", "accommodation", "food"];
-    const completed = checks.filter(id => document.getElementById(id).checked).length;
-    const badge = document.getElementById("statusBadge");
-    badge.textContent = `${completed} / 3 completed`;
-    badge.classList.toggle("complete", completed === 3);
-  }
-
-  ["kit", "accommodation", "food"].forEach(id => {
-    document.getElementById(id).addEventListener("change", updateBadge);
-  });
-
-  updateBadge();
   setEditModeEnabled(isOrganizerAuthenticated());
 }
 
@@ -233,7 +374,6 @@ editStatusBtn.addEventListener("click", () => {
 
 unlockBtn.addEventListener("click", () => {
   if (isOrganizerAuthenticated()) {
-    // Lock / Logout
     localStorage.removeItem(AUTH_KEY);
     setEditModeEnabled(false);
   } else {
@@ -251,17 +391,27 @@ saveButton.addEventListener("click", async () => {
   saveButton.disabled = true;
   saveButton.textContent = "Saving...";
 
-  const newState = {
-    kit: document.getElementById("kit").checked,
-    accommodation: document.getElementById("accommodation").checked,
-    food: document.getElementById("food").checked,
-  };
+  // Collect all checkbox statuses
+  const updatedStatus = {};
+  document.querySelectorAll('#checklistContainer input[type="checkbox"]').forEach(c => {
+    const k = c.id.replace("check_", "");
+    updatedStatus[k] = c.checked;
+  });
+  currentParticipant.status = updatedStatus;
 
-  // 1. Save to cloud DB
-  const ok = await updateCloudStatus(currentParticipant.id, newState);
+  // Collect all custom fields
+  const updatedFields = {};
+  document.querySelectorAll(".field-input").forEach(input => {
+    const k = input.dataset.fieldKey;
+    updatedFields[k] = input.value.trim();
+  });
+  currentParticipant.fields = updatedFields;
 
-  // 2. Real-time sync directly into Google Sheet
-  await syncToGoogleSheet(currentParticipant, newState);
+  // 1. Save to cloud database
+  const ok = await updateCloudParticipant(currentParticipant);
+
+  // 2. Real-time sync to Google Sheet
+  await syncToGoogleSheet(currentParticipant, currentParticipant.status, currentParticipant.fields);
 
   const msg = document.getElementById("saveMessage");
   msg.textContent = ok ? "✅ Saved & Synced to Google Sheet!" : "⚠️ Saved locally";
@@ -273,5 +423,4 @@ saveButton.addEventListener("click", async () => {
   setTimeout(() => (msg.textContent = ""), 3000);
 });
 
-// Load on start
 loadParticipant();
