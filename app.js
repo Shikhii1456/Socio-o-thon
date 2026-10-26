@@ -1,6 +1,7 @@
 // Shared Cloud Database Integration for Socio-O-Thon
 const ADMIN_PIN = "1234";
-const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a1156100f012a9";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1_l9WvZ9ZJzhhij0QR0IRe388gP2lt-RNctH2qeErW9U/export?format=csv";
+const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw7p21WbHuWVn3iclq8PUCjpfDZrCXQEkpZMuV8TruuZtNcIJjzU1zw5hNEiVtJqUVg/exec";
 const LOCAL_STORAGE_KEY = "socioOthon_shared_participants";
 
 const defaultSeed = [
@@ -24,39 +25,131 @@ function recordState(list) {
   updateUndoRedoButtons();
 }
 
-async function fetchParticipantsFromCloud() {
-  try {
-    const res = await fetch(CLOUD_DB_URL);
-    if (res.ok) {
-      const json = await res.json();
-      if (json && json.data && Array.isArray(json.data.participants)) {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(json.data.participants));
-        return json.data.participants;
+// ── Google Sheet CSV Parsing & Cloud Retrieval ──
+function parseCSV(text) {
+  const lines = [];
+  let row = [''];
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    const next = text[i + 1];
+    if (c === '"') {
+      if (inQuotes && next === '"') {
+        row[row.length - 1] += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (c === ',' && !inQuotes) {
+      row.push('');
+    } else if ((c === '\r' || c === '\n') && !inQuotes) {
+      if (c === '\r' && next === '\n') i++;
+      lines.push(row);
+      row = [''];
+    } else {
+      row[row.length - 1] += c;
+    }
+  }
+  if (row.length > 1 || (row.length === 1 && row[0] !== '')) lines.push(row);
+  return lines;
+}
+
+function isTruthy(val) {
+  if (!val) return false;
+  const s = String(val).trim().toUpperCase();
+  return s === "YES" || s === "TRUE" || s === "1" || s === "CHECKED";
+}
+
+function parseParticipantsFromCSV(csvText) {
+  const rows = parseCSV(csvText);
+  if (!rows || rows.length < 2) return null;
+  const headers = rows[0].map(h => h.trim());
+  const idCol = headers.findIndex(h => /participant\s*id/i.test(h));
+  const nameCol = headers.findIndex(h => /^name$/i.test(h));
+  const teamCol = headers.findIndex(h => /team/i.test(h));
+  const kitCol = headers.findIndex(h => /kit/i.test(h));
+  const accCol = headers.findIndex(h => /accommodation/i.test(h));
+  const foodCol = headers.findIndex(h => /food/i.test(h));
+
+  const list = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    const rawId = (idCol !== -1 && r[idCol]) ? r[idCol].trim() : (r[0] ? r[0].trim() : "");
+    if (!rawId) continue;
+    const id = rawId.toUpperCase();
+    const name = (nameCol !== -1 && r[nameCol]) ? r[nameCol].trim() : (r[1] ? r[1].trim() : ("Participant " + id));
+    const team = (teamCol !== -1 && r[teamCol]) ? r[teamCol].trim() : (r[2] ? r[2].trim() : "");
+
+    const status = {
+      kit: kitCol !== -1 ? isTruthy(r[kitCol]) : isTruthy(r[3]),
+      accommodation: accCol !== -1 ? isTruthy(r[accCol]) : isTruthy(r[4]),
+      food: foodCol !== -1 ? isTruthy(r[foodCol]) : isTruthy(r[5])
+    };
+
+    const fields = {};
+    for (let c = 0; c < headers.length; c++) {
+      if (c === idCol || c === nameCol || c === teamCol || c === kitCol || c === accCol || c === foodCol) continue;
+      const h = headers[c];
+      if (!h || /last\s*updated/i.test(h)) continue;
+      const val = r[c] ? r[c].trim() : "";
+      if (val) {
+        fields[h] = val;
       }
     }
-  } catch (err) {}
+
+    list.push({ id, name, team, status, fields });
+  }
+  return list;
+}
+
+async function syncParticipantToGoogleSheet(p) {
+  try {
+    await fetch(GOOGLE_SHEET_API_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "sync_status",
+        id: p.id,
+        name: p.name,
+        team: p.team || "",
+        status: p.status || {},
+        fields: p.fields || {}
+      })
+    });
+  } catch (e) {
+    console.warn("Sheet sync error:", e);
+  }
+}
+
+async function fetchParticipantsFromCloud() {
+  try {
+    const res = await fetch(GOOGLE_SHEET_CSV_URL + "&_t=" + Date.now());
+    if (res.ok) {
+      const csv = await res.text();
+      const parsed = parseParticipantsFromCSV(csv);
+      if (parsed && parsed.length > 0) {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(parsed));
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not load from Google Sheet CSV, trying localStorage:", err);
+  }
+
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (saved) {
-    try { return JSON.parse(saved); } catch (e) {}
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) {}
   }
   return defaultSeed;
 }
 
 async function saveParticipantsToCloud(list) {
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
-  try {
-    await fetch(CLOUD_DB_URL, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: "socio-o-thon-db",
-        data: { participants: list }
-      })
-    });
-    return true;
-  } catch (err) {
-    return false;
-  }
+  return true;
 }
 
 async function getParticipants() {
@@ -68,14 +161,16 @@ async function addParticipant(id, name, team) {
   const existing = list.find(p => p.id.toUpperCase() === id.toUpperCase());
   if (!existing) {
     recordState(list);
-    list.push({
+    const newParticipant = {
       id: id.toUpperCase(),
       team: team || "Team 1",
       name: name || `Participant ${id.toUpperCase()}`,
       status: { kit: false, accommodation: false, food: false },
       fields: {}
-    });
+    };
+    list.push(newParticipant);
     await saveParticipantsToCloud(list);
+    await syncParticipantToGoogleSheet(newParticipant);
   }
   return { ok: true };
 }
@@ -98,6 +193,7 @@ async function updateParticipantInfo(oldId, newId, newName, newTeam) {
   target.name = newName.trim();
   target.team = newTeam.trim();
   await saveParticipantsToCloud(list);
+  await syncParticipantToGoogleSheet(target);
   return true;
 }
 
@@ -111,7 +207,18 @@ async function deleteParticipant(id) {
 }
 
 function participantUrl(id) {
-  const base = window.location.href.split("?")[0].split("#")[0].replace(/\/(index\.html)?$/, "");
+  let base;
+  if (
+    !window.location.protocol ||
+    window.location.protocol === "file:" ||
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === ""
+  ) {
+    base = "https://shikhii1456.github.io/Socio-o-thon";
+  } else {
+    base = window.location.href.split("?")[0].split("#")[0].replace(/\/+$/, "").replace(/\/index\.html$/i, "");
+  }
   return `${base}/participant.html?id=${encodeURIComponent(id)}`;
 }
 

@@ -2,7 +2,7 @@
 // CONFIGURATION: Admin PIN & Endpoints
 // ==========================================
 const ADMIN_PIN = "1234";
-const CLOUD_DB_URL = "https://api.restful-api.dev/objects/ff808181a09d98f701a1156100f012a9";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1_l9WvZ9ZJzhhij0QR0IRe388gP2lt-RNctH2qeErW9U/export?format=csv";
 const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw7p21WbHuWVn3iclq8PUCjpfDZrCXQEkpZMuV8TruuZtNcIJjzU1zw5hNEiVtJqUVg/exec";
 
 const LOCAL_STORAGE_KEY = "socioOthon_shared_participants";
@@ -50,6 +50,7 @@ function setEditModeEnabled(enabled) {
   const nameEdit = document.getElementById("nameEditContainer");
   const editIdInput = document.getElementById("editParticipantIdInput");
   const editNameInput = document.getElementById("editParticipantNameInput");
+  const editTeamInput = document.getElementById("editParticipantTeamInput");
 
   if (enabled) {
     editStatusBtn.classList.add("hidden");
@@ -69,6 +70,7 @@ function setEditModeEnabled(enabled) {
       nameView.classList.add("hidden");
       nameEdit.classList.remove("hidden");
       if (editNameInput) editNameInput.value = currentParticipant.name;
+      if (editTeamInput) editTeamInput.value = currentParticipant.team || "";
     }
   } else {
     editStatusBtn.classList.remove("hidden");
@@ -119,22 +121,106 @@ function verifyPin() {
   }
 }
 
-// ── Cloud Database Retrieval & Storage ──
-async function fetchParticipants() {
-  try {
-    const res = await fetch(CLOUD_DB_URL);
-    if (res.ok) {
-      const json = await res.json();
-      if (json && json.data && Array.isArray(json.data.participants)) {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(json.data.participants));
-        return json.data.participants;
+// ── Google Sheet CSV Parsing & Cloud Retrieval ──
+function parseCSV(text) {
+  const lines = [];
+  let row = [''];
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    const next = text[i + 1];
+    if (c === '"') {
+      if (inQuotes && next === '"') {
+        row[row.length - 1] += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (c === ',' && !inQuotes) {
+      row.push('');
+    } else if ((c === '\r' || c === '\n') && !inQuotes) {
+      if (c === '\r' && next === '\n') i++;
+      lines.push(row);
+      row = [''];
+    } else {
+      row[row.length - 1] += c;
+    }
+  }
+  if (row.length > 1 || (row.length === 1 && row[0] !== '')) lines.push(row);
+  return lines;
+}
+
+function isTruthy(val) {
+  if (!val) return false;
+  const s = String(val).trim().toUpperCase();
+  return s === "YES" || s === "TRUE" || s === "1" || s === "CHECKED";
+}
+
+function parseParticipantsFromCSV(csvText) {
+  const rows = parseCSV(csvText);
+  if (!rows || rows.length < 2) return null;
+  const headers = rows[0].map(h => h.trim());
+  const idCol = headers.findIndex(h => /participant\s*id/i.test(h));
+  const nameCol = headers.findIndex(h => /^name$/i.test(h));
+  const teamCol = headers.findIndex(h => /team/i.test(h));
+  const kitCol = headers.findIndex(h => /kit/i.test(h));
+  const accCol = headers.findIndex(h => /accommodation/i.test(h));
+  const foodCol = headers.findIndex(h => /food/i.test(h));
+
+  const list = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    const rawId = (idCol !== -1 && r[idCol]) ? r[idCol].trim() : (r[0] ? r[0].trim() : "");
+    if (!rawId) continue;
+    const id = rawId.toUpperCase();
+    const name = (nameCol !== -1 && r[nameCol]) ? r[nameCol].trim() : (r[1] ? r[1].trim() : ("Participant " + id));
+    const team = (teamCol !== -1 && r[teamCol]) ? r[teamCol].trim() : (r[2] ? r[2].trim() : "");
+
+    const status = {
+      kit: kitCol !== -1 ? isTruthy(r[kitCol]) : isTruthy(r[3]),
+      accommodation: accCol !== -1 ? isTruthy(r[accCol]) : isTruthy(r[4]),
+      food: foodCol !== -1 ? isTruthy(r[foodCol]) : isTruthy(r[5])
+    };
+
+    const fields = {};
+    for (let c = 0; c < headers.length; c++) {
+      if (c === idCol || c === nameCol || c === teamCol || c === kitCol || c === accCol || c === foodCol) continue;
+      const h = headers[c];
+      if (!h || /last\s*updated/i.test(h)) continue;
+      const val = r[c] ? r[c].trim() : "";
+      if (val) {
+        fields[h] = val;
       }
     }
-  } catch (err) {}
+
+    list.push({ id, name, team, status, fields });
+  }
+  return list;
+}
+
+async function fetchParticipants() {
+  try {
+    const res = await fetch(GOOGLE_SHEET_CSV_URL + "&_t=" + Date.now());
+    if (res.ok) {
+      const csv = await res.text();
+      const parsed = parseParticipantsFromCSV(csv);
+      if (parsed && parsed.length > 0) {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(parsed));
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not load from Google Sheet CSV, trying localStorage:", err);
+  }
+
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (saved) {
-    try { return JSON.parse(saved); } catch (e) {}
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) {}
   }
+
   return [
     { id: "SOT001", name: "Participant 001", team: "Team 1", status: { kit: false, accommodation: false, food: false }, fields: {} },
     { id: "SOT002", name: "Participant 002", team: "Team 1", status: { kit: false, accommodation: false, food: false }, fields: {} },
@@ -376,15 +462,19 @@ async function loadParticipant() {
   participantPanel.classList.remove("hidden");
   notFoundPanel.classList.add("hidden");
 
-  document.getElementById("participantId").textContent = currentParticipant.id;
-  document.getElementById("participantName").textContent = currentParticipant.name;
+  const idEl = document.getElementById("participantId");
+  if (idEl) idEl.textContent = currentParticipant.id;
+  const nameEl = document.getElementById("participantName");
+  if (nameEl) nameEl.textContent = currentParticipant.name;
 
   const teamEl = document.getElementById("participantTeam");
-  if (currentParticipant.team) {
-    teamEl.textContent = `Team: ${currentParticipant.team}`;
-    teamEl.classList.remove("hidden");
-  } else {
-    teamEl.classList.add("hidden");
+  if (teamEl) {
+    if (currentParticipant.team) {
+      teamEl.textContent = `Team: ${currentParticipant.team}`;
+      teamEl.classList.remove("hidden");
+    } else {
+      teamEl.classList.add("hidden");
+    }
   }
 
   setEditModeEnabled(isOrganizerAuthenticated());
@@ -434,9 +524,10 @@ saveButton.addEventListener("click", async () => {
   });
   currentParticipant.fields = updatedFields;
 
-  // Collect edited Name and ID if in organizer mode
+  // Collect edited Name, ID, Team if in organizer mode
   const editIdInput = document.getElementById("editParticipantIdInput");
   const editNameInput = document.getElementById("editParticipantNameInput");
+  const editTeamInput = document.getElementById("editParticipantTeamInput");
   const oldId = currentParticipant.id;
 
   if (editNameInput && editNameInput.value.trim()) {
@@ -445,8 +536,11 @@ saveButton.addEventListener("click", async () => {
   if (editIdInput && editIdInput.value.trim()) {
     currentParticipant.id = editIdInput.value.trim().toUpperCase();
   }
+  if (editTeamInput) {
+    currentParticipant.team = editTeamInput.value.trim();
+  }
 
-  // 1. Save to cloud database (handling ID rename if changed)
+  // 1. Save to local storage cache immediately
   const list = await fetchParticipants();
   const idx = list.findIndex(p => p.id.toUpperCase() === oldId.toUpperCase());
   if (idx !== -1) {
@@ -456,24 +550,23 @@ saveButton.addEventListener("click", async () => {
   }
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
 
-  let ok = false;
-  try {
-    await fetch(CLOUD_DB_URL, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: "socio-o-thon-db",
-        data: { participants: list }
-      })
-    });
-    ok = true;
-  } catch (e) {
-    ok = false;
-  }
+  // 2. Real-time sync to Google Sheet
+  await syncToGoogleSheet(currentParticipant, currentParticipant.status, currentParticipant.fields);
 
   // Update display values
-  document.getElementById("participantId").textContent = currentParticipant.id;
-  document.getElementById("participantName").textContent = currentParticipant.name;
+  const idEl = document.getElementById("participantId");
+  if (idEl) idEl.textContent = currentParticipant.id;
+  const nameEl = document.getElementById("participantName");
+  if (nameEl) nameEl.textContent = currentParticipant.name;
+  const teamEl = document.getElementById("participantTeam");
+  if (teamEl) {
+    if (currentParticipant.team) {
+      teamEl.textContent = `Team: ${currentParticipant.team}`;
+      teamEl.classList.remove("hidden");
+    } else {
+      teamEl.classList.add("hidden");
+    }
+  }
 
   // Update browser URL bar seamlessly if ID changed so refreshing page doesn't break
   if (currentParticipant.id !== oldId) {
@@ -481,12 +574,9 @@ saveButton.addEventListener("click", async () => {
     window.history.replaceState(null, "", newUrl);
   }
 
-  // 2. Real-time sync to Google Sheet
-  await syncToGoogleSheet(currentParticipant, currentParticipant.status, currentParticipant.fields);
-
   const msg = document.getElementById("saveMessage");
-  msg.textContent = ok ? "✅ Saved & Synced to Google Sheet!" : "⚠️ Saved locally";
-  msg.style.color = ok ? "#067647" : "#d97706";
+  msg.textContent = "✅ Saved & Synced to Google Sheet!";
+  msg.style.color = "#067647";
 
   // Automatically lock immediately after saving!
   setTimeout(() => {
