@@ -26,8 +26,9 @@ async function isPinValid(enteredPin) {
 }
 
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1_l9WvZ9ZJzhhij0QR0IRe388gP2lt-RNctH2qeErW9U/export?format=csv";
+const GOOGLE_SHEET_GVIZ_URL = "https://docs.google.com/spreadsheets/d/1_l9WvZ9ZJzhhij0QR0IRe388gP2lt-RNctH2qeErW9U/gviz/tq";
 const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw7p21WbHuWVn3iclq8PUCjpfDZrCXQEkpZMuV8TruuZtNcIJjzU1zw5hNEiVtJqUVg/exec";
-const LOCAL_STORAGE_KEY = "socioOthon_participants_v8_1";
+const LOCAL_STORAGE_KEY = "socioOthon_participants_v8_2";
 
 // Initial seed loaded safely from data/seed.js or window.SOCIO_DEFAULT_PARTICIPANTS
 const defaultSeed = (typeof window !== "undefined" && Array.isArray(window.SOCIO_DEFAULT_PARTICIPANTS))
@@ -82,12 +83,106 @@ function isTruthy(val) {
   return s === "YES" || s === "TRUE" || s === "1" || s === "CHECKED";
 }
 
+function parseGvizTable(data) {
+  if (!data || !data.table || !data.table.rows) return null;
+  const cols = data.table.cols.map(c => (c.label || c.id || '').trim());
+  const rows = data.table.rows;
+  
+  const idCol = cols.findIndex(h => /participant\s*id/i.test(h));
+  const teamIdCol = cols.findIndex(h => /^team\s*id$/i.test(h) || /socio\s*team\s*id/i.test(h));
+  const nameCol = cols.findIndex(h => /^name$/i.test(h));
+  const kitCol = cols.findIndex(h => /kit/i.test(h));
+  const accCol = cols.findIndex(h => /accommodation/i.test(h));
+  const foodCol = cols.findIndex(h => /food/i.test(h));
+  
+  const list = [];
+  rows.forEach(r => {
+    const cells = r.c || [];
+    const getVal = (idx) => {
+      if (idx === -1 || !cells[idx]) return '';
+      const cell = cells[idx];
+      return (cell.f !== undefined && cell.f !== null) ? String(cell.f).trim() : (cell.v !== undefined && cell.v !== null ? String(cell.v).trim() : '');
+    };
+    
+    const id = getVal(idCol).toUpperCase();
+    if (!id) return;
+    
+    const name = getVal(nameCol) || ('Participant ' + id);
+    let teamId = getVal(teamIdCol) || '';
+    if (teamId === '-') teamId = '';
+    
+    const status = {
+      kit: isTruthy(getVal(kitCol)),
+      accommodation: isTruthy(getVal(accCol)),
+      food: isTruthy(getVal(foodCol))
+    };
+    
+    const fields = {};
+    if (teamId) fields['Team ID'] = teamId;
+    
+    cols.forEach((colName, cIdx) => {
+      if (cIdx === idCol || cIdx === nameCol || cIdx === kitCol || cIdx === accCol || cIdx === foodCol) return;
+      if (!colName || /last\s*updated/i.test(colName)) return;
+      const val = getVal(cIdx);
+      if (val && val !== '-') {
+        fields[colName] = val;
+      }
+    });
+
+    const ab2 = fields['AB2 (SOCI-O-THON)'] || fields['AB2'] || '';
+    if (ab2) fields['AB2 (SOCI-O-THON)'] = ab2;
+    
+    list.push({ id, name, teamId, status, fields });
+  });
+  return list;
+}
+
+function fetchLiveSheetJsonp() {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined" || !document || !document.head) {
+      return resolve(null);
+    }
+    const callbackName = "gvizSheetCallback_" + Math.random().toString(36).slice(2);
+    const timeout = setTimeout(() => {
+      cleanup();
+      resolve(null);
+    }, 6000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[callbackName];
+      const el = document.getElementById(callbackName);
+      if (el) el.remove();
+    }
+
+    window[callbackName] = function(rawResponse) {
+      cleanup();
+      try {
+        const parsed = parseGvizTable(rawResponse);
+        resolve(parsed);
+      } catch (e) {
+        console.warn("Error parsing Gviz sheet response:", e);
+        resolve(null);
+      }
+    };
+
+    const script = document.createElement("script");
+    script.id = callbackName;
+    script.src = `${GOOGLE_SHEET_GVIZ_URL}?tqx=responseHandler:${callbackName}&_t=${Date.now()}`;
+    script.onerror = () => {
+      cleanup();
+      resolve(null);
+    };
+    document.head.appendChild(script);
+  });
+}
+
 function parseParticipantsFromCSV(csvText) {
   const rows = parseCSV(csvText);
   if (!rows || rows.length < 2) return null;
   const headers = rows[0].map(h => h.trim());
   const idCol = headers.findIndex(h => /participant\s*id/i.test(h));
-  const teamIdCol = headers.findIndex(h => /team\s*id/i.test(h));
+  const teamIdCol = headers.findIndex(h => /^team\s*id$/i.test(h) || /socio\s*team\s*id/i.test(h));
   const nameCol = headers.findIndex(h => /^name$/i.test(h));
   const kitCol = headers.findIndex(h => /kit/i.test(h));
   const accCol = headers.findIndex(h => /accommodation/i.test(h));
@@ -100,7 +195,8 @@ function parseParticipantsFromCSV(csvText) {
     if (!rawId) continue;
     const id = rawId.toUpperCase();
     const name = (nameCol !== -1 && r[nameCol]) ? r[nameCol].trim() : (r[1] ? r[1].trim() : ("Participant " + id));
-    const teamId = (teamIdCol !== -1 && r[teamIdCol]) ? r[teamIdCol].trim() : "";
+    let teamId = (teamIdCol !== -1 && r[teamIdCol]) ? r[teamIdCol].trim() : "";
+    if (teamId === '-') teamId = '';
     
     const status = {
       kit: kitCol !== -1 ? isTruthy(r[kitCol]) : isTruthy(r[3]),
@@ -108,22 +204,16 @@ function parseParticipantsFromCSV(csvText) {
       food: foodCol !== -1 ? isTruthy(r[foodCol]) : isTruthy(r[5])
     };
 
-    const isOnSpot = name.toLowerCase().startsWith("on-spot");
-
     const fields = {};
-    if (teamId) {
-      fields["Team ID"] = teamId;
-    }
+    if (teamId) fields["Team ID"] = teamId;
 
     for (let c = 0; c < headers.length; c++) {
-      if (c === idCol || c === nameCol || c === kitCol || c === accCol || c === foodCol || c === teamIdCol) continue;
+      if (c === idCol || c === nameCol || c === kitCol || c === accCol || c === foodCol) continue;
       const h = headers[c];
       if (!h || /last\s*updated/i.test(h)) continue;
-      // Strip email and contact only for blank on-spot walk-in slots
-      if (isOnSpot && (/email|mail/i.test(h) || /contact|phone/i.test(h))) continue;
 
       const val = r[c] ? r[c].trim() : "";
-      if (val) {
+      if (val && val !== '-') {
         const upper = val.toUpperCase();
         if (upper === "YES" || upper === "NO" || upper === "TRUE" || upper === "FALSE") {
           status[h] = isTruthy(val);
@@ -132,6 +222,9 @@ function parseParticipantsFromCSV(csvText) {
         }
       }
     }
+
+    const ab2 = fields['AB2 (SOCI-O-THON)'] || fields['AB2'] || '';
+    if (ab2) fields['AB2 (SOCI-O-THON)'] = ab2;
 
     list.push({ id, name, teamId, status, fields });
   }
@@ -147,7 +240,7 @@ async function syncParticipantToGoogleSheet(p) {
       body: JSON.stringify({
         action: "sync_status",
         id: p.id,
-        teamId: p.teamId || (p.fields && p.fields["Team ID"]) || "",
+        teamId: p.teamId || (p.fields && p.fields["Team ID"]) || (p.fields && p.fields["Socio Team ID"]) || "",
         name: p.name,
         status: p.status || {},
         fields: p.fields || {}
@@ -161,61 +254,54 @@ async function syncParticipantToGoogleSheet(p) {
 async function fetchParticipantsFromCloud() {
   let list = [];
 
-  // 1. Fetch live Google Sheet CSV (primary attached real-time source)
+  // 1. Fetch live Google Sheet via JSONP (No CORS restrictions, real-time sync with Google Sheet!)
   try {
-    const res = await fetch(GOOGLE_SHEET_CSV_URL + "&_t=" + Date.now());
-    if (res.ok) {
-      const csv = await res.text();
-      const parsed = parseParticipantsFromCSV(csv);
-      if (parsed && parsed.length > 0) {
-        list = parsed;
-      }
+    const liveGviz = await fetchLiveSheetJsonp();
+    if (liveGviz && Array.isArray(liveGviz) && liveGviz.length > 0) {
+      list = liveGviz;
     }
   } catch (err) {
-    console.warn("Could not load from Google Sheet CSV, falling back to local:", err);
+    console.warn("JSONP sheet fetch error:", err);
   }
 
-  // If live sheet data is available, it is the primary attached source
-  if (list.length > 0) {
-    // Strip email and contact for all on-spot participants (SOT080+)
-    list.forEach(p => {
-      const num = parseInt(String(p.id).replace(/\D/g, ""), 10) || 0;
-      if (num >= 80 && p.fields) {
-        delete p.fields.Email;
-        delete p.fields.Contact;
-        delete p.fields["email"];
-        delete p.fields["contact"];
+  // 2. Secondary fetch: Google Sheet CSV export
+  if (list.length === 0) {
+    try {
+      const res = await fetch(GOOGLE_SHEET_CSV_URL + "&_t=" + Date.now());
+      if (res.ok) {
+        const csv = await res.text();
+        const parsed = parseParticipantsFromCSV(csv);
+        if (parsed && parsed.length > 0) {
+          list = parsed;
+        }
       }
-    });
+    } catch (err) {}
+  }
 
+  // If live sheet data is available, update local cache and return
+  if (list.length > 0) {
     list.sort((a, b) => {
       const numA = parseInt(String(a.id).replace(/\D/g, ""), 10) || 0;
       const numB = parseInt(String(b.id).replace(/\D/g, ""), 10) || 0;
       return numA - numB;
     });
 
-    // Keep local cache perfectly synchronized with the sheet
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+    } catch (e) {}
     return list;
   }
 
   // Fallback 1: localStorage if offline
-  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (saved) {
-    try {
+  try {
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (saved) {
       const localList = JSON.parse(saved);
       if (Array.isArray(localList) && localList.length > 0) {
-        localList.forEach(p => {
-          const num = parseInt(String(p.id).replace(/\D/g, ""), 10) || 0;
-          if (num >= 80 && p.fields) {
-            delete p.fields.Email;
-            delete p.fields.Contact;
-          }
-        });
         return localList;
       }
-    } catch (e) {}
-  }
+    }
+  } catch (e) {}
 
   // Fallback 2: data/participants.json
   try {
