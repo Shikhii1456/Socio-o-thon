@@ -7,8 +7,8 @@ function escapeHtml(str) {
 // ==========================================
 // CONFIGURATION: Admin PIN & Endpoints
 // ==========================================
-// Cryptographic SHA-256 hash of default admin PIN (prevents cleartext exposure in source code)
-const DEFAULT_ADMIN_PIN_HASH = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4";
+// Cryptographic SHA-256 hash of default admin PIN (1456)
+const DEFAULT_ADMIN_PIN_HASH = "fddc599a3afe6c68b8098f7ef3db02335f7e398e3c0bd34b663f04f424886aeb";
 
 async function computeSha256(text) {
   try {
@@ -24,13 +24,17 @@ async function computeSha256(text) {
 async function isPinValid(enteredPin) {
   if (!enteredPin) return false;
   const trimmed = enteredPin.trim();
+  // Clear obsolete custom hash from previous PIN (1234)
+  if (localStorage.getItem("socioOthon_admin_pin_hash") === "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4") {
+    localStorage.removeItem("socioOthon_admin_pin_hash");
+  }
   const customHash = localStorage.getItem("socioOthon_admin_pin_hash");
   const targetHash = customHash || DEFAULT_ADMIN_PIN_HASH;
   const computed = await computeSha256(trimmed);
   if (computed) {
     return computed.toLowerCase() === targetHash.toLowerCase();
   }
-  return trimmed === "1234";
+  return trimmed === "1456";
 }
 
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1_l9WvZ9ZJzhhij0QR0IRe388gP2lt-RNctH2qeErW9U/export?format=csv";
@@ -529,16 +533,23 @@ function renderChecklist() {
     const row = document.createElement("label");
     row.className = "check-row";
 
-    const deleteBtn = (unlocked && !defaultKeys.some(d => d.key === item.key))
+    const deleteBtn = unlocked
       ? '<button type="button" class="field-del-btn" data-del-check="' + escapeHtml(item.key) + '" title="Delete this check item">🗑️</button>'
       : "";
 
+    const labelContent = unlocked
+      ? `<div style="flex:1; display:flex; flex-direction:column; gap:2px; margin-left:6px;">
+           <input type="text" class="check-label-input" data-original-key="${escapeHtml(item.key)}" value="${escapeHtml(item.label)}" style="font-weight:700; font-size:14px; color:#0f172a; border:1px dashed #93c5fd; background:#fff; padding:4px 8px; border-radius:6px; width:92%;" title="Click to edit checkbox name" placeholder="Checkbox Name..." />
+           <small style="color:#64748b; font-size:11px;">${escapeHtml(item.desc)}</small>
+         </div>`
+      : `<span style="flex:1; margin-left:6px;">
+           <strong>${escapeHtml(item.label)}</strong>
+           <small>${escapeHtml(item.desc)}</small>
+         </span>`;
+
     row.innerHTML = `
       <input type="checkbox" id="check_${encodeURIComponent(item.key)}" data-check-key="${escapeHtml(item.key)}" ${isChecked ? 'checked' : ''} ${unlocked ? '' : 'disabled'} />
-      <span style="flex:1;">
-        <strong>${escapeHtml(item.label)}</strong>
-        <small>${escapeHtml(item.desc)}</small>
-      </span>
+      ${labelContent}
       ${deleteBtn}
     `;
     container.appendChild(row);
@@ -627,9 +638,11 @@ function renderCustomFields() {
 
     if (unlocked) {
       row.innerHTML = `
-        <span class="field-label">${escapeHtml(displayLabel)}</span>
+        <div style="display:flex; align-items:center; gap:6px; width:45%; min-width:140px;">
+          <input type="text" class="field-name-input" data-original-name="${escapeHtml(k)}" value="${escapeHtml(k)}" placeholder="Field Name..." style="font-weight:700; font-size:13px; color:#1e40af; border:1px dashed #93c5fd; background:#fff; padding:4px 8px; border-radius:6px; width:100%;" title="Click to edit field name" />
+        </div>
         <div style="display:flex; align-items:center; gap:6px; flex:1; justify-content:flex-end;">
-          <input type="text" class="field-input" data-field-key="${escapeHtml(k)}" value="${escapeHtml(val)}" placeholder="Enter ${escapeHtml(displayLabel)}..." />
+          <input type="text" class="field-input" data-field-key="${escapeHtml(k)}" value="${escapeHtml(val)}" placeholder="Value..." style="width:100%; padding:5px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;" />
           <button type="button" class="field-del-btn" data-del-field="${escapeHtml(k)}" title="Delete field">🗑️</button>
         </div>
       `;
@@ -810,27 +823,51 @@ if (saveButton) {
     saveButton.disabled = true;
     saveButton.textContent = "Saving...";
 
-    // Collect all checkbox statuses
+    // Collect all checkbox statuses & editable checkbox names
     const updatedStatus = {};
-    document.querySelectorAll('#checklistContainer input[type="checkbox"]').forEach(c => {
-      const k = c.dataset.checkKey || c.id.replace("check_", "");
-      updatedStatus[k] = c.checked;
+    const deletedChecks = currentParticipant._deletedChecks || [];
+    document.querySelectorAll('#checklistContainer .check-row').forEach(row => {
+      const c = row.querySelector('input[type="checkbox"]');
+      if (!c) return;
+      const labelInput = row.querySelector('.check-label-input');
+      const origKey = c.dataset.checkKey || c.id.replace("check_", "");
+      let finalKey = origKey;
+      if (labelInput && labelInput.value.trim()) {
+        finalKey = labelInput.value.trim();
+      }
+      if (finalKey !== origKey && !deletedChecks.includes(origKey)) {
+        deletedChecks.push(origKey);
+      }
+      updatedStatus[finalKey] = c.checked;
     });
     currentParticipant.status = updatedStatus;
+    currentParticipant._deletedChecks = deletedChecks;
 
-    // Collect all custom fields
+    // Collect all custom fields & editable field names
     const updatedFields = {};
-    document.querySelectorAll(".field-input").forEach(input => {
-      const k = input.dataset.fieldKey;
-      updatedFields[k] = input.value.trim();
+    const deletedFields = currentParticipant._deletedFields || [];
+    document.querySelectorAll('#customFieldsContainer .field-row').forEach(row => {
+      const nameInput = row.querySelector('.field-name-input');
+      const valInput = row.querySelector('.field-input');
+      if (!valInput) return;
+      const origKey = valInput.dataset.fieldKey;
+      let finalKey = origKey;
+      if (nameInput && nameInput.value.trim()) {
+        finalKey = nameInput.value.trim();
+      }
+      if (finalKey !== origKey && !deletedFields.includes(origKey)) {
+        deletedFields.push(origKey);
+      }
+      updatedFields[finalKey] = valInput.value.trim();
     });
     currentParticipant.fields = { ...updatedFields };
+    currentParticipant._deletedFields = deletedFields;
 
-    // For Google Sheet sync, pass empty string for any explicitly deleted fields so the cell is blanked!
+    // For Google Sheet sync, pass empty string for any explicitly deleted or renamed fields so the cell is blanked!
     const syncFields = { ...updatedFields };
     if (currentParticipant._deletedFields && Array.isArray(currentParticipant._deletedFields)) {
       currentParticipant._deletedFields.forEach(k => {
-        syncFields[k] = "";
+        if (!syncFields[k]) syncFields[k] = "";
       });
     }
 
@@ -912,3 +949,34 @@ if (document.readyState === "loading") {
 } else {
   loadParticipant();
 }
+
+// Manual Sync Button Handler
+const refreshPartSheetBtn = document.getElementById("refreshPartSheetBtn");
+if (refreshPartSheetBtn) {
+  refreshPartSheetBtn.addEventListener("click", async () => {
+    refreshPartSheetBtn.textContent = "⏳ Syncing...";
+    refreshPartSheetBtn.disabled = true;
+    try {
+      await loadParticipant();
+      refreshPartSheetBtn.textContent = "✅ Synced!";
+      setTimeout(() => {
+        refreshPartSheetBtn.textContent = "🔄 Sync Sheet";
+        refreshPartSheetBtn.disabled = false;
+      }, 1500);
+    } catch (e) {
+      refreshPartSheetBtn.textContent = "🔄 Sync Sheet";
+      refreshPartSheetBtn.disabled = false;
+    }
+  });
+}
+
+// Auto-refresh when tab gains focus or every 20 seconds so changes in Google Sheet appear automatically
+window.addEventListener("focus", () => {
+  if (!isOrganizerUnlocked) loadParticipant();
+});
+
+setInterval(() => {
+  if (!isOrganizerUnlocked) {
+    loadParticipant();
+  }
+}, 20000);

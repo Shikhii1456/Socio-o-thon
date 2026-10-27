@@ -1,6 +1,35 @@
 // Google Apps Script Web App for Socio-O-Thon
 // Handles check-in syncing, dynamic columns, Team ID, Theme, AB2, and sorting
 
+function doGet(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var values = sheet.getDataRange().getValues();
+    if (!values || values.length < 2) {
+      return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+    }
+    var headers = values[0];
+    var result = [];
+    for (var r = 1; r < values.length; r++) {
+      var row = values[r];
+      var rowObj = {};
+      for (var c = 0; c < headers.length; c++) {
+        var h = String(headers[c] || "").trim();
+        if (h) rowObj[h] = row[c];
+      }
+      result.push(rowObj);
+    }
+    var callback = e && e.parameter && e.parameter.callback;
+    if (callback) {
+      return ContentService.createTextOutput(callback + "(" + JSON.stringify(result) + ");")
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ error: err.message })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
 function doPost(e) {
   var lock = LockService.getScriptLock();
   lock.tryLock(30000);

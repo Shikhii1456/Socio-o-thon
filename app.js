@@ -1,6 +1,6 @@
 // Shared Cloud Database Integration for Socio-O-Thon
-// Cryptographic SHA-256 hash of default admin PIN (prevents cleartext exposure in source code)
-const DEFAULT_ADMIN_PIN_HASH = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4";
+// Cryptographic SHA-256 hash of default admin PIN (1456)
+const DEFAULT_ADMIN_PIN_HASH = "fddc599a3afe6c68b8098f7ef3db02335f7e398e3c0bd34b663f04f424886aeb";
 
 async function computeSha256(text) {
   try {
@@ -16,13 +16,17 @@ async function computeSha256(text) {
 async function isPinValid(enteredPin) {
   if (!enteredPin) return false;
   const trimmed = enteredPin.trim();
+  // Clear obsolete custom hash from previous PIN (1234)
+  if (localStorage.getItem("socioOthon_admin_pin_hash") === "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4") {
+    localStorage.removeItem("socioOthon_admin_pin_hash");
+  }
   const customHash = localStorage.getItem("socioOthon_admin_pin_hash");
   const targetHash = customHash || DEFAULT_ADMIN_PIN_HASH;
   const computed = await computeSha256(trimmed);
   if (computed) {
     return computed.toLowerCase() === targetHash.toLowerCase();
   }
-  return trimmed === "1234";
+  return trimmed === "1456";
 }
 
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1_l9WvZ9ZJzhhij0QR0IRe388gP2lt-RNctH2qeErW9U/export?format=csv";
@@ -702,6 +706,29 @@ setInterval(() => {
     }).catch(() => {});
   }
 }, 25000);
+
+const refreshSheetBtn = document.getElementById("refreshSheetBtn");
+if (refreshSheetBtn) {
+  refreshSheetBtn.addEventListener("click", async () => {
+    refreshSheetBtn.textContent = "⏳ Syncing...";
+    refreshSheetBtn.disabled = true;
+    try {
+      const fresh = await fetchLiveSheetJsonp();
+      if (fresh && fresh.length > 0) {
+        allParticipants = fresh;
+        try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(fresh)); } catch(e) {}
+        render(allParticipants);
+        refreshSheetBtn.textContent = "✅ Synced!";
+        setTimeout(() => { refreshSheetBtn.textContent = "🔄 Sync Sheet"; refreshSheetBtn.disabled = false; }, 1500);
+        return;
+      }
+    } catch(e) {
+      console.warn("Manual sync error:", e);
+    }
+    refreshSheetBtn.textContent = "🔄 Sync Sheet";
+    refreshSheetBtn.disabled = false;
+  });
+}
 
 // ── Debounced Search for 60 FPS Performance ──
 let searchTimer = null;
