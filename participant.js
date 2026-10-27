@@ -5,7 +5,7 @@ const ADMIN_PIN = "1234";
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1_l9WvZ9ZJzhhij0QR0IRe388gP2lt-RNctH2qeErW9U/export?format=csv";
 const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw7p21WbHuWVn3iclq8PUCjpfDZrCXQEkpZMuV8TruuZtNcIJjzU1zw5hNEiVtJqUVg/exec";
 
-const LOCAL_STORAGE_KEY = "socioOthon_participants_v4";
+const LOCAL_STORAGE_KEY = "socioOthon_participants_v5";
 const AUTH_KEY = "socioOthon_admin_auth";
 
 // Extract participant ID from query param (?id=SOT001) or path (/p/SOT001)
@@ -225,7 +225,7 @@ async function fetchParticipants() {
               return {
                 ...p,
                 status: fromSheet.status || p.status,
-                fields: { ...p.fields, ...fromSheet.fields }
+                fields: { ...fromSheet.fields, ...p.fields }
               };
             }
             return p;
@@ -493,58 +493,6 @@ async function fetchParticipants() {
   },
   {
     "id": "SOT018",
-    "name": "HIMANSHU PANDEY",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "240694@kit.ac.in",
-      "Contact": "9198003605"
-    }
-  },
-  {
-    "id": "SOT019",
-    "name": "ANUSTHA SHARMA",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "240466@kit.ac.in",
-      "Contact": "7905776123"
-    }
-  },
-  {
-    "id": "SOT020",
-    "name": "AKASH JOSHI",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "developer.akashjoshi@gmail.com",
-      "Contact": "9125847406"
-    }
-  },
-  {
-    "id": "SOT021",
-    "name": "Kashvee Mehta",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "dev.kashvee@gmail.com",
-      "Contact": "8887539149"
-    }
-  },
-  {
-    "id": "SOT022",
     "name": "Utkarsh Kumar Singh",
     "status": {
       "kit": false,
@@ -557,7 +505,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT023",
+    "id": "SOT019",
     "name": "Tiwari Mayank",
     "status": {
       "kit": false,
@@ -570,7 +518,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT024",
+    "id": "SOT020",
     "name": "Prativa Sahoo",
     "status": {
       "kit": false,
@@ -583,7 +531,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT025",
+    "id": "SOT021",
     "name": "Abhijeet Kumar Singh",
     "status": {
       "kit": false,
@@ -596,7 +544,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT026",
+    "id": "SOT022",
     "name": "ISHIKA SINGH",
     "status": {
       "kit": false,
@@ -609,7 +557,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT027",
+    "id": "SOT023",
     "name": "Aditya Gupta",
     "status": {
       "kit": false,
@@ -622,7 +570,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT028",
+    "id": "SOT024",
     "name": "Ayush Mishra",
     "status": {
       "kit": false,
@@ -635,7 +583,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT029",
+    "id": "SOT025",
     "name": "Alok Sahu",
     "status": {
       "kit": false,
@@ -648,72 +596,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT030",
-    "name": "SARTHAK AGRAWAL",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "sarthakag24@iitk.ac.in",
-      "Contact": "9696625701"
-    }
-  },
-  {
-    "id": "SOT031",
-    "name": "rudresh kumar",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "rudreshthakur80@gmail.com",
-      "Contact": "9369699470"
-    }
-  },
-  {
-    "id": "SOT032",
-    "name": "Pratik Kumar Yadav",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "pratiky24@iitk.ac.in",
-      "Contact": "8253084953"
-    }
-  },
-  {
-    "id": "SOT033",
-    "name": "pranjal gautam",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "pranjalg24@iitk.ac.in",
-      "Contact": "7454040860"
-    }
-  },
-  {
-    "id": "SOT034",
-    "name": "Kartikey Agnihotri",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "kartikeyofficial12@gmail.com",
-      "Contact": "8081260329"
-    }
-  },
-  {
-    "id": "SOT035",
+    "id": "SOT026",
     "name": "Kajal Singh",
     "status": {
       "kit": false,
@@ -726,7 +609,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT036",
+    "id": "SOT027",
     "name": "Avika Chauhan",
     "status": {
       "kit": false,
@@ -739,7 +622,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT037",
+    "id": "SOT028",
     "name": "Vaibhavi Shukla",
     "status": {
       "kit": false,
@@ -752,7 +635,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT038",
+    "id": "SOT029",
     "name": "Kalash Mishra",
     "status": {
       "kit": false,
@@ -765,7 +648,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT039",
+    "id": "SOT030",
     "name": "Anirudh Mishra",
     "status": {
       "kit": false,
@@ -778,7 +661,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT040",
+    "id": "SOT031",
     "name": "Aditya Dhanraj",
     "status": {
       "kit": false,
@@ -791,7 +674,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT041",
+    "id": "SOT032",
     "name": "Priyanshi Maurya",
     "status": {
       "kit": false,
@@ -804,7 +687,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT042",
+    "id": "SOT033",
     "name": "Nainshi Yadav",
     "status": {
       "kit": false,
@@ -817,7 +700,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT043",
+    "id": "SOT034",
     "name": "Tushar Periwal",
     "status": {
       "kit": false,
@@ -830,7 +713,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT044",
+    "id": "SOT035",
     "name": "Dipesh Sikhwal",
     "status": {
       "kit": false,
@@ -843,7 +726,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT045",
+    "id": "SOT036",
     "name": "ADITYA RAJ",
     "status": {
       "kit": false,
@@ -856,7 +739,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT046",
+    "id": "SOT037",
     "name": "KANISHK KRISHAN",
     "status": {
       "kit": false,
@@ -869,7 +752,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT047",
+    "id": "SOT038",
     "name": "AYUSHMAAN KESARWANI",
     "status": {
       "kit": false,
@@ -882,7 +765,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT048",
+    "id": "SOT039",
     "name": "SANDIHYA SATYA",
     "status": {
       "kit": false,
@@ -895,7 +778,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT049",
+    "id": "SOT040",
     "name": "ADITYA SHARMA",
     "status": {
       "kit": false,
@@ -908,7 +791,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT050",
+    "id": "SOT041",
     "name": "Vedika Bhatnagar",
     "status": {
       "kit": false,
@@ -921,7 +804,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT051",
+    "id": "SOT042",
     "name": "Divya Shahi",
     "status": {
       "kit": false,
@@ -934,7 +817,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT052",
+    "id": "SOT043",
     "name": "Srishti Katiyar",
     "status": {
       "kit": false,
@@ -947,7 +830,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT053",
+    "id": "SOT044",
     "name": "garima negi",
     "status": {
       "kit": false,
@@ -960,7 +843,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT054",
+    "id": "SOT045",
     "name": "B.Nanda kishore",
     "status": {
       "kit": false,
@@ -973,7 +856,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT055",
+    "id": "SOT046",
     "name": "DOMMETI TEJA SRIVARDHAN",
     "status": {
       "kit": false,
@@ -986,7 +869,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT056",
+    "id": "SOT047",
     "name": "YATHARTH SRIVASTAVA",
     "status": {
       "kit": false,
@@ -999,7 +882,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT057",
+    "id": "SOT048",
     "name": "Gitanjali",
     "status": {
       "kit": false,
@@ -1012,7 +895,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT058",
+    "id": "SOT049",
     "name": "Tiyasa Kundu",
     "status": {
       "kit": false,
@@ -1025,7 +908,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT059",
+    "id": "SOT050",
     "name": "Soumya Singh",
     "status": {
       "kit": false,
@@ -1038,7 +921,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT060",
+    "id": "SOT051",
     "name": "MADHURI KUMARI",
     "status": {
       "kit": false,
@@ -1051,7 +934,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT061",
+    "id": "SOT052",
     "name": "Pranav Mahajan",
     "status": {
       "kit": false,
@@ -1064,7 +947,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT062",
+    "id": "SOT053",
     "name": "Aryan Kushwaha",
     "status": {
       "kit": false,
@@ -1077,59 +960,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT063",
-    "name": "Devansh",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "25ce3020@rgipt.ac.in",
-      "Contact": "7417031824"
-    }
-  },
-  {
-    "id": "SOT064",
-    "name": "Kalavala Maneesh",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "25ce3028@rgipt.ac.in",
-      "Contact": "7569734770"
-    }
-  },
-  {
-    "id": "SOT065",
-    "name": "Prince Prajapati",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "25cd3029@rgipt.ac.in",
-      "Contact": "8756224155"
-    }
-  },
-  {
-    "id": "SOT066",
-    "name": "Deepak Kumar",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "25pp3006@rgipt.ac.in",
-      "Contact": "7073389905"
-    }
-  },
-  {
-    "id": "SOT067",
+    "id": "SOT054",
     "name": "P Darshit",
     "status": {
       "kit": false,
@@ -1142,46 +973,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT068",
-    "name": "Jaiditya Sinha",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "jaidityasinha200@gmail.com",
-      "Contact": "9308250700"
-    }
-  },
-  {
-    "id": "SOT069",
-    "name": "Sriwanth Reddy",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "sriwanthalla@gmail.com",
-      "Contact": "9515331577"
-    }
-  },
-  {
-    "id": "SOT070",
-    "name": "Aditya Deshmukh",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "adityadeshmukh5115@gmail.com",
-      "Contact": "8830981635"
-    }
-  },
-  {
-    "id": "SOT071",
+    "id": "SOT055",
     "name": "Krishna Agrawal",
     "status": {
       "kit": false,
@@ -1194,7 +986,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT072",
+    "id": "SOT056",
     "name": "Nimish Singh",
     "status": {
       "kit": false,
@@ -1207,7 +999,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT073",
+    "id": "SOT057",
     "name": "Devesh Singh",
     "status": {
       "kit": false,
@@ -1220,7 +1012,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT074",
+    "id": "SOT058",
     "name": "SANKALP",
     "status": {
       "kit": false,
@@ -1233,46 +1025,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT075",
-    "name": "Vaibhav Nehra",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "vaibhavxnehrax@gmail.com",
-      "Contact": "8814092519"
-    }
-  },
-  {
-    "id": "SOT076",
-    "name": "Maittri Tripathi",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "24mc3027@rgipt.ac.in",
-      "Contact": "7976034702"
-    }
-  },
-  {
-    "id": "SOT077",
-    "name": "Ayush Kumar Srivastava",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "ayushkrsrivastava2005@gmail.com",
-      "Contact": "9555532680"
-    }
-  },
-  {
-    "id": "SOT078",
+    "id": "SOT059",
     "name": "Divyansh Ojha",
     "status": {
       "kit": false,
@@ -1285,7 +1038,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT079",
+    "id": "SOT060",
     "name": "Amber Pal",
     "status": {
       "kit": false,
@@ -1298,7 +1051,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT080",
+    "id": "SOT061",
     "name": "Nilim Choudhury",
     "status": {
       "kit": false,
@@ -1311,7 +1064,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT081",
+    "id": "SOT062",
     "name": "Disha Agarwal",
     "status": {
       "kit": false,
@@ -1324,7 +1077,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT082",
+    "id": "SOT063",
     "name": "Aman Raj",
     "status": {
       "kit": false,
@@ -1337,646 +1090,388 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT083",
-    "name": "Monali Tiwari",
+    "id": "SOT064",
+    "name": "Dhruv Vinod Vishwakarma",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
     "fields": {
-      "Email": "monalitiwari.in@gmail.com",
-      "Contact": "9831105712"
+      "Email": "26pe3007@rgipt.ac.in",
+      "Contact": "8828036271"
     }
+  },
+  {
+    "id": "SOT065",
+    "name": "Arshiya",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "Arshiya130809@gmail.com",
+      "Contact": "8828036271"
+    }
+  },
+  {
+    "id": "SOT066",
+    "name": "Toyshi Choudhary",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "toyshi01k@gmail.com",
+      "Contact": "6378787309"
+    }
+  },
+  {
+    "id": "SOT067",
+    "name": "Om sahu",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "26ce3034@rgipt.ac.in",
+      "Contact": "9201883639"
+    }
+  },
+  {
+    "id": "SOT068",
+    "name": "Nelaballi Dheeraj Samuel",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "26ce3032@rgipt.ac.in",
+      "Contact": "7569811612"
+    }
+  },
+  {
+    "id": "SOT069",
+    "name": "Yash Jaiswal",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "26cd3035@rgipt.ac.in",
+      "Contact": "8840018140"
+    }
+  },
+  {
+    "id": "SOT070",
+    "name": "Tarun Singh",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "26mc3066@rgipt.ac.in",
+      "Contact": "8894486898"
+    }
+  },
+  {
+    "id": "SOT071",
+    "name": "Palak P",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "25re3016@rgipt.ac.in",
+      "Contact": "6204883242"
+    }
+  },
+  {
+    "id": "SOT072",
+    "name": "Kriti Kumari Singh",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "25ce3030@rgipt.ac.in",
+      "Contact": "7439501227"
+    }
+  },
+  {
+    "id": "SOT073",
+    "name": "Sreeraj Basak",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "26ce3053@rgipt.ac.in",
+      "Contact": "8276079672"
+    }
+  },
+  {
+    "id": "SOT074",
+    "name": "Kalavala Maneesh",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "25ce3028@rgipt.ac.in",
+      "Contact": "7569734770"
+    }
+  },
+  {
+    "id": "SOT075",
+    "name": "PUNEETH PUDI",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "25pe3044@rgipt.ac.in",
+      "Contact": "7382175526"
+    }
+  },
+  {
+    "id": "SOT076",
+    "name": "Shreyansh Singh",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "26it3036@rgipt.ac.in",
+      "Contact": "9006846272"
+    }
+  },
+  {
+    "id": "SOT077",
+    "name": "Abhishek Ekka",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "26ce3002@rgipt.ac.in",
+      "Contact": "9348638467"
+    }
+  },
+  {
+    "id": "SOT078",
+    "name": "On-Spot Participant 01",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {}
+  },
+  {
+    "id": "SOT079",
+    "name": "On-Spot Participant 02",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {}
+  },
+  {
+    "id": "SOT080",
+    "name": "On-Spot Participant 03",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {}
+  },
+  {
+    "id": "SOT081",
+    "name": "On-Spot Participant 04",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {}
+  },
+  {
+    "id": "SOT082",
+    "name": "On-Spot Participant 05",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {}
+  },
+  {
+    "id": "SOT083",
+    "name": "On-Spot Participant 06",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {}
   },
   {
     "id": "SOT084",
-    "name": "Prajukta Jana",
+    "name": "On-Spot Participant 07",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
-    "fields": {
-      "Email": "prajuktaj@gmail.com"
-    }
+    "fields": {}
   },
   {
     "id": "SOT085",
-    "name": "Dipti Kumari",
+    "name": "On-Spot Participant 08",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
-    "fields": {
-      "Email": "diptikumari2306@gmail.com"
-    }
+    "fields": {}
   },
   {
     "id": "SOT086",
-    "name": "Dimpy Bhattacharjee",
+    "name": "On-Spot Participant 09",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
-    "fields": {
-      "Email": "dimpybhattacharjee213@gmail.com"
-    }
+    "fields": {}
   },
   {
     "id": "SOT087",
-    "name": "Shikhar Gupta",
+    "name": "On-Spot Participant 10",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
-    "fields": {
-      "Email": "24ce3051@rgipt.ac.in",
-      "Contact": "7000435256"
-    }
+    "fields": {}
   },
   {
     "id": "SOT088",
-    "name": "Dev Jangid",
+    "name": "On-Spot Participant 11",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
-    "fields": {
-      "Email": "24ce3022@rgipt.ac.in"
-    }
+    "fields": {}
   },
   {
     "id": "SOT089",
-    "name": "Chirantan Toley",
+    "name": "On-Spot Participant 12",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
-    "fields": {
-      "Email": "24ce3020@rgipt.ac.in"
-    }
+    "fields": {}
   },
   {
     "id": "SOT090",
-    "name": "Gourav Yadav",
+    "name": "On-Spot Participant 13",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
-    "fields": {
-      "Email": "24ce3026@rgipt.ac.in"
-    }
+    "fields": {}
   },
   {
     "id": "SOT091",
-    "name": "VISHWA P",
+    "name": "On-Spot Participant 14",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
-    "fields": {
-      "Email": "babyvishwa2008@gmail.com",
-      "Contact": "8838396227"
-    }
+    "fields": {}
   },
   {
     "id": "SOT092",
-    "name": "SHAMYUKTHA S",
+    "name": "On-Spot Participant 15",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
-    "fields": {
-      "Email": "shamyukthas08@gmail.com",
-      "Contact": "8825434574"
-    }
+    "fields": {}
   },
   {
     "id": "SOT093",
-    "name": "NIRANJAN A M",
+    "name": "On-Spot Participant 16",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
-    "fields": {
-      "Email": "amniranjan007@gmail.com",
-      "Contact": "9442798088"
-    }
+    "fields": {}
   },
   {
     "id": "SOT094",
-    "name": "SUHASHINI V A",
+    "name": "On-Spot Participant 17",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
-    "fields": {
-      "Email": "suhashinivadivel2006@gmail.com",
-      "Contact": "8428881222"
-    }
+    "fields": {}
   },
   {
     "id": "SOT095",
-    "name": "Raghubir Rai",
+    "name": "On-Spot Participant 18",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
-    "fields": {
-      "Email": "25ce3064@rgipt.ac.in",
-      "Contact": "8957276668"
-    }
+    "fields": {}
   },
   {
     "id": "SOT096",
-    "name": "Ayush Kumar",
+    "name": "On-Spot Participant 19",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
-    "fields": {
-      "Email": "25cs3007@rgipt.ac.in"
-    }
+    "fields": {}
   },
   {
     "id": "SOT097",
-    "name": "Anil Suthar N",
+    "name": "On-Spot Participant 20",
     "status": {
       "kit": false,
       "accommodation": false,
       "food": false
     },
-    "fields": {
-      "Email": "25me3003@rgipt.ac.in"
-    }
-  },
-  {
-    "id": "SOT098",
-    "name": "Abhinav Jaiswal",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "25re3002@rgipt.ac.in"
-    }
-  },
-  {
-    "id": "SOT099",
-    "name": "SIDDHARTH SINGH",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "240378@kit.ac.in",
-      "Contact": "8303558840"
-    }
-  },
-  {
-    "id": "SOT100",
-    "name": "Kratika Gupta",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "gkratika202@gmail.com",
-      "Contact": "9235352300"
-    }
-  },
-  {
-    "id": "SOT101",
-    "name": "Swati Yadav",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "swatiydv.2805@gmail.com",
-      "Contact": "8173939363"
-    }
-  },
-  {
-    "id": "SOT102",
-    "name": "Rachit Aggarwal",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "26cs3054@rgipt.ac.in",
-      "Contact": "9528904043"
-    }
-  },
-  {
-    "id": "SOT103",
-    "name": "HITEN Bansal",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "26cs3027@rgipt.ac.in",
-      "Contact": "7056390801"
-    }
-  },
-  {
-    "id": "SOT104",
-    "name": "Aditya Pratap Singh",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "26cs3005@rgipt.ac.in",
-      "Contact": "9451773050"
-    }
-  },
-  {
-    "id": "SOT105",
-    "name": "Aditya Awasthi",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "26cs3004@rgipt.ac.in",
-      "Contact": "8962603638"
-    }
-  },
-  {
-    "id": "SOT106",
-    "name": "Prashant Lavania",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "prashantlavania9@gmail.com",
-      "Contact": "9220369216"
-    }
-  },
-  {
-    "id": "SOT107",
-    "name": "Dipak Kumar",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "dipakbhagat934@gmail.com",
-      "Contact": "9341196921"
-    }
-  },
-  {
-    "id": "SOT108",
-    "name": "Sourya Sarangi",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "sourya07sarangi@gmail.com",
-      "Contact": "7894742252"
-    }
-  },
-  {
-    "id": "SOT109",
-    "name": "Rahul Pradhan",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "rgnppr93@gmail.com",
-      "Contact": "7008271572"
-    }
-  },
-  {
-    "id": "SOT110",
-    "name": "DIVYANSHU Raj Raj",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "rdivyanshu752@gmail.com",
-      "Contact": "8877103516"
-    }
-  },
-  {
-    "id": "SOT111",
-    "name": "Harshit Anand",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "harshitanand469@gmail.com",
-      "Contact": "8789277595"
-    }
-  },
-  {
-    "id": "SOT112",
-    "name": "Sana Arora",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "arorasana81@gmail.com",
-      "Contact": "8700035292"
-    }
-  },
-  {
-    "id": "SOT113",
-    "name": "NIKHIL KUMAR GAUTAM",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "nikhil73809@gmail.com",
-      "Contact": "7380970355"
-    }
-  },
-  {
-    "id": "SOT114",
-    "name": "OMJEE OJHA",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "ojhaaemail@gmail.com",
-      "Contact": "8051420231"
-    }
-  },
-  {
-    "id": "SOT115",
-    "name": "DIPAK OJHA",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "ojha09293@gmail.com",
-      "Contact": "6299024068"
-    }
-  },
-  {
-    "id": "SOT116",
-    "name": "ANANYA PANDEY",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "pandeyananya848@gmail.com",
-      "Contact": "6391039210"
-    }
-  },
-  {
-    "id": "SOT117",
-    "name": "RUDRANSH MISHRA",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "rudranshvns2006@gmail.com",
-      "Contact": "6307606696"
-    }
-  },
-  {
-    "id": "SOT118",
-    "name": "Saumya Ganeshe",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "24cs3048@rgipt.ac.in",
-      "Contact": "7802020161"
-    }
-  },
-  {
-    "id": "SOT119",
-    "name": "Riya Chaudhary",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "241027@kit.ac.in",
-      "Contact": "9653040087"
-    }
-  },
-  {
-    "id": "SOT120",
-    "name": "ABHISHEK kumar kumar",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "abhinav87976@gmail.com",
-      "Contact": "9631372631"
-    }
-  },
-  {
-    "id": "SOT121",
-    "name": "Narendra Girjaram Bambarde",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "bambardenarendra5@gmail.com",
-      "Contact": "9403858554"
-    }
-  },
-  {
-    "id": "SOT122",
-    "name": "SREEHARINARAYANAN v s",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "sreeharinarayanan_b261276ec@nitc.ac.in",
-      "Contact": "7063905161"
-    }
-  },
-  {
-    "id": "SOT123",
-    "name": "Priyal Shende",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "mbatm25033@iimsirmaur.ac.in",
-      "Contact": "8805651859"
-    }
-  },
-  {
-    "id": "SOT124",
-    "name": "Karan Gupta",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "karan.guptaaids24@smslucknow.ac.in",
-      "Contact": "7376748506"
-    }
-  },
-  {
-    "id": "SOT125",
-    "name": "Akanksha Yadav",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "24ce3004@rgipt.ac.in",
-      "Contact": "8858477375"
-    }
-  },
-  {
-    "id": "SOT126",
-    "name": "Himmat Singh",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "26it3017@rgipt.ac.in",
-      "Contact": "8306881391"
-    }
-  },
-  {
-    "id": "SOT127",
-    "name": "NILOY SAMADDER",
-    "status": {
-      "kit": false,
-      "accommodation": false,
-      "food": false
-    },
-    "fields": {
-      "Email": "26mc3046@rgipt.ac.in",
-      "Contact": "6291587997"
-    }
+    "fields": {}
   }
 ];
-}
-
-// ── Real-Time Sync to Google Sheet ──
-async function syncToGoogleSheet(participant, newStatus, fields) {
-  const sheetUrl = GOOGLE_SHEET_API_URL || localStorage.getItem("socioOthon_google_sheet_url");
-  if (!sheetUrl) return;
-
-  try {
-    await fetch(sheetUrl, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "sync_status",
-        id: participant.id,
-        name: participant.name,
-                status: newStatus,
-        fields: fields || {}
-      })
-    });
-  } catch (e) {
-    console.warn("Google Sheet sync error:", e);
-  }
-}
-
-async function updateCloudParticipant(updated) {
-  const list = await fetchParticipants();
-  const idx = list.findIndex(p => p.id.toUpperCase() === updated.id.toUpperCase());
-  if (idx !== -1) {
-    list[idx] = updated;
-  } else {
-    list.push(updated);
-  }
-
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
-
-  try {
-    await fetch(CLOUD_DB_URL, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: "socio-o-thon-db",
-        data: { participants: list }
-      })
-    });
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-// ── Rendering Checklist (Default + Custom Checkboxes) ──
-function renderChecklist() {
-  const container = document.getElementById("checklistContainer");
-  container.innerHTML = "";
-
-  const status = currentParticipant.status || {};
-  const unlocked = isOrganizerAuthenticated();
-
-  const defaultKeys = [
-    { key: "kit", label: "Kit received", desc: "Mark when kit has been handed over." },
-    { key: "accommodation", label: "Accommodation", desc: "Mark when accommodation is assigned/confirmed." },
-    { key: "food", label: "Food arrangement", desc: "Mark when food coupon/token is issued." }
-  ];
 
   // Combine default with any custom added checklist items
   const allChecks = [...defaultKeys];

@@ -36,9 +36,9 @@ function parseCSV(text) {
 
 async function loadCSVText() {
   const possibleLocalFiles = [
+    path.join('C:', 'Users', 'OMEN', 'Downloads', 'participants.csv'),
     path.join(__dirname, 'participants.csv'),
     path.join(__dirname, 'sheet.csv'),
-    path.join('C:', 'Users', 'OMEN', 'Downloads', 'participants.csv'),
     path.join('C:', 'Users', 'OMEN', 'Downloads', 'sheet.csv'),
     path.join('C:', 'Users', 'OMEN', 'Downloads', 'Socio-O-Thon.csv')
   ];
@@ -79,9 +79,9 @@ async function run() {
 
     const emailCol = headers.findIndex(h => /email|mail|e-mail/i.test(h));
     const contactCol = headers.findIndex(h => /contact|phone|mobile|whatsapp|number/i.test(h));
-    const idCol = headers.findIndex(h => /^(participant\s*id|id|sot\s*id)$/i.test(h));
+    const paidCol = headers.findIndex(h => /^paid$/i.test(h));
 
-    console.log(`Detected columns -> Name: [Col ${nameCol}], Email: [Col ${emailCol}], Contact: [Col ${contactCol}], Team: [Col ${teamCol}], ID: [Col ${idCol}]`);
+    console.log(`Detected columns -> Name: [Col ${nameCol}], Email: [Col ${emailCol}], Contact: [Col ${contactCol}], Paid: [Col ${paidCol}]`);
 
     const participants = [];
     let counter = 1;
@@ -91,12 +91,14 @@ async function run() {
       const rawName = nameCol !== -1 && row[nameCol] ? row[nameCol].trim() : '';
       const rawEmail = emailCol !== -1 && row[emailCol] ? row[emailCol].trim() : '';
       const rawContact = contactCol !== -1 && row[contactCol] ? row[contactCol].trim() : '';
+      const rawPaid = paidCol !== -1 && row[paidCol] ? row[paidCol].trim() : '';
 
-      if (!rawName && !rawEmail && !rawContact) continue;
+      if (!rawName || rawName.toLowerCase() === 'participant name') continue;
 
-      let pid = (idCol !== -1 && row[idCol] && row[idCol].trim())
-        ? row[idCol].trim().toUpperCase()
-        : `SOT${String(counter).padStart(3, '0')}`;
+      // Filter out not paid and blank! Only include Paid
+      if (!/^paid$/i.test(rawPaid)) continue;
+
+      const pid = `SOT${String(counter).padStart(3, '0')}`;
 
       // Only Email, Contact No., and Name as explicitly requested
       const fields = {};
@@ -116,7 +118,23 @@ async function run() {
       counter++;
     }
 
-    console.log(`\nSuccessfully imported ${participants.length} participants!`);
+    // Add 20 extras for on-spot registration
+    for (let s = 1; s <= 20; s++) {
+      const pid = `SOT${String(counter).padStart(3, '0')}`;
+      participants.push({
+        id: pid,
+        name: `On-Spot Participant ${String(s).padStart(2, '0')}`,
+        status: {
+          kit: false,
+          accommodation: false,
+          food: false
+        },
+        fields: {}
+      });
+      counter++;
+    }
+
+    console.log(`\nSuccessfully imported ${participants.length} participants (including 20 on-spot extras)!`);
 
     // Ensure data directory exists
     const dataDir = path.join(__dirname, 'data');
@@ -125,29 +143,6 @@ async function run() {
     // Write to data/participants.json
     fs.writeFileSync(path.join(dataDir, 'participants.json'), JSON.stringify(participants, null, 2));
     console.log('Saved to data/participants.json');
-
-    // Also sync to Google Sheet via webhook
-    console.log(`Syncing ${participants.length} participants to connected Google Sheet...`);
-    for (let i = 0; i < participants.length; i++) {
-      const p = participants[i];
-      try {
-        await fetch(GOOGLE_SHEET_API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'sync_status',
-            id: p.id,
-            name: p.name,
-            status: p.status,
-            fields: p.fields
-          })
-        });
-        process.stdout.write(`Synced ${i + 1}/${participants.length} (${p.id})\r`);
-      } catch (err) {
-        console.warn(`Sync failed for ${p.id}:`, err.message);
-      }
-    }
-    console.log('\nAll participants synced to Google Sheet!');
 
     return participants;
   } catch (err) {
