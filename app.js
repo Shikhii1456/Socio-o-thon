@@ -1887,6 +1887,28 @@ function verifyDashPin() {
   }
 }
 
+if (submitDashPinBtn) submitDashPinBtn.addEventListener("click", verifyDashPin);
+if (dashPinInput) {
+  dashPinInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") verifyDashPin();
+  });
+}
+if (cancelDashPinBtn) {
+  cancelDashPinBtn.addEventListener("click", () => {
+    dashPinModal.classList.add("hidden");
+  });
+}
+if (dashPinModal) {
+  dashPinModal.addEventListener("click", (e) => {
+    if (e.target === dashPinModal) dashPinModal.classList.add("hidden");
+  });
+}
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && dashPinModal && !dashPinModal.classList.contains("hidden")) {
+    dashPinModal.classList.add("hidden");
+  }
+});
+
 addParticipantBtn.addEventListener("click", async () => {
   if (!isOrganizerUnlocked) return;
   const nextNum = allParticipants.length + 1;

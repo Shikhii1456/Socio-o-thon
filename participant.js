@@ -1815,6 +1815,16 @@ modalPinInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") verifyPin();
 });
 cancelPinBtn.addEventListener("click", closePinModal);
+if (pinModal) {
+  pinModal.addEventListener("click", (e) => {
+    if (e.target === pinModal) closePinModal();
+  });
+}
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && pinModal && !pinModal.classList.contains("hidden")) {
+    closePinModal();
+  }
+});
 
 saveButton.addEventListener("click", async () => {
   saveButton.disabled = true;
