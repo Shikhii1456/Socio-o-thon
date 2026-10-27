@@ -1373,7 +1373,7 @@ async function fetchParticipantsFromCloud() {
             return {
               ...p,
               status: fromSheet.status || p.status,
-              fields: { ...fromSheet.fields, ...p.fields }
+              fields: { ...p.fields, ...fromSheet.fields }
             };
           }
           return p;
@@ -1406,7 +1406,7 @@ async function fetchParticipantsFromCloud() {
               ...p,
               ...fromLocal,
               status: fromLocal.status || p.status,
-              fields: { ...p.fields, ...fromLocal.fields }
+              fields: (fromLocal.fields !== undefined) ? fromLocal.fields : p.fields
             };
           }
           return p;

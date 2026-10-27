@@ -122,7 +122,8 @@ function doPost(e) {
     if (data.fields && typeof data.fields === "object") {
       for (var fieldKey in data.fields) {
         var colIdx = getColumnIndex(fieldKey);
-        sheet.getRange(targetRow, colIdx).setValue(data.fields[fieldKey] || "");
+        var fVal = data.fields[fieldKey];
+        sheet.getRange(targetRow, colIdx).setValue(fVal !== undefined && fVal !== null ? fVal : "");
       }
     }
 

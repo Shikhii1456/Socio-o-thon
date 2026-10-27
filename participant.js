@@ -263,7 +263,7 @@ async function fetchParticipants() {
             return {
               ...p,
               status: fromSheet.status || p.status,
-              fields: { ...fromSheet.fields, ...p.fields }
+              fields: { ...p.fields, ...fromSheet.fields }
             };
           }
           return p;
@@ -296,7 +296,7 @@ async function fetchParticipants() {
               ...p,
               ...fromLocal,
               status: fromLocal.status || p.status,
-              fields: { ...p.fields, ...fromLocal.fields }
+              fields: (fromLocal.fields !== undefined) ? fromLocal.fields : p.fields
             };
           }
           return p;
@@ -1712,6 +1712,8 @@ function renderCustomFields() {
         const k = btn.dataset.delField;
         if (confirm("Delete information field \"" + k + "\"?")) {
           delete currentParticipant.fields[k];
+          if (!currentParticipant._deletedFields) currentParticipant._deletedFields = [];
+          if (!currentParticipant._deletedFields.includes(k)) currentParticipant._deletedFields.push(k);
           renderCustomFields();
         }
       });
@@ -1844,7 +1846,15 @@ saveButton.addEventListener("click", async () => {
     const k = input.dataset.fieldKey;
     updatedFields[k] = input.value.trim();
   });
-  currentParticipant.fields = updatedFields;
+  currentParticipant.fields = { ...updatedFields };
+
+  // For Google Sheet sync, pass empty string for any explicitly deleted fields so the cell is blanked!
+  const syncFields = { ...updatedFields };
+  if (currentParticipant._deletedFields && Array.isArray(currentParticipant._deletedFields)) {
+    currentParticipant._deletedFields.forEach(k => {
+      syncFields[k] = "";
+    });
+  }
 
   // Collect edited Name, ID if in organizer mode
   const editIdInput = document.getElementById("editParticipantIdInput");
@@ -1885,7 +1895,7 @@ saveButton.addEventListener("click", async () => {
   }
 
   // 2. Real-time sync to Google Sheet
-  await syncToGoogleSheet(currentParticipant, currentParticipant.status, currentParticipant.fields);
+  await syncToGoogleSheet(currentParticipant, currentParticipant.status, syncFields);
 
   // Update display values
   const idEl = document.getElementById("participantId");
