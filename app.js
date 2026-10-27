@@ -685,6 +685,24 @@ async function init() {
 
 init();
 
+// Auto-refresh when tab gains focus or periodically so changes in Google Sheet appear automatically
+window.addEventListener("focus", () => {
+  if (!isOrganizerUnlocked) init();
+});
+
+setInterval(() => {
+  const searchInput = document.getElementById("search");
+  const searchVal = searchInput ? searchInput.value.trim() : "";
+  if (!searchVal && !isOrganizerUnlocked) {
+    getParticipants().then(fresh => {
+      if (fresh && fresh.length > 0) {
+        allParticipants = fresh;
+        render(allParticipants);
+      }
+    }).catch(() => {});
+  }
+}, 25000);
+
 // ── Debounced Search for 60 FPS Performance ──
 let searchTimer = null;
 document.getElementById("search").addEventListener("input", e => {
