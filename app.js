@@ -1516,17 +1516,72 @@ function escapeHtml(value) {
   }[ch]));
 }
 
+
+// ── In-Memory QR Code Cache for Instant Performance ──
+const qrCache = new Map();
+let activeQrQueue = [];
+let qrAnimationId = null;
+
+function generateQR(containerId, url) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (el.dataset.rendered === "true") return;
+
+  if (qrCache.has(url)) {
+    el.innerHTML = qrCache.get(url);
+    el.dataset.rendered = "true";
+    return;
+  }
+
+  el.innerHTML = "";
+  new QRCode(el, {
+    text: url,
+    width: 180,
+    height: 180,
+    correctLevel: QRCode.CorrectLevel.M
+  });
+  el.dataset.rendered = "true";
+  setTimeout(() => {
+    if (el.innerHTML && !qrCache.has(url)) {
+      qrCache.set(url, el.innerHTML);
+    }
+  }, 100);
+}
+
+function processQRQueue() {
+  if (!activeQrQueue.length) return;
+  const chunk = activeQrQueue.splice(0, 8);
+  chunk.forEach(item => generateQR(item.id, item.url));
+  if (activeQrQueue.length > 0) {
+    qrAnimationId = requestAnimationFrame(processQRQueue);
+  }
+}
+
+// Ensure all QRs complete immediately before printing
+window.addEventListener("beforeprint", () => {
+  if (qrAnimationId) cancelAnimationFrame(qrAnimationId);
+  while (activeQrQueue.length) {
+    const item = activeQrQueue.shift();
+    generateQR(item.id, item.url);
+  }
+});
+
 function render(list) {
   const grid = document.getElementById("participantGrid");
   grid.innerHTML = "";
   document.getElementById("participantCount").textContent = list.length;
+
+  if (qrAnimationId) cancelAnimationFrame(qrAnimationId);
+  activeQrQueue = [];
 
   if (!list.length) {
     grid.innerHTML = `<div class="empty">No participants found.</div>`;
     return;
   }
 
-  list.forEach(p => {
+  const fragment = document.createDocumentFragment();
+
+  list.forEach((p, idx) => {
     const card = document.createElement("article");
     card.className = "participant-card";
 
@@ -1545,7 +1600,6 @@ function render(list) {
       fieldsHtml += `</div>`;
     }
 
-    // Controls only visible when unlocked by organizer with PIN!
     const organizerControls = isOrganizerUnlocked
       ? `<div style="display:flex; gap:4px;">
            <button class="button small secondary edit-btn" style="padding:4px 8px; font-size:11px;" title="Edit Name/ID">✏️ Edit</button>
@@ -1555,8 +1609,9 @@ function render(list) {
 
     const qrId = `qr-${p.id}`;
     card.innerHTML = `
-      <div class="participant-meta" style="display:flex; justify-content:space-between; align-items:flex-start;">
-        <div>
+      <div class="participant-meta" style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="id-pill">${escapeHtml(p.id)}</span>
           <span class="badge small ${statusClass}">${completed}/${totalChecks}</span>
         </div>
         ${organizerControls}
@@ -1572,14 +1627,13 @@ function render(list) {
       </div>
       <div class="url">${pUrl}</div>
     `;
-    grid.appendChild(card);
+    fragment.appendChild(card);
 
-    new QRCode(document.getElementById(qrId), {
-      text: pUrl,
-      width: 180,
-      height: 180,
-      correctLevel: QRCode.CorrectLevel.M
-    });
+    if (idx < 12) {
+      setTimeout(() => generateQR(qrId, pUrl), 0);
+    } else {
+      activeQrQueue.push({ id: qrId, url: pUrl });
+    }
 
     if (isOrganizerUnlocked) {
       card.querySelector(".edit-btn").addEventListener("click", async () => {
@@ -1600,7 +1654,13 @@ function render(list) {
     }
   });
 
-  document.querySelectorAll(".copy-btn").forEach(btn => {
+  grid.appendChild(fragment);
+
+  if (activeQrQueue.length > 0) {
+    qrAnimationId = requestAnimationFrame(processQRQueue);
+  }
+
+  grid.querySelectorAll(".copy-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
       await navigator.clipboard.writeText(btn.dataset.url);
       const old = btn.textContent;
@@ -1654,19 +1714,51 @@ function exportExcelCSV() {
 let allParticipants = [];
 
 async function init() {
-  allParticipants = await getParticipants();
-  render(allParticipants);
+  // 1. Instant Paint from LocalStorage or defaultSeed (0ms delay!)
+  const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        allParticipants = parsed;
+        render(allParticipants);
+      }
+    } catch (e) {}
+  }
+  if (!allParticipants.length) {
+    allParticipants = [...defaultSeed];
+    render(allParticipants);
+  }
+
+  // 2. Refresh from Google Sheet in background without UI freeze
+  try {
+    const fresh = await getParticipants();
+    if (fresh && fresh.length > 0) {
+      allParticipants = fresh;
+      const searchVal = document.getElementById("search").value.toLowerCase().trim();
+      if (!searchVal) {
+        render(allParticipants);
+      }
+    }
+  } catch (err) {
+    console.warn("Background refresh note:", err.message);
+  }
 }
 
 init();
 
+// ── Debounced Search for 60 FPS Performance ──
+let searchTimer = null;
 document.getElementById("search").addEventListener("input", e => {
+  clearTimeout(searchTimer);
   const q = e.target.value.toLowerCase().trim();
-  render(allParticipants.filter(p =>
-    p.id.toLowerCase().includes(q) ||
-    p.name.toLowerCase().includes(q) ||
-    (p.fields && Object.values(p.fields).some(v => String(v).toLowerCase().includes(q)))
-  ));
+  searchTimer = setTimeout(() => {
+    render(allParticipants.filter(p =>
+      p.id.toLowerCase().includes(q) ||
+      p.name.toLowerCase().includes(q) ||
+      (p.fields && Object.values(p.fields).some(v => String(v).toLowerCase().includes(q)))
+    ));
+  }, 100);
 });
 
 // ── Organizer Lock / Unlock Handler ──
@@ -1747,25 +1839,53 @@ organizerToggleBtn.addEventListener("click", () => {
   }
 });
 
+let pinFailCount = 0;
+let pinLockoutUntil = 0;
+let inactivityTimer = null;
+
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  if (isOrganizerUnlocked) {
+    inactivityTimer = setTimeout(() => {
+      isOrganizerUnlocked = false;
+      updateOrganizerUi();
+      console.log("Organizer mode locked due to 10-minute inactivity.");
+    }, 10 * 60 * 1000);
+  }
+}
+
+["click", "keydown", "touchstart"].forEach(evt => {
+  window.addEventListener(evt, () => {
+    if (isOrganizerUnlocked) resetInactivityTimer();
+  }, { passive: true });
+});
+
 function verifyDashPin() {
+  const now = Date.now();
+  if (now < pinLockoutUntil) {
+    const remaining = Math.ceil((pinLockoutUntil - now) / 1000);
+    dashPinError.textContent = "Too many attempts. Locked for " + remaining + "s.";
+    return;
+  }
+
   if (dashPinInput.value.trim() === ADMIN_PIN) {
+    pinFailCount = 0;
     isOrganizerUnlocked = true;
     dashPinModal.classList.add("hidden");
     updateOrganizerUi();
+    resetInactivityTimer();
   } else {
-    dashPinError.textContent = "Incorrect PIN. Try again.";
+    pinFailCount++;
+    if (pinFailCount >= 5) {
+      pinLockoutUntil = Date.now() + 30000;
+      dashPinError.textContent = "5 incorrect attempts. Locked for 30s.";
+    } else {
+      dashPinError.textContent = "Incorrect PIN (" + (5 - pinFailCount) + " attempts left).";
+    }
     dashPinInput.value = "";
     dashPinInput.focus();
   }
 }
-
-submitDashPinBtn.addEventListener("click", verifyDashPin);
-dashPinInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") verifyDashPin();
-});
-cancelDashPinBtn.addEventListener("click", () => {
-  dashPinModal.classList.add("hidden");
-});
 
 addParticipantBtn.addEventListener("click", async () => {
   if (!isOrganizerUnlocked) return;

@@ -1,3 +1,8 @@
+function escapeHtml(str) {
+  return String(str || "").replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+  }[ch]));
+}
 // ==========================================
 // CONFIGURATION: Admin PIN & Endpoints
 // ==========================================
@@ -107,20 +112,55 @@ function closePinModal() {
   modalPinError.textContent = "";
 }
 
+let partPinFailCount = 0;
+let partPinLockoutUntil = 0;
+let partInactivityTimer = null;
+
+function resetPartInactivityTimer() {
+  clearTimeout(partInactivityTimer);
+  if (isOrganizerUnlocked) {
+    partInactivityTimer = setTimeout(() => {
+      isOrganizerUnlocked = false;
+      setEditModeEnabled(false);
+      console.log("Organizer mode locked due to 10-minute inactivity.");
+    }, 10 * 60 * 1000);
+  }
+}
+
+["click", "keydown", "touchstart"].forEach(evt => {
+  window.addEventListener(evt, () => {
+    if (isOrganizerUnlocked) resetPartInactivityTimer();
+  }, { passive: true });
+});
+
 function verifyPin() {
+  const now = Date.now();
+  if (now < partPinLockoutUntil) {
+    const remaining = Math.ceil((partPinLockoutUntil - now) / 1000);
+    modalPinError.textContent = "Too many attempts. Locked for " + remaining + "s.";
+    return;
+  }
+
   const entered = modalPinInput.value.trim();
   if (entered === ADMIN_PIN) {
+    partPinFailCount = 0;
     isOrganizerUnlocked = true;
     closePinModal();
     setEditModeEnabled(true);
+    resetPartInactivityTimer();
   } else {
-    modalPinError.textContent = "Incorrect PIN. Try again.";
+    partPinFailCount++;
+    if (partPinFailCount >= 5) {
+      partPinLockoutUntil = Date.now() + 30000;
+      modalPinError.textContent = "5 incorrect attempts. Locked for 30s.";
+    } else {
+      modalPinError.textContent = "Incorrect PIN (" + (5 - partPinFailCount) + " attempts left).";
+    }
     modalPinInput.value = "";
     modalPinInput.focus();
   }
 }
 
-// ── Google Sheet CSV Parsing & Cloud Retrieval ──
 function parseCSV(text) {
   const lines = [];
   let row = [''];
@@ -1576,11 +1616,10 @@ function renderChecklist() {
     { key: "food", label: "Food arrangement", desc: "Mark when food coupon/token is issued." }
   ];
 
-  // Combine default with any custom added checklist items
   const allChecks = [...defaultKeys];
   Object.keys(status).forEach(k => {
     if (!defaultKeys.some(d => d.key === k)) {
-      allChecks.push({ key: k, label: k, desc: `Custom attendance item: ${k}` });
+      allChecks.push({ key: k, label: k, desc: "Custom attendance item: " + k });
     }
   });
 
@@ -1590,26 +1629,25 @@ function renderChecklist() {
     row.className = "check-row";
 
     const deleteBtn = (unlocked && !defaultKeys.some(d => d.key === item.key))
-      ? `<button type="button" class="field-del-btn" data-del-check="${item.key}" title="Delete this check item">🗑️</button>`
+      ? '<button type="button" class="field-del-btn" data-del-check="' + escapeHtml(item.key) + '" title="Delete this check item">🗑️</button>'
       : "";
 
     row.innerHTML = `
-      <input type="checkbox" id="check_${item.key}" ${isChecked ? 'checked' : ''} ${unlocked ? '' : 'disabled'} />
+      <input type="checkbox" id="check_${escapeHtml(item.key)}" ${isChecked ? 'checked' : ''} ${unlocked ? '' : 'disabled'} />
       <span style="flex:1;">
-        <strong>${item.label}</strong>
-        <small>${item.desc}</small>
+        <strong>${escapeHtml(item.label)}</strong>
+        <small>${escapeHtml(item.desc)}</small>
       </span>
       ${deleteBtn}
     `;
     container.appendChild(row);
   });
 
-  // Attach delete handlers for custom checklist items
   container.querySelectorAll("[data-del-check]").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       const k = btn.dataset.delCheck;
-      if (confirm(`Remove checklist item "${k}"?`)) {
+      if (confirm("Remove checklist item \"" + k + "\"?")) {
         delete currentParticipant.status[k];
         renderChecklist();
         updateBadge();
@@ -1617,7 +1655,6 @@ function renderChecklist() {
     });
   });
 
-  // Attach change listeners
   container.querySelectorAll('input[type="checkbox"]').forEach(input => {
     input.addEventListener("change", updateBadge);
   });
@@ -1634,7 +1671,6 @@ function updateBadge() {
   badge.classList.toggle("complete", completed === total && total > 0);
 }
 
-// ── Rendering Custom Text Fields (Email, Phone, College, etc.) ──
 function renderCustomFields() {
   const container = document.getElementById("customFieldsContainer");
   container.innerHTML = "";
@@ -1655,34 +1691,32 @@ function renderCustomFields() {
 
     if (unlocked) {
       row.innerHTML = `
-        <span class="field-label">${k}</span>
+        <span class="field-label">${escapeHtml(k)}</span>
         <div style="display:flex; align-items:center; gap:6px; flex:1; justify-content:flex-end;">
-          <input type="text" class="field-input" data-field-key="${k}" value="${val}" placeholder="Enter ${k}..." />
-          <button type="button" class="field-del-btn" data-del-field="${k}" title="Delete field">🗑️</button>
+          <input type="text" class="field-input" data-field-key="${escapeHtml(k)}" value="${escapeHtml(val)}" placeholder="Enter ${escapeHtml(k)}..." />
+          <button type="button" class="field-del-btn" data-del-field="${escapeHtml(k)}" title="Delete field">🗑️</button>
         </div>
       `;
     } else {
       row.innerHTML = `
-        <span class="field-label">${k}</span>
-        <span class="field-value">${val || '<em style="color:#94a3b8;">Not provided</em>'}</span>
+        <span class="field-label">${escapeHtml(k)}</span>
+        <span class="field-value">${val ? escapeHtml(val) : '<em style="color:#94a3b8;">Not provided</em>'}</span>
       `;
     }
     container.appendChild(row);
   });
 
   if (unlocked) {
-    // Delete field listener
     container.querySelectorAll("[data-del-field]").forEach(btn => {
       btn.addEventListener("click", () => {
         const k = btn.dataset.delField;
-        if (confirm(`Delete information field "${k}"?`)) {
+        if (confirm("Delete information field \"" + k + "\"?")) {
           delete currentParticipant.fields[k];
           renderCustomFields();
         }
       });
     });
 
-    // Input changes
     container.querySelectorAll(".field-input").forEach(input => {
       input.addEventListener("input", (e) => {
         const k = input.dataset.fieldKey;
@@ -1692,7 +1726,7 @@ function renderCustomFields() {
   }
 }
 
-// ── Add New Information Field (Email, Phone, College, etc.) ──
+// ── Add New Information Field ──
 addFieldBtn.addEventListener("click", () => {
   if (!isOrganizerAuthenticated()) return;
   const fieldName = prompt("Enter Field Name (e.g. Email, Phone Number, College, Food Preference):");
@@ -1705,7 +1739,7 @@ addFieldBtn.addEventListener("click", () => {
     return;
   }
 
-  const initialVal = prompt(`Enter ${key} for ${currentParticipant.name}:`, "");
+  const initialVal = prompt("Enter " + key + " for " + currentParticipant.name + ":", "");
   currentParticipant.fields[key] = initialVal !== null ? initialVal.trim() : "";
   renderCustomFields();
 });
