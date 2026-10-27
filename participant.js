@@ -290,8 +290,6 @@ function parseGvizTable(data) {
     };
     
     const fields = {};
-    if (teamId) fields['Team ID'] = teamId;
-    
     cols.forEach((colName, cIdx) => {
       if (cIdx === idCol || cIdx === nameCol || cIdx === kitCol || cIdx === accCol || cIdx === foodCol) return;
       if (!colName || /last\s*updated/i.test(colName)) return;
@@ -300,6 +298,10 @@ function parseGvizTable(data) {
         fields[colName] = val;
       }
     });
+
+    if (!teamId && (fields['Socio Team ID'] || fields['Team ID'])) {
+      teamId = fields['Socio Team ID'] || fields['Team ID'] || '';
+    }
 
     const ab2 = fields['AB2 (SOCI-O-THON)'] || fields['AB2'] || '';
     if (ab2) fields['AB2 (SOCI-O-THON)'] = ab2;
@@ -377,8 +379,6 @@ function parseParticipantsFromCSV(csvText) {
     };
 
     const fields = {};
-    if (teamId) fields["Team ID"] = teamId;
-
     for (let c = 0; c < headers.length; c++) {
       if (c === idCol || c === nameCol || c === kitCol || c === accCol || c === foodCol) continue;
       const h = headers[c];
@@ -393,6 +393,10 @@ function parseParticipantsFromCSV(csvText) {
           fields[h] = val;
         }
       }
+    }
+
+    if (!teamId && (fields['Socio Team ID'] || fields['Team ID'])) {
+      teamId = fields['Socio Team ID'] || fields['Team ID'] || '';
     }
 
     const ab2 = fields['AB2 (SOCI-O-THON)'] || fields['AB2'] || '';
@@ -600,9 +604,10 @@ function renderCustomFields() {
     }
   }
 
-  // Deduplicate keys: avoid showing both "AB2" and "AB2 (SOCI-O-THON)"
+  // Deduplicate keys: avoid showing both "AB2" and "AB2 (SOCI-O-THON)", or phantom "Team ID"
   const keys = Object.keys(fields).filter(k => {
     if (k.toLowerCase() === "ab2" && fields["AB2 (SOCI-O-THON)"]) return false;
+    if (k.toLowerCase() === "team id" && fields["Socio Team ID"]) return false;
     return true;
   });
 

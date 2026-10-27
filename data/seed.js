@@ -11,7 +11,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/RD/001",
       "Socio Team ID": "SSC/26/SOT/RD/001",
       "Email": "pss.purushottam@gmail.com",
       "Contact": "9344141746",
@@ -29,7 +28,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/RD/001",
       "Socio Team ID": "SSC/26/SOT/RD/001",
       "Email": "26ai114028@rgnau.ac.in",
       "Contact": "7008217572",
@@ -47,7 +45,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/RD/001",
       "Socio Team ID": "SSC/26/SOT/RD/001",
       "Email": "sasidharnagabathula@gmail.com",
       "Contact": "8790350954",
@@ -65,7 +62,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/RD/001",
       "Socio Team ID": "SSC/26/SOT/RD/001",
       "Email": "sourya07sarangi@gmail.com",
       "Contact": "7894742252",
@@ -83,7 +79,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/WC/001",
       "Socio Team ID": "SSC/26/SOT/WC/001",
       "Email": "himanshusinghgaur26@gmail.com",
       "Contact": "6388171218",
@@ -101,7 +96,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/WC/001",
       "Socio Team ID": "SSC/26/SOT/WC/001",
       "Email": "jahnavichaurasia67@gmail.com",
       "Contact": "9555531276",
@@ -175,7 +169,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/RD/002",
       "Socio Team ID": "SSC/26/SOT/RD/002",
       "Email": "bhanu.singhcse24@smslucknow.ac.in",
       "Contact": "6207776437",
@@ -193,7 +186,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/RD/002",
       "Socio Team ID": "SSC/26/SOT/RD/002",
       "Email": "shankaracharyabharti40@gmail.com",
       "Contact": "8521566913",
@@ -211,7 +203,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/RD/002",
       "Socio Team ID": "SSC/26/SOT/RD/002",
       "Email": "saumya.skdian@gmail.com",
       "Contact": "6306391167",
@@ -229,7 +220,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/ES/001",
       "Socio Team ID": "SSC/26/SOT/ES/001",
       "Email": "sumitkumarpatelcse25@smslucknow.ac.in",
       "Contact": "6201035429",
@@ -275,7 +265,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/RD/003",
       "Socio Team ID": "SSC/26/SOT/RD/003",
       "Email": "suryanshiot@gmail.com",
       "Contact": "6306784525",
@@ -293,7 +282,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/HH/001",
       "Socio Team ID": "SSC/26/SOT/HH/001",
       "Email": "utkarshphoenix67@gmail.com",
       "Contact": "9235087737",
@@ -311,7 +299,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/HH/001",
       "Socio Team ID": "SSC/26/SOT/HH/001",
       "Email": "mayank54xd@gmail.com",
       "Contact": "8856815411",
@@ -329,7 +316,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/HH/001",
       "Socio Team ID": "SSC/26/SOT/HH/001",
       "Email": "prativasahoo2006@gmail.com",
       "Contact": "7978701860",
@@ -347,7 +333,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/HH/001",
       "Socio Team ID": "SSC/26/SOT/HH/001",
       "Email": "abhirajput1366@gmail.com",
       "Contact": "7783004239",
@@ -365,7 +350,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/WC/002",
       "Socio Team ID": "SSC/26/SOT/WC/002",
       "Email": "ishayyylko@gmail.com",
       "Contact": "7897777641",
@@ -383,7 +367,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/WC/002",
       "Socio Team ID": "SSC/26/SOT/WC/002",
       "Email": "adityagupta80098@gmail.com",
       "Contact": "8127657475",
@@ -401,7 +384,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/WC/002",
       "Socio Team ID": "SSC/26/SOT/WC/002",
       "Email": "ayushmishra0205ix@gmail.com",
       "Contact": "9369035137",
@@ -419,7 +401,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/WC/002",
       "Socio Team ID": "SSC/26/SOT/WC/002",
       "Email": "aloksahu95190@gmail.com",
       "Contact": "9519027901",
@@ -437,7 +418,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/RD/004",
       "Socio Team ID": "SSC/26/SOT/RD/004",
       "Email": "kajalsingh829407@gmail.com",
       "Contact": "8294077701",
@@ -455,7 +435,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/RD/004",
       "Socio Team ID": "SSC/26/SOT/RD/004",
       "Email": "s4916178@gmail.com",
       "Contact": "8318955925",
@@ -473,7 +452,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/RD/004",
       "Socio Team ID": "SSC/26/SOT/RD/004",
       "Email": "vaibhavishukla45@gmail.com",
       "Contact": "7633912311",
@@ -491,7 +469,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/RD/004",
       "Socio Team ID": "SSC/26/SOT/RD/004",
       "Email": "kalashmishra2006@gmail.com",
       "Contact": "9415334228",
@@ -509,7 +486,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/ES/003",
       "Socio Team ID": "SSC/26/SOT/ES/003",
       "Email": "mishrakumar1192005@gmail.com",
       "Contact": "8175961647",
@@ -527,7 +503,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/ES/003",
       "Socio Team ID": "SSC/26/SOT/ES/003",
       "Email": "dhanrajaditya262@gmail.com",
       "Contact": "7376548635",
@@ -545,7 +520,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/ES/003",
       "Socio Team ID": "SSC/26/SOT/ES/003",
       "Email": "mauryapriyanshi2526@gmail.com",
       "Contact": "9569542060",
@@ -563,7 +537,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/ES/003",
       "Socio Team ID": "SSC/26/SOT/ES/003",
       "Email": "nainshi30309@gmail.com",
       "Contact": "8853303228",
@@ -581,7 +554,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/002",
       "Socio Team ID": "SSC/26/SOT/OT/002",
       "Email": "tusharperiwal95@gmail.com",
       "Contact": "9395839383",
@@ -599,7 +571,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/002",
       "Socio Team ID": "SSC/26/SOT/OT/002",
       "Email": "meb25047@tezu.ac.in",
       "Contact": "8617443361",
@@ -617,7 +588,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/002",
       "Socio Team ID": "SSC/26/SOT/OT/002",
       "Email": "araj71248@gmail.com",
       "Contact": "8617391523",
@@ -635,7 +605,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/003",
       "Socio Team ID": "SSC/26/SOT/OT/003",
       "Email": "kanishk2772@gmail.com",
       "Contact": "7851954942",
@@ -653,7 +622,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/003",
       "Socio Team ID": "SSC/26/SOT/OT/003",
       "Email": "ayushmaankesarwani6@gmail.com",
       "Contact": "8958272744",
@@ -671,7 +639,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/003",
       "Socio Team ID": "SSC/26/SOT/OT/003",
       "Email": "sanidhyasatya9080@gmail.com",
       "Contact": "8434620922",
@@ -689,7 +656,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/003",
       "Socio Team ID": "SSC/26/SOT/OT/003",
       "Email": "kanishk2772@gmail.com",
       "Contact": "8446937220",
@@ -707,7 +673,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/004",
       "Socio Team ID": "SSC/26/SOT/OT/004",
       "Email": "vedikabhatnagar19@gmail.com",
       "Contact": "9335618757",
@@ -725,7 +690,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/004",
       "Socio Team ID": "SSC/26/SOT/OT/004",
       "Email": "divya1shahi5@gmail.com",
       "Contact": "7898002168",
@@ -743,7 +707,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/005",
       "Socio Team ID": "SSC/26/SOT/OT/005",
       "Email": "25bb143035@rgnau.ac.in",
       "Contact": "8738928331",
@@ -761,7 +724,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/005",
       "Socio Team ID": "SSC/26/SOT/OT/005",
       "Email": "25bb143013@rgnau.ac.in",
       "Contact": "9267923221",
@@ -820,7 +782,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/MC/001",
       "Socio Team ID": "SSC/26/SOT/MC/001",
       "Email": "25cs3019@rgipt.ac.in",
       "Contact": "7897540955",
@@ -838,7 +799,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/MC/001",
       "Socio Team ID": "SSC/26/SOT/MC/001",
       "Email": "25mc3064@rgipt.ac.in",
       "Contact": "9434060094",
@@ -856,7 +816,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/MC/001",
       "Socio Team ID": "SSC/26/SOT/MC/001",
       "Email": "25it3055@rgipt.ac.in",
       "Contact": "7268909951",
@@ -874,7 +833,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/MC/001",
       "Socio Team ID": "SSC/26/SOT/MC/001",
       "Email": "25cd3020@rgipt.ac.in",
       "Contact": "9296900602",
@@ -934,7 +892,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/001",
       "Socio Team ID": "SSC/26/SOT/OT/001",
       "Email": "agrk1603@gmail.com",
       "Contact": "9236428463",
@@ -952,7 +909,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/001",
       "Socio Team ID": "SSC/26/SOT/OT/001",
       "Email": "nimish120838@gmail.com",
       "Contact": "9076721337",
@@ -970,7 +926,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/001",
       "Socio Team ID": "SSC/26/SOT/OT/001",
       "Email": "deveshsingh2424@gmail.com",
       "Contact": "8604283039",
@@ -988,7 +943,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/001",
       "Socio Team ID": "SSC/26/SOT/OT/001",
       "Email": "singhsankalp678@gmail.com",
       "Contact": "7054490586",
@@ -1006,7 +960,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/ES/002",
       "Socio Team ID": "SSC/26/SOT/ES/002",
       "Email": "25ce3023@rgipt.ac.in",
       "Contact": "9336385828",
@@ -1024,7 +977,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/ES/002",
       "Socio Team ID": "SSC/26/SOT/ES/002",
       "Email": "25re3004@rgipt.ac.in",
       "Contact": "7307264829",
@@ -1042,7 +994,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/ES/002",
       "Socio Team ID": "SSC/26/SOT/ES/002",
       "Email": "25pp3013@rgipt.ac.in",
       "Contact": "8761011885",
@@ -1060,7 +1011,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/ES/002",
       "Socio Team ID": "SSC/26/SOT/ES/002",
       "Email": "25ce3022@rgipt.ac.in",
       "Contact": "7500023600",
@@ -1134,7 +1084,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/HH/002",
       "Socio Team ID": "SSC/26/SOT/HH/002",
       "Email": "26ce3034@rgipt.ac.in",
       "Contact": "9201883639",
@@ -1152,7 +1101,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/HH/002",
       "Socio Team ID": "SSC/26/SOT/HH/002",
       "Email": "26ce3032@rgipt.ac.in",
       "Contact": "7569811612",
@@ -1296,7 +1244,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/RD/005",
       "Socio Team ID": "SSC/26/SOT/RD/005",
       "Email": "26it3036@rgipt.ac.in",
       "Contact": "9006846272",
@@ -1314,7 +1261,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/RD/005",
       "Socio Team ID": "SSC/26/SOT/RD/005",
       "Email": "26ce3002@rgipt.ac.in",
       "Contact": "9348638467",
@@ -1332,7 +1278,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/ES/004",
       "Socio Team ID": "SSC/26/SOT/ES/004",
       "Email": "25l1811002@rgipt.ac.in",
       "Contact": "7099135987",
@@ -1350,7 +1295,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/ES/004",
       "Socio Team ID": "Manasvi Pathak",
       "Email": "24mc3030@rgipt.ac.in",
       "Contact": "9415086334",
@@ -1368,7 +1312,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/ES/004",
       "Socio Team ID": "SSC/26/SOT/ES/004",
       "Email": "24pp3002@rgipt.ac.in",
       "Contact": "8400900844",
@@ -1386,7 +1329,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/MC/002",
       "Socio Team ID": "SSC/26/SOT/MC/002",
       "Email": "anubhavm516@gmail.com",
       "Contact": "9140048934",
@@ -1404,7 +1346,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/MC/003",
       "Socio Team ID": "SSC/26/SOT/MC/003",
       "Email": "26cd3001@rgipt.ac.in",
       "Contact": "9942156335",
@@ -1422,7 +1363,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/006",
       "Socio Team ID": "SSC/26/SOT/OT/006",
       "Email": "240694@kit.ac.in",
       "Contact": "9198003605",
@@ -1440,7 +1380,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/006",
       "Socio Team ID": "SSC/26/SOT/OT/006",
       "Email": "240466@kit.ac.in",
       "Contact": "7905776123",
@@ -1458,7 +1397,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/006",
       "Socio Team ID": "SSC/26/SOT/OT/006",
       "Email": "developer.akashjoshi@gmail.com",
       "Contact": "9125847406",
@@ -1476,7 +1414,6 @@ window.SOCIO_DEFAULT_PARTICIPANTS = [
       "food": false
     },
     "fields": {
-      "Team ID": "SSC/26/SOT/OT/006",
       "Socio Team ID": "SSC/26/SOT/OT/006",
       "Email": "dev.kashvee@gmail.com",
       "Contact": "8887539149",

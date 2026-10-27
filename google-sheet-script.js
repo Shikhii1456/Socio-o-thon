@@ -64,8 +64,18 @@ function doPost(e) {
       return newColIdx;
     }
 
+    function getTeamIdColumn() {
+      for (var c = 0; c < headers.length; c++) {
+        var h = String(headers[c]).trim().toLowerCase();
+        if (h === "socio team id" || h === "team id") {
+          return c + 1;
+        }
+      }
+      return getColumnIndex("Socio Team ID");
+    }
+
     var idCol = getColumnIndex("Participant ID");
-    var teamIdCol = getColumnIndex("Team ID");
+    var teamIdCol = getTeamIdColumn();
     var nameCol = getColumnIndex("Name");
     var kitCol = getColumnIndex("Kit Received");
     var accCol = getColumnIndex("Accommodation");
@@ -115,21 +125,21 @@ function ensureColumnLayout(sheet) {
 
   for (var i = 0; i < headers.length; i++) {
     var h = String(headers[i]).trim().toLowerCase();
-    if (h === "team id") teamIdIdx = i;
+    if (h === "socio team id" || h === "team id") teamIdIdx = i;
     if (h === "name") nameIdx = i;
   }
 
-  // If Team ID does not exist, insert it before Name
+  // If Socio Team ID does not exist, insert it before Name
   if (teamIdIdx === -1) {
     if (nameIdx !== -1) {
       sheet.insertColumnBefore(nameIdx + 1);
-      sheet.getRange(1, nameIdx + 1).setValue("Team ID");
+      sheet.getRange(1, nameIdx + 1).setValue("Socio Team ID");
     } else {
       sheet.insertColumnBefore(2);
-      sheet.getRange(1, 2).setValue("Team ID");
+      sheet.getRange(1, 2).setValue("Socio Team ID");
     }
   } else if (nameIdx !== -1 && teamIdIdx > nameIdx) {
-    // If Team ID is after Name, we move the Team ID column before Name
+    // If Socio Team ID is after Name, we move the Socio Team ID column before Name
     sheet.moveColumns(sheet.getRange(1, teamIdIdx + 1, sheet.getLastRow(), 1), nameIdx + 1);
   }
 }
@@ -153,11 +163,10 @@ function syncSingleParticipant(sheet, data, getColumnIndex, idCol, teamIdCol, na
     sheet.getRange(targetRow, idCol).setValue(targetId);
   }
 
-  // Update Team ID
-  if (data.teamId !== undefined) {
-    sheet.getRange(targetRow, teamIdCol).setValue(data.teamId || "");
-  } else if (data.fields && data.fields["Team ID"] !== undefined) {
-    sheet.getRange(targetRow, teamIdCol).setValue(data.fields["Team ID"] || "");
+  // Update Socio Team ID
+  var teamVal = data.teamId !== undefined ? data.teamId : (data.fields && (data.fields["Socio Team ID"] || data.fields["Team ID"]));
+  if (teamVal !== undefined) {
+    sheet.getRange(targetRow, teamIdCol).setValue(teamVal || "");
   }
 
   // Update Name
@@ -182,7 +191,7 @@ function syncSingleParticipant(sheet, data, getColumnIndex, idCol, teamIdCol, na
   // Update Custom Info Fields (Theme, AB2, Email, Contact, etc.)
   if (data.fields && typeof data.fields === "object") {
     for (var fieldKey in data.fields) {
-      if (fieldKey.toLowerCase() === "team id") continue; // Already updated above
+      if (fieldKey.toLowerCase() === "team id" || fieldKey.toLowerCase() === "socio team id") continue; // Already updated above
       var colIdx = getColumnIndex(fieldKey);
       var fVal = data.fields[fieldKey];
       sheet.getRange(targetRow, colIdx).setValue(fVal !== undefined && fVal !== null ? fVal : "");

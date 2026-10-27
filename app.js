@@ -118,8 +118,6 @@ function parseGvizTable(data) {
     };
     
     const fields = {};
-    if (teamId) fields['Team ID'] = teamId;
-    
     cols.forEach((colName, cIdx) => {
       if (cIdx === idCol || cIdx === nameCol || cIdx === kitCol || cIdx === accCol || cIdx === foodCol) return;
       if (!colName || /last\s*updated/i.test(colName)) return;
@@ -128,6 +126,10 @@ function parseGvizTable(data) {
         fields[colName] = val;
       }
     });
+
+    if (!teamId && (fields['Socio Team ID'] || fields['Team ID'])) {
+      teamId = fields['Socio Team ID'] || fields['Team ID'] || '';
+    }
 
     const ab2 = fields['AB2 (SOCI-O-THON)'] || fields['AB2'] || '';
     if (ab2) fields['AB2 (SOCI-O-THON)'] = ab2;
@@ -205,8 +207,6 @@ function parseParticipantsFromCSV(csvText) {
     };
 
     const fields = {};
-    if (teamId) fields["Team ID"] = teamId;
-
     for (let c = 0; c < headers.length; c++) {
       if (c === idCol || c === nameCol || c === kitCol || c === accCol || c === foodCol) continue;
       const h = headers[c];
@@ -221,6 +221,10 @@ function parseParticipantsFromCSV(csvText) {
           fields[h] = val;
         }
       }
+    }
+
+    if (!teamId && (fields['Socio Team ID'] || fields['Team ID'])) {
+      teamId = fields['Socio Team ID'] || fields['Team ID'] || '';
     }
 
     const ab2 = fields['AB2 (SOCI-O-THON)'] || fields['AB2'] || '';
@@ -527,7 +531,9 @@ function render(list) {
     if (p.fields && Object.keys(p.fields).length > 0) {
       fieldsHtml = `<div style="font-size:12px; color:#64748b; margin-top:6px; line-height:1.4; text-align:left;">`;
       Object.entries(p.fields).forEach(([k, v]) => {
-        if (v) fieldsHtml += `<div><strong>${escapeHtml(k)}:</strong> ${escapeHtml(v)}</div>`;
+        if (!v || v === "-") return;
+        if (k.toLowerCase() === "team id" && p.fields["Socio Team ID"]) return;
+        fieldsHtml += `<div><strong>${escapeHtml(k)}:</strong> ${escapeHtml(v)}</div>`;
       });
       fieldsHtml += `</div>`;
     }
