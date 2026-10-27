@@ -10,7 +10,7 @@ const ADMIN_PIN = "1234";
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1_l9WvZ9ZJzhhij0QR0IRe388gP2lt-RNctH2qeErW9U/export?format=csv";
 const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw7p21WbHuWVn3iclq8PUCjpfDZrCXQEkpZMuV8TruuZtNcIJjzU1zw5hNEiVtJqUVg/exec";
 
-const LOCAL_STORAGE_KEY = "socioOthon_participants_v5";
+const LOCAL_STORAGE_KEY = "socioOthon_participants_v7";
 const AUTH_KEY = "socioOthon_admin_auth";
 
 const defaultSeed = [
@@ -25,8 +25,11 @@ const defaultSeed = [
     "fields": {
       "Email": "pss.purushottam@gmail.com",
       "Contact": "9344141746",
-      "AB2": "LR4"
-    }
+      "AB2": "LR4",
+      "Team ID": "SSC/26/SOT/RD/004",
+      "Theme": "Rural Development"
+    },
+    "teamId": "SSC/26/SOT/RD/004"
   },
   {
     "id": "SOT002",
@@ -39,8 +42,11 @@ const defaultSeed = [
     "fields": {
       "Email": "26ai114028@rgnau.ac.in",
       "Contact": "7008217572",
-      "AB2": "LR4"
-    }
+      "AB2": "LR4",
+      "Team ID": "SSC/26/SOT/RD/004",
+      "Theme": "Rural Development"
+    },
+    "teamId": "SSC/26/SOT/RD/004"
   },
   {
     "id": "SOT003",
@@ -53,8 +59,11 @@ const defaultSeed = [
     "fields": {
       "Email": "sasidharnagabathula@gmail.com",
       "Contact": "8790350954",
-      "AB2": "LR4"
-    }
+      "AB2": "LR4",
+      "Team ID": "SSC/26/SOT/RD/004",
+      "Theme": "Rural Development"
+    },
+    "teamId": "SSC/26/SOT/RD/004"
   },
   {
     "id": "SOT004",
@@ -67,8 +76,11 @@ const defaultSeed = [
     "fields": {
       "Email": "sourya07sarangi@gmail.com",
       "Contact": "7894742252",
-      "AB2": "LR4"
-    }
+      "AB2": "LR4",
+      "Team ID": "SSC/26/SOT/RD/004",
+      "Theme": "Rural Development"
+    },
+    "teamId": "SSC/26/SOT/RD/004"
   },
   {
     "id": "SOT005",
@@ -81,8 +93,11 @@ const defaultSeed = [
     "fields": {
       "Email": "himanshusinghgaur26@gmail.com",
       "Contact": "6388171218",
-      "AB2": "LR3"
-    }
+      "AB2": "LR3",
+      "Team ID": "SSC/26/SOT/ET/021",
+      "Theme": "Women and Child Empowerment"
+    },
+    "teamId": "SSC/26/SOT/ET/021"
   },
   {
     "id": "SOT006",
@@ -95,8 +110,11 @@ const defaultSeed = [
     "fields": {
       "Email": "jahnavichaurasia67@gmail.com",
       "Contact": "9555531276",
-      "AB2": "LR3"
-    }
+      "AB2": "LR3",
+      "Team ID": "SSC/26/SOT/ET/021",
+      "Theme": "Women and Child Empowerment"
+    },
+    "teamId": "SSC/26/SOT/ET/021"
   },
   {
     "id": "SOT007",
@@ -108,8 +126,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "26ai114037@gmail.com",
-      "Contact": "7903317467"
-    }
+      "Contact": "7903317467",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT008",
@@ -121,8 +142,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "priyanshukumarpatel789@gmail.com",
-      "Contact": "8969776557"
-    }
+      "Contact": "8969776557",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT009",
@@ -134,8 +158,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "athnidhi1676@gmail.com",
-      "Contact": "7974640071"
-    }
+      "Contact": "7974640071",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT010",
@@ -147,8 +174,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "krishna958192@gmail.com",
-      "Contact": "8809896525"
-    }
+      "Contact": "8809896525",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT011",
@@ -161,8 +191,11 @@ const defaultSeed = [
     "fields": {
       "Email": "bhanu.singhcse24@smslucknow.ac.in",
       "Contact": "6207776437",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/ET/024",
+      "Theme": "Rural Development"
+    },
+    "teamId": "SSC/26/SOT/ET/024"
   },
   {
     "id": "SOT012",
@@ -175,8 +208,11 @@ const defaultSeed = [
     "fields": {
       "Email": "shankaracharyabharti40@gmail.com",
       "Contact": "8521566913",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/ET/024",
+      "Theme": "Rural Development"
+    },
+    "teamId": "SSC/26/SOT/ET/024"
   },
   {
     "id": "SOT013",
@@ -189,8 +225,11 @@ const defaultSeed = [
     "fields": {
       "Email": "saumya.skdian@gmail.com",
       "Contact": "6306391167",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/ET/024",
+      "Theme": "Rural Development"
+    },
+    "teamId": "SSC/26/SOT/ET/024"
   },
   {
     "id": "SOT014",
@@ -203,8 +242,11 @@ const defaultSeed = [
     "fields": {
       "Email": "sumitkumarpatelcse25@smslucknow.ac.in",
       "Contact": "6201035429",
-      "AB2": "LR4"
-    }
+      "AB2": "LR4",
+      "Team ID": "SSC/26/SOT/ET/026",
+      "Theme": "Energy and Sustainability"
+    },
+    "teamId": "SSC/26/SOT/ET/026"
   },
   {
     "id": "SOT015",
@@ -216,8 +258,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "26AE3005@rgipt.ac.in",
-      "Contact": "7842961188"
-    }
+      "Contact": "7842961188",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT016",
@@ -229,8 +274,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "26ae3014@rgipt.ac.in",
-      "Contact": "9515169896"
-    }
+      "Contact": "9515169896",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT017",
@@ -243,8 +291,11 @@ const defaultSeed = [
     "fields": {
       "Email": "suryanshiot@gmail.com",
       "Contact": "6306784525",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/NM/RD/006",
+      "Theme": "Rural Development"
+    },
+    "teamId": "SSC/26/NM/RD/006"
   },
   {
     "id": "SOT018",
@@ -257,8 +308,11 @@ const defaultSeed = [
     "fields": {
       "Email": "utkarshphoenix67@gmail.com",
       "Contact": "9235087737",
-      "AB2": "LR1"
-    }
+      "Team ID": "SSC/26/SOT/RD/001",
+      "Theme": "Health and Hygiene",
+      "Notes": "Not coming"
+    },
+    "teamId": "SSC/26/SOT/RD/001"
   },
   {
     "id": "SOT019",
@@ -271,8 +325,11 @@ const defaultSeed = [
     "fields": {
       "Email": "mayank54xd@gmail.com",
       "Contact": "8856815411",
-      "AB2": "LR1"
-    }
+      "Team ID": "SSC/26/SOT/RD/001",
+      "Theme": "Health and Hygiene",
+      "Notes": "Not coming"
+    },
+    "teamId": "SSC/26/SOT/RD/001"
   },
   {
     "id": "SOT020",
@@ -285,8 +342,11 @@ const defaultSeed = [
     "fields": {
       "Email": "prativasahoo2006@gmail.com",
       "Contact": "7978701860",
-      "AB2": "LR1"
-    }
+      "Team ID": "SSC/26/SOT/RD/001",
+      "Theme": "Health and Hygiene",
+      "Notes": "Not coming"
+    },
+    "teamId": "SSC/26/SOT/RD/001"
   },
   {
     "id": "SOT021",
@@ -299,8 +359,11 @@ const defaultSeed = [
     "fields": {
       "Email": "abhirajput1366@gmail.com",
       "Contact": "7783004239",
-      "AB2": "LR1"
-    }
+      "Team ID": "SSC/26/SOT/RD/001",
+      "Theme": "Health and Hygiene",
+      "Notes": "Not coming"
+    },
+    "teamId": "SSC/26/SOT/RD/001"
   },
   {
     "id": "SOT022",
@@ -313,8 +376,11 @@ const defaultSeed = [
     "fields": {
       "Email": "ishayyylko@gmail.com",
       "Contact": "7897777641",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/HH/001",
+      "Theme": "Women and Child Empowerment"
+    },
+    "teamId": "SSC/26/SOT/HH/001"
   },
   {
     "id": "SOT023",
@@ -327,8 +393,11 @@ const defaultSeed = [
     "fields": {
       "Email": "adityagupta80098@gmail.com",
       "Contact": "8127657475",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/HH/001",
+      "Theme": "Women and Child Empowerment"
+    },
+    "teamId": "SSC/26/SOT/HH/001"
   },
   {
     "id": "SOT024",
@@ -341,8 +410,11 @@ const defaultSeed = [
     "fields": {
       "Email": "ayushmishra0205ix@gmail.com",
       "Contact": "9369035137",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/HH/001",
+      "Theme": "Women and Child Empowerment"
+    },
+    "teamId": "SSC/26/SOT/HH/001"
   },
   {
     "id": "SOT025",
@@ -355,8 +427,11 @@ const defaultSeed = [
     "fields": {
       "Email": "aloksahu95190@gmail.com",
       "Contact": "9519027901",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/HH/001",
+      "Theme": "Women and Child Empowerment"
+    },
+    "teamId": "SSC/26/SOT/HH/001"
   },
   {
     "id": "SOT026",
@@ -369,8 +444,11 @@ const defaultSeed = [
     "fields": {
       "Email": "kajalsingh829407@gmail.com",
       "Contact": "8294077701",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/RD/002",
+      "Theme": "Rural Development"
+    },
+    "teamId": "SSC/26/SOT/RD/002"
   },
   {
     "id": "SOT027",
@@ -383,8 +461,11 @@ const defaultSeed = [
     "fields": {
       "Email": "s4916178@gmail.com",
       "Contact": "8318955925",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/RD/002",
+      "Theme": "Rural Development"
+    },
+    "teamId": "SSC/26/SOT/RD/002"
   },
   {
     "id": "SOT028",
@@ -397,8 +478,11 @@ const defaultSeed = [
     "fields": {
       "Email": "vaibhavishukla45@gmail.com",
       "Contact": "7633912311",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/RD/002",
+      "Theme": "Rural Development"
+    },
+    "teamId": "SSC/26/SOT/RD/002"
   },
   {
     "id": "SOT029",
@@ -411,8 +495,11 @@ const defaultSeed = [
     "fields": {
       "Email": "kalashmishra2006@gmail.com",
       "Contact": "9415334228",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/RD/002",
+      "Theme": "Rural Development"
+    },
+    "teamId": "SSC/26/SOT/RD/002"
   },
   {
     "id": "SOT030",
@@ -425,8 +512,11 @@ const defaultSeed = [
     "fields": {
       "Email": "mishrakumar1192005@gmail.com",
       "Contact": "8175961647",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "SSC/26/SOT/ES/001",
+      "Theme": "Energy and Sustainability"
+    },
+    "teamId": "SSC/26/SOT/ES/001"
   },
   {
     "id": "SOT031",
@@ -439,8 +529,11 @@ const defaultSeed = [
     "fields": {
       "Email": "dhanrajaditya262@gmail.com",
       "Contact": "7376548635",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "SSC/26/SOT/ES/001",
+      "Theme": "Energy and Sustainability"
+    },
+    "teamId": "SSC/26/SOT/ES/001"
   },
   {
     "id": "SOT032",
@@ -453,8 +546,11 @@ const defaultSeed = [
     "fields": {
       "Email": "mauryapriyanshi2526@gmail.com",
       "Contact": "9569542060",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "SSC/26/SOT/ES/001",
+      "Theme": "Energy and Sustainability"
+    },
+    "teamId": "SSC/26/SOT/ES/001"
   },
   {
     "id": "SOT033",
@@ -467,8 +563,11 @@ const defaultSeed = [
     "fields": {
       "Email": "nainshi30309@gmail.com",
       "Contact": "8853303228",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "SSC/26/SOT/ES/001",
+      "Theme": "Energy and Sustainability"
+    },
+    "teamId": "SSC/26/SOT/ES/001"
   },
   {
     "id": "SOT034",
@@ -481,8 +580,11 @@ const defaultSeed = [
     "fields": {
       "Email": "tusharperiwal95@gmail.com",
       "Contact": "9395839383",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "SSC/26/SOT/ES/003",
+      "Theme": "Open Theme"
+    },
+    "teamId": "SSC/26/SOT/ES/003"
   },
   {
     "id": "SOT035",
@@ -495,8 +597,11 @@ const defaultSeed = [
     "fields": {
       "Email": "meb25047@tezu.ac.in",
       "Contact": "8617443361",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "SSC/26/SOT/ES/003",
+      "Theme": "Open Theme"
+    },
+    "teamId": "SSC/26/SOT/ES/003"
   },
   {
     "id": "SOT036",
@@ -509,8 +614,11 @@ const defaultSeed = [
     "fields": {
       "Email": "araj71248@gmail.com",
       "Contact": "8617391523",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "SSC/26/SOT/ES/003",
+      "Theme": "Open Theme"
+    },
+    "teamId": "SSC/26/SOT/ES/003"
   },
   {
     "id": "SOT037",
@@ -523,8 +631,11 @@ const defaultSeed = [
     "fields": {
       "Email": "kanishk2772@gmail.com",
       "Contact": "7851954942",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "Not provided",
+      "Theme": "Open Theme"
+    },
+    "teamId": "Not provided"
   },
   {
     "id": "SOT038",
@@ -537,8 +648,11 @@ const defaultSeed = [
     "fields": {
       "Email": "ayushmaankesarwani6@gmail.com",
       "Contact": "8958272744",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "Not provided",
+      "Theme": "Open Theme"
+    },
+    "teamId": "Not provided"
   },
   {
     "id": "SOT039",
@@ -551,8 +665,11 @@ const defaultSeed = [
     "fields": {
       "Email": "sanidhyasatya9080@gmail.com",
       "Contact": "8434620922",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "Not provided",
+      "Theme": "Open Theme"
+    },
+    "teamId": "Not provided"
   },
   {
     "id": "SOT040",
@@ -565,8 +682,11 @@ const defaultSeed = [
     "fields": {
       "Email": "kanishk2772@gmail.com",
       "Contact": "8446937220",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "Not provided",
+      "Theme": "Open Theme"
+    },
+    "teamId": "Not provided"
   },
   {
     "id": "SOT041",
@@ -579,8 +699,11 @@ const defaultSeed = [
     "fields": {
       "Email": "vedikabhatnagar19@gmail.com",
       "Contact": "9335618757",
-      "AB2": "LR3"
-    }
+      "AB2": "LR3",
+      "Team ID": "Not provided",
+      "Theme": "Open Theme"
+    },
+    "teamId": "Not provided"
   },
   {
     "id": "SOT042",
@@ -593,8 +716,11 @@ const defaultSeed = [
     "fields": {
       "Email": "divya1shahi5@gmail.com",
       "Contact": "7898002168",
-      "AB2": "LR3"
-    }
+      "AB2": "LR3",
+      "Team ID": "Not provided",
+      "Theme": "Open Theme"
+    },
+    "teamId": "Not provided"
   },
   {
     "id": "SOT043",
@@ -607,8 +733,11 @@ const defaultSeed = [
     "fields": {
       "Email": "25bb143035@rgnau.ac.in",
       "Contact": "8738928331",
-      "AB2": "LR4"
-    }
+      "AB2": "LR4",
+      "Team ID": "SSC/26/SOT/ET/006",
+      "Theme": "Open Theme"
+    },
+    "teamId": "SSC/26/SOT/ET/006"
   },
   {
     "id": "SOT044",
@@ -621,8 +750,11 @@ const defaultSeed = [
     "fields": {
       "Email": "25bb143013@rgnau.ac.in",
       "Contact": "9267923221",
-      "AB2": "LR4"
-    }
+      "AB2": "LR4",
+      "Team ID": "SSC/26/SOT/ET/006",
+      "Theme": "Open Theme"
+    },
+    "teamId": "SSC/26/SOT/ET/006"
   },
   {
     "id": "SOT045",
@@ -634,8 +766,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "26cs3017@rgipt.ac.in",
-      "Contact": "79891 79963"
-    }
+      "Contact": "79891 79963",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT046",
@@ -647,8 +782,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "26cs3022@rgipt.ac.in",
-      "Contact": "9666498388"
-    }
+      "Contact": "9666498388",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT047",
@@ -660,8 +798,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "26cd3036@rgipt.ac.in",
-      "Contact": "6393848378"
-    }
+      "Contact": "6393848378",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT048",
@@ -674,8 +815,11 @@ const defaultSeed = [
     "fields": {
       "Email": "25cs3019@rgipt.ac.in",
       "Contact": "7897540955",
-      "AB2": "LR3"
-    }
+      "AB2": "LR3",
+      "Team ID": "Not provided",
+      "Theme": "Mental Well-Being and Community Care"
+    },
+    "teamId": "Not provided"
   },
   {
     "id": "SOT049",
@@ -688,8 +832,11 @@ const defaultSeed = [
     "fields": {
       "Email": "25mc3064@rgipt.ac.in",
       "Contact": "9434060094",
-      "AB2": "LR3"
-    }
+      "AB2": "LR3",
+      "Team ID": "Not provided",
+      "Theme": "Mental Well-Being and Community Care"
+    },
+    "teamId": "Not provided"
   },
   {
     "id": "SOT050",
@@ -702,8 +849,11 @@ const defaultSeed = [
     "fields": {
       "Email": "25it3055@rgipt.ac.in",
       "Contact": "7268909951",
-      "AB2": "LR3"
-    }
+      "AB2": "LR3",
+      "Team ID": "Not provided",
+      "Theme": "Mental Well-Being and Community Care"
+    },
+    "teamId": "Not provided"
   },
   {
     "id": "SOT051",
@@ -716,8 +866,11 @@ const defaultSeed = [
     "fields": {
       "Email": "25cd3020@rgipt.ac.in",
       "Contact": "9296900602",
-      "AB2": "LR3"
-    }
+      "AB2": "LR3",
+      "Team ID": "Not provided",
+      "Theme": "Mental Well-Being and Community Care"
+    },
+    "teamId": "Not provided"
   },
   {
     "id": "SOT052",
@@ -729,8 +882,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "26ce3038@rgipt.ac.in",
-      "Contact": "9389247074"
-    }
+      "Contact": "9389247074",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT053",
@@ -742,8 +898,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "26ce3006@rgipt.ac.in",
-      "Contact": "7081665856"
-    }
+      "Contact": "7081665856",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT054",
@@ -755,8 +914,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "26cd3023@rgipt.ac.in",
-      "Contact": "9476109044"
-    }
+      "Contact": "9476109044",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT055",
@@ -769,8 +931,11 @@ const defaultSeed = [
     "fields": {
       "Email": "agrk1603@gmail.com",
       "Contact": "9236428463",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/HH/006",
+      "Theme": "Open Theme"
+    },
+    "teamId": "SSC/26/SOT/HH/006"
   },
   {
     "id": "SOT056",
@@ -783,8 +948,11 @@ const defaultSeed = [
     "fields": {
       "Email": "nimish120838@gmail.com",
       "Contact": "9076721337",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/HH/006",
+      "Theme": "Open Theme"
+    },
+    "teamId": "SSC/26/SOT/HH/006"
   },
   {
     "id": "SOT057",
@@ -797,8 +965,11 @@ const defaultSeed = [
     "fields": {
       "Email": "deveshsingh2424@gmail.com",
       "Contact": "8604283039",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/HH/006",
+      "Theme": "Open Theme"
+    },
+    "teamId": "SSC/26/SOT/HH/006"
   },
   {
     "id": "SOT058",
@@ -811,8 +982,11 @@ const defaultSeed = [
     "fields": {
       "Email": "singhsankalp678@gmail.com",
       "Contact": "7054490586",
-      "AB2": "LR2"
-    }
+      "AB2": "LR2",
+      "Team ID": "SSC/26/SOT/HH/006",
+      "Theme": "Open Theme"
+    },
+    "teamId": "SSC/26/SOT/HH/006"
   },
   {
     "id": "SOT059",
@@ -825,8 +999,11 @@ const defaultSeed = [
     "fields": {
       "Email": "25ce3023@rgipt.ac.in",
       "Contact": "9336385828",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "SSC/26/SOT/ET/008",
+      "Theme": "Energy and Sustainability"
+    },
+    "teamId": "SSC/26/SOT/ET/008"
   },
   {
     "id": "SOT060",
@@ -839,8 +1016,11 @@ const defaultSeed = [
     "fields": {
       "Email": "25re3004@rgipt.ac.in",
       "Contact": "7307264829",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "SSC/26/SOT/ET/008",
+      "Theme": "Energy and Sustainability"
+    },
+    "teamId": "SSC/26/SOT/ET/008"
   },
   {
     "id": "SOT061",
@@ -853,8 +1033,11 @@ const defaultSeed = [
     "fields": {
       "Email": "25pp3013@rgipt.ac.in",
       "Contact": "8761011885",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "SSC/26/SOT/ET/008",
+      "Theme": "Energy and Sustainability"
+    },
+    "teamId": "SSC/26/SOT/ET/008"
   },
   {
     "id": "SOT062",
@@ -867,8 +1050,11 @@ const defaultSeed = [
     "fields": {
       "Email": "25ce3022@rgipt.ac.in",
       "Contact": "7500023600",
-      "AB2": "LR1"
-    }
+      "AB2": "LR1",
+      "Team ID": "SSC/26/SOT/ET/008",
+      "Theme": "Energy and Sustainability"
+    },
+    "teamId": "SSC/26/SOT/ET/008"
   },
   {
     "id": "SOT063",
@@ -880,8 +1066,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "25ce3008@rgipt.ac.in",
-      "Contact": "7257886304"
-    }
+      "Contact": "7257886304",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT064",
@@ -893,8 +1082,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "26pe3007@rgipt.ac.in",
-      "Contact": "8828036271"
-    }
+      "Contact": "8828036271",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT065",
@@ -906,8 +1098,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "Arshiya130809@gmail.com",
-      "Contact": "8828036271"
-    }
+      "Contact": "8828036271",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT066",
@@ -919,8 +1114,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "toyshi01k@gmail.com",
-      "Contact": "6378787309"
-    }
+      "Contact": "6378787309",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT067",
@@ -933,8 +1131,11 @@ const defaultSeed = [
     "fields": {
       "Email": "26ce3034@rgipt.ac.in",
       "Contact": "9201883639",
-      "AB2": "LR4"
-    }
+      "AB2": "LR4",
+      "Team ID": "NA",
+      "Theme": "Health and Hygiene"
+    },
+    "teamId": "NA"
   },
   {
     "id": "SOT068",
@@ -947,8 +1148,11 @@ const defaultSeed = [
     "fields": {
       "Email": "26ce3032@rgipt.ac.in",
       "Contact": "7569811612",
-      "AB2": "LR4"
-    }
+      "AB2": "LR4",
+      "Team ID": "NA",
+      "Theme": "Health and Hygiene"
+    },
+    "teamId": "NA"
   },
   {
     "id": "SOT069",
@@ -961,8 +1165,11 @@ const defaultSeed = [
     "fields": {
       "Email": "mahisahani99@gmail.com",
       "Contact": "09569893990",
-      "AB2": "LR3"
-    }
+      "AB2": "LR3",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT070",
@@ -975,8 +1182,11 @@ const defaultSeed = [
     "fields": {
       "Email": "darcy2706already@gmail.com",
       "Contact": "8318284773",
-      "AB2": "LR3"
-    }
+      "AB2": "LR3",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT071",
@@ -988,8 +1198,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "26cd3035@rgipt.ac.in",
-      "Contact": "8840018140"
-    }
+      "Contact": "8840018140",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT072",
@@ -1001,8 +1214,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "26mc3066@rgipt.ac.in",
-      "Contact": "8894486898"
-    }
+      "Contact": "8894486898",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT073",
@@ -1014,8 +1230,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "25re3016@rgipt.ac.in",
-      "Contact": "6204883242"
-    }
+      "Contact": "6204883242",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT074",
@@ -1027,8 +1246,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "25ce3030@rgipt.ac.in",
-      "Contact": "7439501227"
-    }
+      "Contact": "7439501227",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT075",
@@ -1040,8 +1262,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "26ce3053@rgipt.ac.in",
-      "Contact": "8276079672"
-    }
+      "Contact": "8276079672",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT076",
@@ -1053,8 +1278,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "25ce3028@rgipt.ac.in",
-      "Contact": "7569734770"
-    }
+      "Contact": "7569734770",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT077",
@@ -1066,8 +1294,11 @@ const defaultSeed = [
     },
     "fields": {
       "Email": "25pe3044@rgipt.ac.in",
-      "Contact": "7382175526"
-    }
+      "Contact": "7382175526",
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT078",
@@ -1080,8 +1311,11 @@ const defaultSeed = [
     "fields": {
       "Email": "26it3036@rgipt.ac.in",
       "Contact": "9006846272",
-      "AB2": "LR3"
-    }
+      "AB2": "LR3",
+      "Team ID": "SSC/26/SOT/ET/023",
+      "Theme": "Rural Development"
+    },
+    "teamId": "SSC/26/SOT/ET/023"
   },
   {
     "id": "SOT079",
@@ -1094,8 +1328,11 @@ const defaultSeed = [
     "fields": {
       "Email": "26ce3002@rgipt.ac.in",
       "Contact": "9348638467",
-      "AB2": "LR3"
-    }
+      "AB2": "LR3",
+      "Team ID": "SSC/26/SOT/ET/023",
+      "Theme": "Rural Development"
+    },
+    "teamId": "SSC/26/SOT/ET/023"
   },
   {
     "id": "SOT080",
@@ -1105,7 +1342,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT081",
@@ -1115,7 +1356,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT082",
@@ -1125,7 +1370,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT083",
@@ -1135,7 +1384,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT084",
@@ -1145,7 +1398,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT085",
@@ -1155,7 +1412,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT086",
@@ -1165,7 +1426,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT087",
@@ -1175,7 +1440,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT088",
@@ -1185,7 +1454,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT089",
@@ -1195,7 +1468,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT090",
@@ -1205,7 +1482,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT091",
@@ -1215,7 +1496,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT092",
@@ -1225,7 +1510,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT093",
@@ -1235,7 +1524,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT094",
@@ -1245,7 +1538,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT095",
@@ -1255,7 +1552,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT096",
@@ -1265,7 +1566,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT097",
@@ -1275,7 +1580,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT098",
@@ -1285,7 +1594,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT099",
@@ -1295,7 +1608,11 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
   },
   {
     "id": "SOT100",
@@ -1305,38 +1622,156 @@ const defaultSeed = [
       "accommodation": false,
       "food": false
     },
-    "fields": {}
+    "fields": {
+      "Team ID": "-",
+      "Theme": "-"
+    },
+    "teamId": "-"
+  },
+  {
+    "id": "SOT101",
+    "name": "Kashyapee Kakoty",
+    "teamId": "SSC/26/SOT/ET/002",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Team ID": "SSC/26/SOT/ET/002",
+      "Theme": "Energy and Sustainability",
+      "AB2": "LR1"
+    }
+  },
+  {
+    "id": "SOT102",
+    "name": "Manasvi Pathak",
+    "teamId": "SSC/26/SOT/ET/002",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Team ID": "SSC/26/SOT/ET/002",
+      "Theme": "Energy and Sustainability",
+      "AB2": "LR1"
+    }
+  },
+  {
+    "id": "SOT103",
+    "name": "Mahi Meetali",
+    "teamId": "SSC/26/SOT/ET/002",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Team ID": "SSC/26/SOT/ET/002",
+      "Theme": "Energy and Sustainability",
+      "AB2": "LR1"
+    }
+  },
+  {
+    "id": "SOT104",
+    "name": "Shirsh Mishra",
+    "teamId": "Not provided",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Team ID": "Not provided",
+      "Theme": "Mental Wellbeing & Community Care",
+      "AB2": "LR3"
+    }
+  },
+  {
+    "id": "SOT105",
+    "name": "Aarush Raj",
+    "teamId": "Not provided",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Team ID": "Not provided",
+      "Theme": "Mental Wellbeing & Community Care",
+      "AB2": "LR4"
+    }
+  },
+  {
+    "id": "SOT106",
+    "name": "Himanshu Pandey",
+    "teamId": "Not provided",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Team ID": "Not provided",
+      "Theme": "Open Theme",
+      "AB2": "LR4",
+      "Email": "240694@kit.ac.in",
+      "Contact": "9198003605"
+    }
+  },
+  {
+    "id": "SOT107",
+    "name": "Anustha Sharma",
+    "teamId": "Not provided",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Team ID": "Not provided",
+      "Theme": "Open Theme",
+      "AB2": "LR4",
+      "Email": "240466@kit.ac.in",
+      "Contact": "7905776123"
+    }
+  },
+  {
+    "id": "SOT108",
+    "name": "Akash Joshi",
+    "teamId": "Not provided",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Team ID": "Not provided",
+      "Theme": "Open Theme",
+      "AB2": "LR4",
+      "Email": "developer.akashjoshi@gmail.com",
+      "Contact": "9125847406"
+    }
+  },
+  {
+    "id": "SOT109",
+    "name": "Kashvee Mehta",
+    "teamId": "Not provided",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Team ID": "Not provided",
+      "Theme": "Open Theme",
+      "AB2": "LR4",
+      "Email": "dev.kashvee@gmail.com",
+      "Contact": "8887539149"
+    }
   }
 ];
-
-// Extract participant ID from query param (?id=SOT001) or path (/p/SOT001)
-const urlParams = new URLSearchParams(window.location.search);
-let participantId = urlParams.get("id");
-
-if (!participantId) {
-  const pathParts = window.location.pathname.split("/").filter(Boolean);
-  const pIndex = pathParts.indexOf("p");
-  if (pIndex !== -1 && pathParts[pIndex + 1]) {
-    participantId = decodeURIComponent(pathParts[pIndex + 1]);
-  }
-}
-
-const participantPanel = document.getElementById("participantPanel");
-const notFoundPanel = document.getElementById("notFound");
-const editStatusBtn = document.getElementById("editStatusBtn");
-const saveButton = document.getElementById("saveButton");
-const authBanner = document.getElementById("authBanner");
-const authStatusText = document.getElementById("authStatusText");
-const unlockBtn = document.getElementById("unlockBtn");
-
-const addFieldBtn = document.getElementById("addFieldBtn");
-const addChecklistBtn = document.getElementById("addChecklistBtn");
-
-const pinModal = document.getElementById("pinModal");
-const modalPinInput = document.getElementById("modalPinInput");
-const modalPinError = document.getElementById("modalPinError");
-const submitPinBtn = document.getElementById("submitPinBtn");
-const cancelPinBtn = document.getElementById("cancelPinBtn");
 
 let isOrganizerUnlocked = false;
 let currentParticipant = null;
@@ -1496,6 +1931,7 @@ function parseParticipantsFromCSV(csvText) {
   if (!rows || rows.length < 2) return null;
   const headers = rows[0].map(h => h.trim());
   const idCol = headers.findIndex(h => /participant\s*id/i.test(h));
+  const teamIdCol = headers.findIndex(h => /team\s*id/i.test(h));
   const nameCol = headers.findIndex(h => /^name$/i.test(h));
   const kitCol = headers.findIndex(h => /kit/i.test(h));
   const accCol = headers.findIndex(h => /accommodation/i.test(h));
@@ -1508,6 +1944,7 @@ function parseParticipantsFromCSV(csvText) {
     if (!rawId) continue;
     const id = rawId.toUpperCase();
     const name = (nameCol !== -1 && r[nameCol]) ? r[nameCol].trim() : (r[1] ? r[1].trim() : ("Participant " + id));
+    const teamId = (teamIdCol !== -1 && r[teamIdCol]) ? r[teamIdCol].trim() : "";
     
     const status = {
       kit: kitCol !== -1 ? isTruthy(r[kitCol]) : isTruthy(r[3]),
@@ -1515,15 +1952,18 @@ function parseParticipantsFromCSV(csvText) {
       food: foodCol !== -1 ? isTruthy(r[foodCol]) : isTruthy(r[5])
     };
 
-    const num = parseInt(String(id).replace(/\D/g, ""), 10) || 0;
-    const isOnSpot = num >= 80;
+    const isOnSpot = name.toLowerCase().startsWith("on-spot");
 
     const fields = {};
+    if (teamId) {
+      fields["Team ID"] = teamId;
+    }
+
     for (let c = 0; c < headers.length; c++) {
-      if (c === idCol || c === nameCol || c === kitCol || c === accCol || c === foodCol) continue;
+      if (c === idCol || c === nameCol || c === kitCol || c === accCol || c === foodCol || c === teamIdCol) continue;
       const h = headers[c];
-      if (!h || /last\s*updated/i.test(h) || /team/i.test(h)) continue;
-      // Strip email and contact for on-spot participants (SOT080+)
+      if (!h || /last\s*updated/i.test(h)) continue;
+      // Strip email and contact only for blank on-spot walk-in slots
       if (isOnSpot && (/email|mail/i.test(h) || /contact|phone/i.test(h))) continue;
 
       const val = r[c] ? r[c].trim() : "";
@@ -1537,7 +1977,7 @@ function parseParticipantsFromCSV(csvText) {
       }
     }
 
-    list.push({ id, name, status, fields });
+    list.push({ id, name, teamId, status, fields });
   }
   return list;
 }

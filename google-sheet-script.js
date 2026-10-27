@@ -1,6 +1,9 @@
+// Google Apps Script Web App for Socio-O-Thon
+// Handles check-in syncing, dynamic columns, Team ID, Theme, AB2, and sorting
+
 function doPost(e) {
   var lock = LockService.getScriptLock();
-  lock.tryLock(20000);
+  lock.tryLock(30000);
 
   try {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
@@ -32,7 +35,7 @@ function doPost(e) {
       var values = sheet.getDataRange().getValues();
       for (var r = values.length - 1; r >= 1; r--) {
         var idVal = String(values[r][0]).trim().toUpperCase();
-        var nameVal = String(values[r][1]).trim();
+        var nameVal = String(values[r][2] || values[r][1] || "").trim();
         if (/deleted/i.test(nameVal) || /not\s*paid/i.test(nameVal) || idVal === "TEST_NON_EXISTENT") {
           sheet.deleteRow(r + 1);
         }
@@ -42,12 +45,8 @@ function doPost(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // ── 3. ACTION: SYNC / ADD / UPDATE PARTICIPANT ──
-    var targetId = String(data.id || "").trim().toUpperCase();
-    if (!targetId) {
-      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Missing participant ID" }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
+    // ── ENSURE TEAM ID COLUMN IS INSERTED BEFORE NAME ──
+    ensureColumnLayout(sheet);
 
     var values = sheet.getDataRange().getValues();
     var headers = values[0] || [];
@@ -65,73 +64,34 @@ function doPost(e) {
       return newColIdx;
     }
 
-    // Standard column positions
-    var idCol = 1;  // Col A: Participant ID
-    var nameCol = 2; // Col B: Name
-    var kitCol = 4;  // Col D: Kit Received
-    var accCol = 5;  // Col E: Accommodation
-    var foodCol = 6; // Col F: Food Received
-
-    // Ensure standard columns exist in header row
-    if (headers.length < 6) {
-      sheet.getRange(1, 1).setValue("Participant ID");
-      sheet.getRange(1, 2).setValue("Name");
-      sheet.getRange(1, 3).setValue("Team ID");
-      sheet.getRange(1, 4).setValue("Kit Received");
-      sheet.getRange(1, 5).setValue("Accommodation");
-      sheet.getRange(1, 6).setValue("Food Received");
-      headers = sheet.getDataRange().getValues()[0];
-    }
-
-    // Find existing row by Participant ID
-    var targetRow = -1;
-    for (var r = 1; r < values.length; r++) {
-      if (String(values[r][0]).trim().toUpperCase() === targetId) {
-        targetRow = r + 1;
-        break;
-      }
-    }
-
-    // If row doesn't exist, append new row
-    if (targetRow === -1) {
-      targetRow = sheet.getLastRow() + 1;
-      sheet.getRange(targetRow, idCol).setValue(targetId);
-    }
-
-    // Update Name
-    if (data.name !== undefined) {
-      sheet.getRange(targetRow, nameCol).setValue(data.name);
-    }
-
-    // Update Attendance Checkboxes
-    if (data.status) {
-      if (data.status.kit !== undefined) sheet.getRange(targetRow, kitCol).setValue(data.status.kit ? "YES" : "NO");
-      if (data.status.accommodation !== undefined) sheet.getRange(targetRow, accCol).setValue(data.status.accommodation ? "YES" : "NO");
-      if (data.status.food !== undefined) sheet.getRange(targetRow, foodCol).setValue(data.status.food ? "YES" : "NO");
-
-      // Custom checkboxes
-      for (var checkKey in data.status) {
-        if (checkKey !== "kit" && checkKey !== "accommodation" && checkKey !== "food") {
-          var colIdx = getColumnIndex(checkKey);
-          sheet.getRange(targetRow, colIdx).setValue(data.status[checkKey] ? "YES" : "NO");
-        }
-      }
-    }
-
-    // Update Custom Info Fields (Email, Contact, etc.)
-    if (data.fields && typeof data.fields === "object") {
-      for (var fieldKey in data.fields) {
-        var colIdx = getColumnIndex(fieldKey);
-        var fVal = data.fields[fieldKey];
-        sheet.getRange(targetRow, colIdx).setValue(fVal !== undefined && fVal !== null ? fVal : "");
-      }
-    }
-
-    // Update Last Updated timestamp
+    var idCol = getColumnIndex("Participant ID");
+    var teamIdCol = getColumnIndex("Team ID");
+    var nameCol = getColumnIndex("Name");
+    var kitCol = getColumnIndex("Kit Received");
+    var accCol = getColumnIndex("Accommodation");
+    var foodCol = getColumnIndex("Food Received");
     var updatedCol = getColumnIndex("Last Updated");
-    sheet.getRange(targetRow, updatedCol).setValue(new Date().toLocaleString());
 
-    // ── KEEP ALL ROWS IN EXACT NUMERICAL ORDER AS QR CLOUD ──
+    // ── 3. ACTION: BATCH SYNC ──
+    if (action === "batch_sync" && Array.isArray(data.participants)) {
+      var count = 0;
+      data.participants.forEach(function(p) {
+        syncSingleParticipant(sheet, p, getColumnIndex, idCol, teamIdCol, nameCol, kitCol, accCol, foodCol, updatedCol);
+        count++;
+      });
+      sortSheetInOrder(sheet);
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", updatedCount: count }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ── 4. ACTION: SYNC / ADD / UPDATE SINGLE PARTICIPANT ──
+    var targetId = String(data.id || "").trim().toUpperCase();
+    if (!targetId) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Missing participant ID" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    syncSingleParticipant(sheet, data, getColumnIndex, idCol, teamIdCol, nameCol, kitCol, accCol, foodCol, updatedCol);
     sortSheetInOrder(sheet);
 
     return ContentService.createTextOutput(JSON.stringify({ status: "success", id: targetId }))
@@ -141,6 +101,97 @@ function doPost(e) {
       .setMimeType(ContentService.MimeType.JSON);
   } finally {
     lock.releaseLock();
+  }
+}
+
+// Helper: Ensure column layout puts "Team ID" right before "Name"
+function ensureColumnLayout(sheet) {
+  var values = sheet.getDataRange().getValues();
+  if (values.length === 0) return;
+  var headers = values[0];
+
+  var teamIdIdx = -1;
+  var nameIdx = -1;
+
+  for (var i = 0; i < headers.length; i++) {
+    var h = String(headers[i]).trim().toLowerCase();
+    if (h === "team id") teamIdIdx = i;
+    if (h === "name") nameIdx = i;
+  }
+
+  // If Team ID does not exist, insert it before Name
+  if (teamIdIdx === -1) {
+    if (nameIdx !== -1) {
+      sheet.insertColumnBefore(nameIdx + 1);
+      sheet.getRange(1, nameIdx + 1).setValue("Team ID");
+    } else {
+      sheet.insertColumnBefore(2);
+      sheet.getRange(1, 2).setValue("Team ID");
+    }
+  } else if (nameIdx !== -1 && teamIdIdx > nameIdx) {
+    // If Team ID is after Name, we move the Team ID column before Name
+    sheet.moveColumns(sheet.getRange(1, teamIdIdx + 1, sheet.getLastRow(), 1), nameIdx + 1);
+  }
+}
+
+// Helper: Sync one participant's row
+function syncSingleParticipant(sheet, data, getColumnIndex, idCol, teamIdCol, nameCol, kitCol, accCol, foodCol, updatedCol) {
+  var targetId = String(data.id || "").trim().toUpperCase();
+  if (!targetId) return;
+
+  var values = sheet.getDataRange().getValues();
+  var targetRow = -1;
+  for (var r = 1; r < values.length; r++) {
+    if (String(values[r][idCol - 1]).trim().toUpperCase() === targetId) {
+      targetRow = r + 1;
+      break;
+    }
+  }
+
+  if (targetRow === -1) {
+    targetRow = sheet.getLastRow() + 1;
+    sheet.getRange(targetRow, idCol).setValue(targetId);
+  }
+
+  // Update Team ID
+  if (data.teamId !== undefined) {
+    sheet.getRange(targetRow, teamIdCol).setValue(data.teamId || "");
+  } else if (data.fields && data.fields["Team ID"] !== undefined) {
+    sheet.getRange(targetRow, teamIdCol).setValue(data.fields["Team ID"] || "");
+  }
+
+  // Update Name
+  if (data.name !== undefined) {
+    sheet.getRange(targetRow, nameCol).setValue(data.name);
+  }
+
+  // Update Attendance Checkboxes
+  if (data.status) {
+    if (data.status.kit !== undefined) sheet.getRange(targetRow, kitCol).setValue(data.status.kit ? "YES" : "NO");
+    if (data.status.accommodation !== undefined) sheet.getRange(targetRow, accCol).setValue(data.status.accommodation ? "YES" : "NO");
+    if (data.status.food !== undefined) sheet.getRange(targetRow, foodCol).setValue(data.status.food ? "YES" : "NO");
+
+    for (var checkKey in data.status) {
+      if (checkKey !== "kit" && checkKey !== "accommodation" && checkKey !== "food") {
+        var colIdx = getColumnIndex(checkKey);
+        sheet.getRange(targetRow, colIdx).setValue(data.status[checkKey] ? "YES" : "NO");
+      }
+    }
+  }
+
+  // Update Custom Info Fields (Theme, AB2, Email, Contact, etc.)
+  if (data.fields && typeof data.fields === "object") {
+    for (var fieldKey in data.fields) {
+      if (fieldKey.toLowerCase() === "team id") continue; // Already updated above
+      var colIdx = getColumnIndex(fieldKey);
+      var fVal = data.fields[fieldKey];
+      sheet.getRange(targetRow, colIdx).setValue(fVal !== undefined && fVal !== null ? fVal : "");
+    }
+  }
+
+  // Update Last Updated timestamp
+  if (updatedCol) {
+    sheet.getRange(targetRow, updatedCol).setValue(new Date().toLocaleString());
   }
 }
 
