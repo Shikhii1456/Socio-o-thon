@@ -38,6 +38,7 @@ const submitPinBtn = document.getElementById("submitPinBtn");
 const cancelPinBtn = document.getElementById("cancelPinBtn");
 
 let isOrganizerUnlocked = false;
+let currentParticipant = null;
 
 function isOrganizerAuthenticated() {
   return isOrganizerUnlocked;
@@ -1156,6 +1157,32 @@ async function fetchParticipants() {
   },
   {
     "id": "SOT069",
+    "name": "Mahi Kumari",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "mahisahani99@gmail.com",
+      "Contact": "09569893990"
+    }
+  },
+  {
+    "id": "SOT070",
+    "name": "Rishika Singh",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {
+      "Email": "darcy2706already@gmail.com",
+      "Contact": "8318284773"
+    }
+  },
+  {
+    "id": "SOT071",
     "name": "Yash Jaiswal",
     "status": {
       "kit": false,
@@ -1168,7 +1195,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT070",
+    "id": "SOT072",
     "name": "Tarun Singh",
     "status": {
       "kit": false,
@@ -1181,7 +1208,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT071",
+    "id": "SOT073",
     "name": "Palak P",
     "status": {
       "kit": false,
@@ -1194,7 +1221,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT072",
+    "id": "SOT074",
     "name": "Kriti Kumari Singh",
     "status": {
       "kit": false,
@@ -1207,7 +1234,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT073",
+    "id": "SOT075",
     "name": "Sreeraj Basak",
     "status": {
       "kit": false,
@@ -1220,7 +1247,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT074",
+    "id": "SOT076",
     "name": "Kalavala Maneesh",
     "status": {
       "kit": false,
@@ -1233,7 +1260,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT075",
+    "id": "SOT077",
     "name": "PUNEETH PUDI",
     "status": {
       "kit": false,
@@ -1246,7 +1273,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT076",
+    "id": "SOT078",
     "name": "Shreyansh Singh",
     "status": {
       "kit": false,
@@ -1259,7 +1286,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT077",
+    "id": "SOT079",
     "name": "Abhishek Ekka",
     "status": {
       "kit": false,
@@ -1272,7 +1299,7 @@ async function fetchParticipants() {
     }
   },
   {
-    "id": "SOT078",
+    "id": "SOT080",
     "name": "On-Spot Participant 01",
     "status": {
       "kit": false,
@@ -1282,7 +1309,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT079",
+    "id": "SOT081",
     "name": "On-Spot Participant 02",
     "status": {
       "kit": false,
@@ -1292,7 +1319,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT080",
+    "id": "SOT082",
     "name": "On-Spot Participant 03",
     "status": {
       "kit": false,
@@ -1302,7 +1329,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT081",
+    "id": "SOT083",
     "name": "On-Spot Participant 04",
     "status": {
       "kit": false,
@@ -1312,7 +1339,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT082",
+    "id": "SOT084",
     "name": "On-Spot Participant 05",
     "status": {
       "kit": false,
@@ -1322,7 +1349,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT083",
+    "id": "SOT085",
     "name": "On-Spot Participant 06",
     "status": {
       "kit": false,
@@ -1332,7 +1359,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT084",
+    "id": "SOT086",
     "name": "On-Spot Participant 07",
     "status": {
       "kit": false,
@@ -1342,7 +1369,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT085",
+    "id": "SOT087",
     "name": "On-Spot Participant 08",
     "status": {
       "kit": false,
@@ -1352,7 +1379,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT086",
+    "id": "SOT088",
     "name": "On-Spot Participant 09",
     "status": {
       "kit": false,
@@ -1362,7 +1389,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT087",
+    "id": "SOT089",
     "name": "On-Spot Participant 10",
     "status": {
       "kit": false,
@@ -1372,7 +1399,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT088",
+    "id": "SOT090",
     "name": "On-Spot Participant 11",
     "status": {
       "kit": false,
@@ -1382,7 +1409,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT089",
+    "id": "SOT091",
     "name": "On-Spot Participant 12",
     "status": {
       "kit": false,
@@ -1392,7 +1419,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT090",
+    "id": "SOT092",
     "name": "On-Spot Participant 13",
     "status": {
       "kit": false,
@@ -1402,7 +1429,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT091",
+    "id": "SOT093",
     "name": "On-Spot Participant 14",
     "status": {
       "kit": false,
@@ -1412,7 +1439,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT092",
+    "id": "SOT094",
     "name": "On-Spot Participant 15",
     "status": {
       "kit": false,
@@ -1422,7 +1449,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT093",
+    "id": "SOT095",
     "name": "On-Spot Participant 16",
     "status": {
       "kit": false,
@@ -1432,7 +1459,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT094",
+    "id": "SOT096",
     "name": "On-Spot Participant 17",
     "status": {
       "kit": false,
@@ -1442,7 +1469,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT095",
+    "id": "SOT097",
     "name": "On-Spot Participant 18",
     "status": {
       "kit": false,
@@ -1452,7 +1479,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT096",
+    "id": "SOT098",
     "name": "On-Spot Participant 19",
     "status": {
       "kit": false,
@@ -1462,7 +1489,7 @@ async function fetchParticipants() {
     "fields": {}
   },
   {
-    "id": "SOT097",
+    "id": "SOT099",
     "name": "On-Spot Participant 20",
     "status": {
       "kit": false,
@@ -1472,6 +1499,70 @@ async function fetchParticipants() {
     "fields": {}
   }
 ];
+}
+
+// ── Real-Time Sync to Google Sheet ──
+async function syncToGoogleSheet(participant, newStatus, fields) {
+  const sheetUrl = GOOGLE_SHEET_API_URL || localStorage.getItem("socioOthon_google_sheet_url");
+  if (!sheetUrl) return;
+
+  try {
+    await fetch(sheetUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "sync_status",
+        id: participant.id,
+        name: participant.name,
+                status: newStatus,
+        fields: fields || {}
+      })
+    });
+  } catch (e) {
+    console.warn("Google Sheet sync error:", e);
+  }
+}
+
+async function updateCloudParticipant(updated) {
+  const list = await fetchParticipants();
+  const idx = list.findIndex(p => p.id.toUpperCase() === updated.id.toUpperCase());
+  if (idx !== -1) {
+    list[idx] = updated;
+  } else {
+    list.push(updated);
+  }
+
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+
+  try {
+    await fetch(CLOUD_DB_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "socio-o-thon-db",
+        data: { participants: list }
+      })
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ── Rendering Checklist (Default + Custom Checkboxes) ──
+function renderChecklist() {
+  const container = document.getElementById("checklistContainer");
+  container.innerHTML = "";
+
+  const status = currentParticipant.status || {};
+  const unlocked = isOrganizerAuthenticated();
+
+  const defaultKeys = [
+    { key: "kit", label: "Kit received", desc: "Mark when kit has been handed over." },
+    { key: "accommodation", label: "Accommodation", desc: "Mark when accommodation is assigned/confirmed." },
+    { key: "food", label: "Food arrangement", desc: "Mark when food coupon/token is issued." }
+  ];
 
   // Combine default with any custom added checklist items
   const allChecks = [...defaultKeys];
@@ -1626,8 +1717,14 @@ async function loadParticipant() {
     return;
   }
 
+  const cleanQueryId = participantId.trim().toUpperCase();
   const list = await fetchParticipants();
-  currentParticipant = list.find(p => p.id.toUpperCase() === participantId.toUpperCase());
+  currentParticipant = list.find(p => {
+    if (p.id.toUpperCase() === cleanQueryId) return true;
+    const numP = parseInt(String(p.id).replace(/\D/g, ""), 10);
+    const numQ = parseInt(String(cleanQueryId).replace(/\D/g, ""), 10);
+    return numP && numQ && numP === numQ;
+  });
 
   if (!currentParticipant) {
     participantPanel.classList.add("hidden");
