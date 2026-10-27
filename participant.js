@@ -280,7 +280,7 @@ function parseGvizTable(data) {
     function isTruthy(val) {
       if (!val) return false;
       const s = String(val).trim().toUpperCase();
-      return s === 'YES' || s === 'TRUE' || s === '1';
+      return s === 'YES' || s === 'TRUE' || s === '1' || s === 'CHECKED' || s === 'Y' || s === 'DONE' || s === 'RECEIVED' || s === '✓' || s === '✔';
     }
     
     const status = {
@@ -737,7 +737,7 @@ async function loadParticipant() {
     if (!currentParticipant.status) currentParticipant.status = {};
 
     const numCurrent = parseInt(String(currentParticipant.id).replace(/\D/g, ""), 10) || 0;
-    if (numCurrent >= 80 && currentParticipant.fields) {
+    if (numCurrent >= 89 && /on-spot/i.test(currentParticipant.name) && currentParticipant.fields) {
       delete currentParticipant.fields.Email;
       delete currentParticipant.fields.Contact;
       delete currentParticipant.fields["email"];

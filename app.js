@@ -80,7 +80,7 @@ function parseCSV(text) {
 function isTruthy(val) {
   if (!val) return false;
   const s = String(val).trim().toUpperCase();
-  return s === "YES" || s === "TRUE" || s === "1" || s === "CHECKED";
+  return s === "YES" || s === "TRUE" || s === "1" || s === "CHECKED" || s === "Y" || s === "DONE" || s === "RECEIVED" || s === "✓" || s === "✔";
 }
 
 function parseGvizTable(data) {

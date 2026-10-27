@@ -240,9 +240,12 @@
   <header>
     <div>
       <div style="font-size: 11px; color: #94a3b8; font-weight: 800; letter-spacing: 1px;">SOCIO-O-THON</div>
-      <h1>Mobile Offline Tracker</h1>
+      <h1>Event Check-In & Scanner</h1>
     </div>
-    <span class="badge">Offline</span>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <a href="index.html" class="btn-secondary" style="padding:6px 12px; font-size:12px; text-decoration:none; display:flex; align-items:center; gap:4px;">📊 QR Dashboard</a>
+      <span id="connectionBadge" class="badge">Live Sync</span>
+    </div>
   </header>
 
   <div class="main">
@@ -252,7 +255,7 @@
         <button class="snap-btn">📷 Snap QR Code</button>
         <input type="file" id="qrFileInput" accept="image/*" capture="environment" onchange="handleQrPhoto(event)" />
       </div>
-      <div class="hint">Tap to take photo of badge</div>
+      <div class="hint">Tap to take photo of badge or upload QR</div>
       <div id="scanningSpinner" class="scanning-spinner">⏳ Reading QR from photo...</div>
     </div>
 
@@ -260,8 +263,12 @@
     <div id="cardPanel" class="card-panel">
       <div class="card-header">
         <div>
-          <h2 class="card-id" id="displayId">SOT001</h2>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h2 class="card-id" id="displayId">SOT001</h2>
+            <span id="displayRoom" style="background:#2563eb; color:#fff; font-size:12px; font-weight:700; padding:3px 8px; border-radius:6px; display:none;">LR...</span>
+          </div>
           <div class="card-name" id="displayName">Participant Name</div>
+          <div id="displayMeta" style="font-size:12px; color:#94a3b8; margin-top:4px;"></div>
         </div>
         <button class="btn-secondary" style="padding:6px 10px; font-size:12px;" onclick="closePanel()">✕ Done</button>
       </div>
@@ -303,7 +310,10 @@
 
     <!-- Summary Stats & CSV Export -->
     <div class="summary-card">
-      <div style="font-weight:700; margin-bottom:10px; font-size:14px;">Live Progress</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div style="font-weight:700; font-size:14px;">Live Progress</div>
+        <button id="refreshBtn" onclick="syncWithGoogleSheet()" class="btn-secondary" style="padding:4px 8px; font-size:11px;">🔄 Sync Sheet</button>
+      </div>
       <div class="summary-grid">
         <div class="summary-item">
           <div class="summary-val" id="kitCount">0</div>
@@ -327,32 +337,168 @@
 
   <canvas id="qrCanvas"></canvas>
 
-  <script src="data/seed.js?v=8.4"></script>
+  <script src="data/seed.js?v=8.5"></script>
   <script>
+    const GOOGLE_SHEET_GVIZ_URL = "https://docs.google.com/spreadsheets/d/1_l9WvZ9ZJzhhij0QR0IRe388gP2lt-RNctH2qeErW9U/gviz/tq";
+    const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw7p21WbHuWVn3iclq8PUCjpfDZrCXQEkpZMuV8TruuZtNcIJjzU1zw5hNEiVtJqUVg/exec";
     const STORAGE_KEY = "offline_socio_participants_v8";
     let db = {};
     let currentParticipantId = null;
 
-    function loadDatabase() {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        db = JSON.parse(stored);
-      } else {
-        db = {};
-        if (window.SOCIO_DEFAULT_PARTICIPANTS && Array.isArray(window.SOCIO_DEFAULT_PARTICIPANTS)) {
-          window.SOCIO_DEFAULT_PARTICIPANTS.forEach(p => {
+    function isTruthy(val) {
+      if (!val) return false;
+      const s = String(val).trim().toUpperCase();
+      return s === "YES" || s === "TRUE" || s === "1" || s === "CHECKED" || s === "Y" || s === "DONE" || s === "RECEIVED" || s === "✓" || s === "✔";
+    }
+
+    function fetchLiveSheetJsonp() {
+      return new Promise((resolve) => {
+        const callbackName = "gvizSheetCallbackScanner_" + Math.random().toString(36).slice(2);
+        const script = document.createElement("script");
+        let resolved = false;
+
+        const timeout = setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            cleanup();
+            resolve(null);
+          }
+        }, 6000);
+
+        function cleanup() {
+          clearTimeout(timeout);
+          try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        window[callbackName] = function(data) {
+          if (resolved) return;
+          resolved = true;
+          cleanup();
+          try {
+            if (!data || !data.table || !data.table.rows) return resolve(null);
+            const cols = data.table.cols.map(c => (c.label || c.id || '').trim());
+            const rows = data.table.rows;
+            const idCol = cols.findIndex(h => /participant\s*id/i.test(h));
+            const teamIdCol = cols.findIndex(h => /socio\s*team\s*id/i.test(h) || /^team\s*id$/i.test(h));
+            const nameCol = cols.findIndex(h => /^name$/i.test(h));
+            const kitCol = cols.findIndex(h => /kit/i.test(h));
+            const accCol = cols.findIndex(h => /accommodation/i.test(h));
+            const foodCol = cols.findIndex(h => /food/i.test(h));
+
+            const list = [];
+            rows.forEach(r => {
+              const cells = r.c || [];
+              const getVal = (idx) => {
+                if (idx === -1 || !cells[idx]) return '';
+                const cell = cells[idx];
+                return (cell.f !== undefined && cell.f !== null) ? String(cell.f).trim() : (cell.v !== undefined && cell.v !== null ? String(cell.v).trim() : '');
+              };
+              const id = getVal(idCol).toUpperCase();
+              if (!id) return;
+              const name = getVal(nameCol) || ('Participant ' + id);
+              let teamId = getVal(teamIdCol) || '';
+              if (teamId === '-') teamId = '';
+              const status = {
+                kit: isTruthy(getVal(kitCol)),
+                accommodation: isTruthy(getVal(accCol)),
+                food: isTruthy(getVal(foodCol))
+              };
+              const fields = {};
+              cols.forEach((colName, cIdx) => {
+                if (cIdx === idCol || cIdx === nameCol || cIdx === kitCol || cIdx === accCol || cIdx === foodCol) return;
+                if (!colName || /last\s*updated/i.test(colName)) return;
+                const val = getVal(cIdx);
+                if (val && val !== '-') fields[colName] = val;
+              });
+              if (!teamId && fields['Socio Team ID']) teamId = fields['Socio Team ID'];
+              list.push({ id, name, teamId, status, fields });
+            });
+            resolve(list);
+          } catch (e) {
+            console.warn("Scanner Gviz parse error:", e);
+            resolve(null);
+          }
+        };
+
+        script.onerror = function() {
+          if (!resolved) {
+            resolved = true;
+            cleanup();
+            resolve(null);
+          }
+        };
+
+        script.src = `${GOOGLE_SHEET_GVIZ_URL}?tqx=responseHandler:${callbackName}&_t=${Date.now()}`;
+        document.head.appendChild(script);
+      });
+    }
+
+    async function syncWithGoogleSheet() {
+      const badge = document.getElementById("connectionBadge");
+      const refreshBtn = document.getElementById("refreshBtn");
+      if (refreshBtn) refreshBtn.textContent = "⏳ Syncing...";
+      try {
+        const liveList = await fetchLiveSheetJsonp();
+        if (liveList && Array.isArray(liveList) && liveList.length > 0) {
+          liveList.forEach(p => {
             db[p.id] = {
               id: p.id,
               name: p.name,
+              teamId: p.teamId || (p.fields ? p.fields['Socio Team ID'] : ''),
+              room: p.fields ? (p.fields['AB2 (SOCI-O-THON)'] || p.fields['AB2'] || '') : '',
+              theme: p.fields ? (p.fields['Theme'] || '') : '',
               kit: p.status ? !!p.status.kit : false,
               acc: p.status ? !!p.status.accommodation : false,
-              food: p.status ? !!p.status.food : false
+              food: p.status ? !!p.status.food : false,
+              fields: p.fields || {}
             };
           });
+          saveDatabase();
+          if (badge) {
+            badge.style.background = "#10b981";
+            badge.textContent = `🟢 Live (${liveList.length})`;
+          }
+        } else {
+          if (badge) badge.textContent = "Offline (Cached)";
         }
+      } catch (e) {
+        console.warn("Sheet sync note:", e);
+        if (badge) badge.textContent = "Offline (Cached)";
+      }
+      if (refreshBtn) refreshBtn.textContent = "🔄 Sync Sheet";
+      updateStats();
+      if (currentParticipantId && db[currentParticipantId]) {
+        openParticipant(currentParticipantId);
+      }
+    }
+
+    function loadDatabase() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try { db = JSON.parse(stored); } catch (e) { db = {}; }
+      }
+      if (!Object.keys(db).length && window.SOCIO_DEFAULT_PARTICIPANTS && Array.isArray(window.SOCIO_DEFAULT_PARTICIPANTS)) {
+        window.SOCIO_DEFAULT_PARTICIPANTS.forEach(p => {
+          db[p.id] = {
+            id: p.id,
+            name: p.name,
+            teamId: p.fields ? p.fields['Socio Team ID'] : '',
+            room: p.fields ? (p.fields['AB2 (SOCI-O-THON)'] || p.fields['AB2'] || '') : '',
+            theme: p.fields ? (p.fields['Theme'] || '') : '',
+            kit: p.status ? !!p.status.kit : false,
+            acc: p.status ? !!p.status.accommodation : false,
+            food: p.status ? !!p.status.food : false,
+            fields: p.fields || {}
+          };
+        });
         saveDatabase();
       }
       updateStats();
+      // Fetch live data from Google Sheet in background immediately!
+      syncWithGoogleSheet();
+      // Auto-poll every 20 seconds to stay in sync
+      setInterval(syncWithGoogleSheet, 20000);
     }
 
     function saveDatabase() {
@@ -386,14 +532,42 @@
       if (!id) return;
 
       if (!db[id]) {
-        db[id] = { id: id, name: "Participant " + id, kit: false, acc: false, food: false };
-        saveDatabase();
+        // Try numeric match
+        const numTarget = parseInt(id.replace(/\D/g, ""), 10);
+        const match = Object.values(db).find(x => {
+          const n = parseInt(String(x.id).replace(/\D/g, ""), 10);
+          return !isNaN(n) && !isNaN(numTarget) && n === numTarget;
+        });
+        if (match) {
+          id = match.id;
+        } else {
+          db[id] = { id: id, name: "Participant " + id, kit: false, acc: false, food: false, fields: {} };
+          saveDatabase();
+        }
       }
       currentParticipantId = id;
       const p = db[id];
 
       document.getElementById("displayId").textContent = p.id;
       document.getElementById("displayName").textContent = p.name;
+
+      const roomEl = document.getElementById("displayRoom");
+      const roomVal = p.room || (p.fields ? (p.fields['AB2 (SOCI-O-THON)'] || p.fields['AB2']) : '');
+      if (roomVal) {
+        roomEl.textContent = roomVal;
+        roomEl.style.display = "inline-block";
+      } else {
+        roomEl.style.display = "none";
+      }
+
+      const metaEl = document.getElementById("displayMeta");
+      const teamVal = p.teamId || (p.fields ? p.fields['Socio Team ID'] : '');
+      const themeVal = p.theme || (p.fields ? p.fields['Theme'] : '');
+      let metaParts = [];
+      if (teamVal) metaParts.push(`<strong>Team:</strong> ${teamVal}`);
+      if (themeVal) metaParts.push(`<strong>Theme:</strong> ${themeVal}`);
+      metaEl.innerHTML = metaParts.join(" &bull; ");
+
       document.getElementById("checkKit").checked = !!p.kit;
       document.getElementById("checkAcc").checked = !!p.acc;
       document.getElementById("checkFood").checked = !!p.food;
@@ -405,16 +579,38 @@
       if (navigator.vibrate) navigator.vibrate(100);
     }
 
-    function autoSaveCurrent() {
+    async function autoSaveCurrent() {
       if (!currentParticipantId || !db[currentParticipantId]) return;
-      db[currentParticipantId].kit = document.getElementById("checkKit").checked;
-      db[currentParticipantId].acc = document.getElementById("checkAcc").checked;
-      db[currentParticipantId].food = document.getElementById("checkFood").checked;
+      const p = db[currentParticipantId];
+      p.kit = document.getElementById("checkKit").checked;
+      p.acc = document.getElementById("checkAcc").checked;
+      p.food = document.getElementById("checkFood").checked;
       saveDatabase();
       
       const msg = document.getElementById("statusMsg");
-      msg.textContent = "✅ Saved instantly!";
-      setTimeout(() => msg.textContent = "", 1500);
+      msg.textContent = "⏳ Syncing to Google Sheet...";
+
+      try {
+        await fetch(GOOGLE_SHEET_API_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "sync_status",
+            id: p.id,
+            kit: p.kit,
+            accommodation: p.acc,
+            food: p.food,
+            fields: p.fields || {}
+          })
+        });
+        msg.textContent = "✅ Saved & Synced to Google Sheet!";
+        setTimeout(() => {
+          if (msg.textContent.includes("Synced")) msg.textContent = "";
+        }, 2000);
+      } catch (err) {
+        msg.textContent = "💾 Saved locally (offline)";
+      }
     }
 
     function closePanel() {
