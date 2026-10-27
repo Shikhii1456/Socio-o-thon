@@ -1866,7 +1866,23 @@ saveButton.addEventListener("click", async () => {
   } else {
     list.push(currentParticipant);
   }
+  list.sort((a, b) => {
+    const numA = parseInt(String(a.id).replace(/\D/g, ""), 10) || 0;
+    const numB = parseInt(String(b.id).replace(/\D/g, ""), 10) || 0;
+    return numA - numB;
+  });
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+
+  if (currentParticipant.id.toUpperCase() !== oldId.toUpperCase()) {
+    try {
+      fetch(GOOGLE_SHEET_API_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete_participant", id: oldId.toUpperCase() })
+      });
+    } catch (e) {}
+  }
 
   // 2. Real-time sync to Google Sheet
   await syncToGoogleSheet(currentParticipant, currentParticipant.status, currentParticipant.fields);

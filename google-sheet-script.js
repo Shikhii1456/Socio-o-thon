@@ -1,19 +1,64 @@
 function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.tryLock(20000);
+
   try {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
     var data = JSON.parse(e.postData.contents);
-    var targetId = String(data.id).trim().toUpperCase();
+    var action = String(data.action || "sync_status").trim().toLowerCase();
+
+    // ── 1. ACTION: DELETE PARTICIPANT ──
+    if (action === "delete_participant" || action === "delete") {
+      var targetId = String(data.id || "").trim().toUpperCase();
+      if (!targetId) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Missing ID" }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+      var values = sheet.getDataRange().getValues();
+      var deleted = false;
+      for (var r = values.length - 1; r >= 1; r--) {
+        if (String(values[r][0]).trim().toUpperCase() === targetId) {
+          sheet.deleteRow(r + 1);
+          deleted = true;
+        }
+      }
+      sortSheetInOrder(sheet);
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", deleted: deleted }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ── 2. ACTION: PURGE DELETED ROWS & SORT ──
+    if (action === "clean_and_sort" || action === "sort") {
+      var values = sheet.getDataRange().getValues();
+      for (var r = values.length - 1; r >= 1; r--) {
+        var idVal = String(values[r][0]).trim().toUpperCase();
+        var nameVal = String(values[r][1]).trim();
+        if (/deleted/i.test(nameVal) || /not\s*paid/i.test(nameVal) || idVal === "TEST_NON_EXISTENT") {
+          sheet.deleteRow(r + 1);
+        }
+      }
+      sortSheetInOrder(sheet);
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Cleaned and sorted sheet!" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ── 3. ACTION: SYNC / ADD / UPDATE PARTICIPANT ──
+    var targetId = String(data.id || "").trim().toUpperCase();
+    if (!targetId) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Missing participant ID" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
     var values = sheet.getDataRange().getValues();
     var headers = values[0] || [];
 
-    // Helper: Find or create column by header name
+    // Helper: Find or dynamically create column by header name
     function getColumnIndex(headerName) {
       for (var c = 0; c < headers.length; c++) {
         if (String(headers[c]).trim().toLowerCase() === headerName.trim().toLowerCase()) {
           return c + 1; // 1-indexed for getRange
         }
       }
-      // Column does not exist -> Create new column header automatically!
       var newColIdx = headers.length + 1;
       sheet.getRange(1, newColIdx).setValue(headerName);
       headers.push(headerName);
@@ -21,14 +66,13 @@ function doPost(e) {
     }
 
     // Standard column positions
-    var idCol = 1; // Col A
-    var nameCol = 2; // Col B
-    var teamCol = 3; // Col C
-    var kitCol = 4; // Col D
-    var accCol = 5; // Col E
-    var foodCol = 6; // Col F
+    var idCol = 1;  // Col A: Participant ID
+    var nameCol = 2; // Col B: Name
+    var kitCol = 4;  // Col D: Kit Received
+    var accCol = 5;  // Col E: Accommodation
+    var foodCol = 6; // Col F: Food Received
 
-    // Ensure standard columns exist in header
+    // Ensure standard columns exist in header row
     if (headers.length < 6) {
       sheet.getRange(1, 1).setValue("Participant ID");
       sheet.getRange(1, 2).setValue("Name");
@@ -39,7 +83,7 @@ function doPost(e) {
       headers = sheet.getDataRange().getValues()[0];
     }
 
-    // Find row index
+    // Find existing row by Participant ID
     var targetRow = -1;
     for (var r = 1; r < values.length; r++) {
       if (String(values[r][0]).trim().toUpperCase() === targetId) {
@@ -48,23 +92,24 @@ function doPost(e) {
       }
     }
 
-    // If row doesn't exist, create it
+    // If row doesn't exist, append new row
     if (targetRow === -1) {
       targetRow = sheet.getLastRow() + 1;
       sheet.getRange(targetRow, idCol).setValue(targetId);
     }
 
-    // Write Name & Team
-    if (data.name) sheet.getRange(targetRow, nameCol).setValue(data.name);
-    if (data.team) sheet.getRange(targetRow, teamCol).setValue(data.team);
+    // Update Name
+    if (data.name !== undefined) {
+      sheet.getRange(targetRow, nameCol).setValue(data.name);
+    }
 
-    // Write Checklist statuses (Kit, Accommodation, Food)
+    // Update Attendance Checkboxes
     if (data.status) {
-      sheet.getRange(targetRow, kitCol).setValue(data.status.kit ? "YES" : "NO");
-      sheet.getRange(targetRow, accCol).setValue(data.status.accommodation ? "YES" : "NO");
-      sheet.getRange(targetRow, foodCol).setValue(data.status.food ? "YES" : "NO");
+      if (data.status.kit !== undefined) sheet.getRange(targetRow, kitCol).setValue(data.status.kit ? "YES" : "NO");
+      if (data.status.accommodation !== undefined) sheet.getRange(targetRow, accCol).setValue(data.status.accommodation ? "YES" : "NO");
+      if (data.status.food !== undefined) sheet.getRange(targetRow, foodCol).setValue(data.status.food ? "YES" : "NO");
 
-      // Any extra custom checkboxes (e.g. T-Shirt, Certificate)
+      // Custom checkboxes
       for (var checkKey in data.status) {
         if (checkKey !== "kit" && checkKey !== "accommodation" && checkKey !== "food") {
           var colIdx = getColumnIndex(checkKey);
@@ -73,7 +118,7 @@ function doPost(e) {
       }
     }
 
-    // Write Custom Fields (e.g. Email, Contact / Phone, College, etc.)
+    // Update Custom Info Fields (Email, Contact, etc.)
     if (data.fields && typeof data.fields === "object") {
       for (var fieldKey in data.fields) {
         var colIdx = getColumnIndex(fieldKey);
@@ -81,14 +126,35 @@ function doPost(e) {
       }
     }
 
-    // Last Updated timestamp column
+    // Update Last Updated timestamp
     var updatedCol = getColumnIndex("Last Updated");
     sheet.getRange(targetRow, updatedCol).setValue(new Date().toLocaleString());
 
-    return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Synced all custom fields and statuses!" }))
+    // ── KEEP ALL ROWS IN EXACT NUMERICAL ORDER AS QR CLOUD ──
+    sortSheetInOrder(sheet);
+
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", id: targetId }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
   }
+}
+
+// Helper: Perfectly sort all participant rows numerically (SOT001, SOT002, SOT003...)
+function sortSheetInOrder(sheet) {
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  if (lastRow <= 2) return;
+
+  var range = sheet.getRange(2, 1, lastRow - 1, lastCol);
+  var data = range.getValues();
+  data.sort(function(a, b) {
+    var numA = parseInt(String(a[0]).replace(/\D/g, ""), 10) || 0;
+    var numB = parseInt(String(b[0]).replace(/\D/g, ""), 10) || 0;
+    return numA - numB;
+  });
+  range.setValues(data);
 }

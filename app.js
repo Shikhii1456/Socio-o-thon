@@ -1445,52 +1445,99 @@ async function getParticipants() {
 }
 
 async function addParticipant(id, name) {
+  const upperId = id.trim().toUpperCase();
   const list = await fetchParticipantsFromCloud();
-  const existing = list.find(p => p.id.toUpperCase() === id.toUpperCase());
+  const existing = list.find(p => p.id.toUpperCase() === upperId);
   if (existing) {
-    alert("Participant with ID " + id.toUpperCase() + " already exists!");
+    alert("Participant with ID " + upperId + " already exists!");
     return { ok: false, error: "Duplicate ID" };
   }
   recordState(list);
   const newParticipant = {
-    id: id.toUpperCase(),
-    name: name || ("Participant " + id.toUpperCase()),
+    id: upperId,
+    name: name ? name.trim() : ("Participant " + upperId),
     status: { kit: false, accommodation: false, food: false },
     fields: {}
   };
   list.push(newParticipant);
+  list.sort((a, b) => {
+    const numA = parseInt(String(a.id).replace(/\D/g, ""), 10) || 0;
+    const numB = parseInt(String(b.id).replace(/\D/g, ""), 10) || 0;
+    return numA - numB;
+  });
   await saveParticipantsToCloud(list);
   await syncParticipantToGoogleSheet(newParticipant);
   return { ok: true, participant: newParticipant };
 }
 
 async function updateParticipantInfo(oldId, newId, newName) {
+  const cleanOld = oldId.trim().toUpperCase();
+  const cleanNew = newId.trim().toUpperCase();
   const list = await fetchParticipantsFromCloud();
-  const target = list.find(p => p.id.toUpperCase() === oldId.toUpperCase());
+  const target = list.find(p => p.id.toUpperCase() === cleanOld);
   if (!target) return false;
 
-  if (oldId.toUpperCase() !== newId.toUpperCase()) {
-    const duplicate = list.find(p => p.id.toUpperCase() === newId.toUpperCase());
+  if (cleanOld !== cleanNew) {
+    const duplicate = list.find(p => p.id.toUpperCase() === cleanNew);
     if (duplicate) {
-      alert("Error: Another participant already has ID " + newId);
+      alert("Error: Another participant already has ID " + cleanNew);
       return false;
     }
   }
 
   recordState(list);
-  target.id = newId.toUpperCase();
+  target.id = cleanNew;
   target.name = newName.trim();
+
+  list.sort((a, b) => {
+    const numA = parseInt(String(a.id).replace(/\D/g, ""), 10) || 0;
+    const numB = parseInt(String(b.id).replace(/\D/g, ""), 10) || 0;
+    return numA - numB;
+  });
+
   await saveParticipantsToCloud(list);
+
+  if (cleanOld !== cleanNew) {
+    try {
+      await fetch(GOOGLE_SHEET_API_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete_participant", id: cleanOld })
+      });
+    } catch (e) {}
+  }
+
   await syncParticipantToGoogleSheet(target);
   return true;
 }
 
 async function deleteParticipant(id) {
-  if (!confirm(`Are you sure you want to delete participant ${id}?`)) return false;
+  const upperId = id.trim().toUpperCase();
+  if (!confirm(`Are you sure you want to delete participant ${upperId}?`)) return false;
   const list = await fetchParticipantsFromCloud();
   recordState(list);
-  const filtered = list.filter(p => p.id.toUpperCase() !== id.toUpperCase());
+  const filtered = list.filter(p => p.id.toUpperCase() !== upperId);
+  filtered.sort((a, b) => {
+    const numA = parseInt(String(a.id).replace(/\D/g, ""), 10) || 0;
+    const numB = parseInt(String(b.id).replace(/\D/g, ""), 10) || 0;
+    return numA - numB;
+  });
   await saveParticipantsToCloud(filtered);
+
+  try {
+    await fetch(GOOGLE_SHEET_API_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "delete_participant",
+        id: upperId
+      })
+    });
+  } catch (e) {
+    console.warn("Sheet delete error:", e);
+  }
   return true;
 }
 
