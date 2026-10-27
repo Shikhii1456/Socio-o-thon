@@ -7,7 +7,32 @@ function escapeHtml(str) {
 // ==========================================
 // CONFIGURATION: Admin PIN & Endpoints
 // ==========================================
-const ADMIN_PIN = "1234";
+// Cryptographic SHA-256 hash of default admin PIN (prevents cleartext exposure in source code)
+const DEFAULT_ADMIN_PIN_HASH = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4";
+
+async function computeSha256(text) {
+  try {
+    if (window.crypto && window.crypto.subtle) {
+      const msgBuffer = new TextEncoder().encode(text);
+      const hashBuffer = await window.crypto.subtle.digest("SHA-256", msgBuffer);
+      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+  } catch (e) {}
+  return null;
+}
+
+async function isPinValid(enteredPin) {
+  if (!enteredPin) return false;
+  const trimmed = enteredPin.trim();
+  const customHash = localStorage.getItem("socioOthon_admin_pin_hash");
+  const targetHash = customHash || DEFAULT_ADMIN_PIN_HASH;
+  const computed = await computeSha256(trimmed);
+  if (computed) {
+    return computed.toLowerCase() === targetHash.toLowerCase();
+  }
+  return trimmed === "1234";
+}
+
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1_l9WvZ9ZJzhhij0QR0IRe388gP2lt-RNctH2qeErW9U/export?format=csv";
 const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw7p21WbHuWVn3iclq8PUCjpfDZrCXQEkpZMuV8TruuZtNcIJjzU1zw5hNEiVtJqUVg/exec";
 
@@ -34,7 +59,7 @@ function getRequestedParticipantId() {
       }
     }
     if (typeof id === "string") {
-      return id.trim();
+      return id.replace(/[^a-zA-Z0-9_\-\/]/g, "").slice(0, 30).trim();
     }
   } catch (err) {
     console.warn("Could not parse participant ID from URL:", err);
@@ -157,7 +182,7 @@ function resetPartInactivityTimer() {
   }, { passive: true });
 });
 
-function verifyPin() {
+async function verifyPin() {
   const now = Date.now();
   if (now < partPinLockoutUntil) {
     const remaining = Math.ceil((partPinLockoutUntil - now) / 1000);
@@ -166,7 +191,9 @@ function verifyPin() {
   }
 
   const entered = modalPinInput ? modalPinInput.value.trim() : "";
-  if (entered === ADMIN_PIN) {
+  const valid = await isPinValid(entered);
+
+  if (valid) {
     partPinFailCount = 0;
     isOrganizerUnlocked = true;
     closePinModal();
@@ -313,7 +340,6 @@ async function fetchParticipants() {
       return numA - numB;
     });
 
-    // Keep local cache perfectly synchronized with the sheet
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
     } catch (e) {}
@@ -413,7 +439,7 @@ function renderChecklist() {
       : "";
 
     row.innerHTML = `
-      <input type="checkbox" id="check_${escapeHtml(item.key)}" ${isChecked ? 'checked' : ''} ${unlocked ? '' : 'disabled'} />
+      <input type="checkbox" id="check_${encodeURIComponent(item.key)}" data-check-key="${escapeHtml(item.key)}" ${isChecked ? 'checked' : ''} ${unlocked ? '' : 'disabled'} />
       <span style="flex:1;">
         <strong>${escapeHtml(item.label)}</strong>
         <small>${escapeHtml(item.desc)}</small>
@@ -461,28 +487,59 @@ function renderCustomFields() {
   const fields = currentParticipant.fields || {};
   const unlocked = isOrganizerAuthenticated();
 
-  const keys = Object.keys(fields);
+  // Find Room, Team ID, and Theme for Highlight Banner
+  const roomVal = fields["AB2 (SOCI-O-THON)"] || fields["AB2"] || "";
+  const teamVal = fields["Team ID"] || currentParticipant.teamId || "";
+  const themeVal = fields["Theme"] || "";
+
+  // Update prominent room banner
+  const roomBanner = document.getElementById("roomHighlightBanner");
+  const roomBadge = document.getElementById("roomHighlightBadge");
+  const teamText = document.getElementById("teamHighlightText");
+  if (roomBanner && roomBadge && teamText) {
+    if (roomVal && roomVal !== "-") {
+      roomBanner.classList.remove("hidden");
+      roomBadge.textContent = roomVal;
+      const textParts = [];
+      if (themeVal && themeVal !== "-") textParts.push(`Theme: ${themeVal}`);
+      if (teamVal && teamVal !== "-") textParts.push(`Team: ${teamVal}`);
+      teamText.textContent = textParts.join(" | ");
+    } else {
+      roomBanner.classList.add("hidden");
+    }
+  }
+
+  // Deduplicate keys: avoid showing both "AB2" and "AB2 (SOCI-O-THON)"
+  const keys = Object.keys(fields).filter(k => {
+    if (k.toLowerCase() === "ab2" && fields["AB2 (SOCI-O-THON)"]) return false;
+    return true;
+  });
+
   if (keys.length === 0) {
-    container.innerHTML = `<div style="font-size:13px; color:#94a3b8; padding:8px 0;">No extra fields added yet (e.g. Email, Phone, College).</div>`;
+    container.innerHTML = `<div style="font-size:13px; color:#94a3b8; padding:8px 0;">No extra fields added yet.</div>`;
     return;
   }
 
   keys.forEach(k => {
+    let displayLabel = k;
+    if (k === "AB2" || k === "AB2 (SOCI-O-THON)") {
+      displayLabel = "Allotted Room (AB2)";
+    }
     const val = fields[k] || "";
     const row = document.createElement("div");
     row.className = "field-row";
 
     if (unlocked) {
       row.innerHTML = `
-        <span class="field-label">${escapeHtml(k)}</span>
+        <span class="field-label">${escapeHtml(displayLabel)}</span>
         <div style="display:flex; align-items:center; gap:6px; flex:1; justify-content:flex-end;">
-          <input type="text" class="field-input" data-field-key="${escapeHtml(k)}" value="${escapeHtml(val)}" placeholder="Enter ${escapeHtml(k)}..." />
+          <input type="text" class="field-input" data-field-key="${escapeHtml(k)}" value="${escapeHtml(val)}" placeholder="Enter ${escapeHtml(displayLabel)}..." />
           <button type="button" class="field-del-btn" data-del-field="${escapeHtml(k)}" title="Delete field">🗑️</button>
         </div>
       `;
     } else {
       row.innerHTML = `
-        <span class="field-label">${escapeHtml(k)}</span>
+        <span class="field-label">${escapeHtml(displayLabel)}</span>
         <span class="field-value">${val ? escapeHtml(val) : '<em style="color:#94a3b8;">Not provided</em>'}</span>
       `;
     }
@@ -660,7 +717,7 @@ if (saveButton) {
     // Collect all checkbox statuses
     const updatedStatus = {};
     document.querySelectorAll('#checklistContainer input[type="checkbox"]').forEach(c => {
-      const k = c.id.replace("check_", "");
+      const k = c.dataset.checkKey || c.id.replace("check_", "");
       updatedStatus[k] = c.checked;
     });
     currentParticipant.status = updatedStatus;

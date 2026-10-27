@@ -327,18 +327,11 @@
 
   <canvas id="qrCanvas"></canvas>
 
+  <script src="data/seed.js?v=8.2"></script>
   <script>
-    const STORAGE_KEY = "offline_socio_participants";
+    const STORAGE_KEY = "offline_socio_participants_v8";
     let db = {};
     let currentParticipantId = null;
-
-    const initialSeed = [
-      { id: "SOT001", name: "Participant 001", kit: false, acc: false, food: false },
-      { id: "SOT002", name: "Participant 002", kit: false, acc: false, food: false },
-      { id: "SOT003", name: "Participant 003", kit: false, acc: false, food: false },
-      { id: "SOT004", name: "Participant 004", kit: false, acc: false, food: false },
-      { id: "SOT005", name: "Participant 005", kit: false, acc: false, food: false }
-    ];
 
     function loadDatabase() {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -346,7 +339,17 @@
         db = JSON.parse(stored);
       } else {
         db = {};
-        initialSeed.forEach(p => db[p.id] = p);
+        if (window.SOCIO_DEFAULT_PARTICIPANTS && Array.isArray(window.SOCIO_DEFAULT_PARTICIPANTS)) {
+          window.SOCIO_DEFAULT_PARTICIPANTS.forEach(p => {
+            db[p.id] = {
+              id: p.id,
+              name: p.name,
+              kit: p.status ? !!p.status.kit : false,
+              acc: p.status ? !!p.status.accommodation : false,
+              food: p.status ? !!p.status.food : false
+            };
+          });
+        }
         saveDatabase();
       }
       updateStats();
@@ -370,11 +373,17 @@
     }
 
     function openParticipant(rawText) {
-      let id = rawText.trim();
-      if (id.includes("/p/")) {
-        id = id.split("/p/")[1].split("?")[0].split("#")[0];
+      let text = String(rawText || "").trim();
+      let id = "";
+      if (text.includes("id=")) {
+        id = text.split("id=")[1].split("&")[0].split("#")[0];
+      } else if (text.includes("/p/")) {
+        id = text.split("/p/")[1].split("?")[0].split("#")[0];
+      } else {
+        id = text;
       }
-      id = decodeURIComponent(id).toUpperCase();
+      id = decodeURIComponent(id).replace(/[^a-zA-Z0-9_\-\/]/g, "").trim().toUpperCase();
+      if (!id) return;
 
       if (!db[id]) {
         db[id] = { id: id, name: "Participant " + id, kit: false, acc: false, food: false };

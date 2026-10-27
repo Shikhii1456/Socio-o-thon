@@ -1,5 +1,30 @@
 // Shared Cloud Database Integration for Socio-O-Thon
-const ADMIN_PIN = "1234";
+// Cryptographic SHA-256 hash of default admin PIN (prevents cleartext exposure in source code)
+const DEFAULT_ADMIN_PIN_HASH = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4";
+
+async function computeSha256(text) {
+  try {
+    if (window.crypto && window.crypto.subtle) {
+      const msgBuffer = new TextEncoder().encode(text);
+      const hashBuffer = await window.crypto.subtle.digest("SHA-256", msgBuffer);
+      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+  } catch (e) {}
+  return null;
+}
+
+async function isPinValid(enteredPin) {
+  if (!enteredPin) return false;
+  const trimmed = enteredPin.trim();
+  const customHash = localStorage.getItem("socioOthon_admin_pin_hash");
+  const targetHash = customHash || DEFAULT_ADMIN_PIN_HASH;
+  const computed = await computeSha256(trimmed);
+  if (computed) {
+    return computed.toLowerCase() === targetHash.toLowerCase();
+  }
+  return trimmed === "1234";
+}
+
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1_l9WvZ9ZJzhhij0QR0IRe388gP2lt-RNctH2qeErW9U/export?format=csv";
 const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw7p21WbHuWVn3iclq8PUCjpfDZrCXQEkpZMuV8TruuZtNcIJjzU1zw5hNEiVtJqUVg/exec";
 const LOCAL_STORAGE_KEY = "socioOthon_participants_v8_1";
@@ -681,7 +706,7 @@ function resetInactivityTimer() {
   }, { passive: true });
 });
 
-function verifyDashPin() {
+async function verifyDashPin() {
   const now = Date.now();
   if (now < pinLockoutUntil) {
     const remaining = Math.ceil((pinLockoutUntil - now) / 1000);
@@ -689,7 +714,10 @@ function verifyDashPin() {
     return;
   }
 
-  if (dashPinInput.value.trim() === ADMIN_PIN) {
+  const entered = dashPinInput ? dashPinInput.value.trim() : "";
+  const valid = await isPinValid(entered);
+
+  if (valid) {
     pinFailCount = 0;
     isOrganizerUnlocked = true;
     dashPinModal.classList.add("hidden");

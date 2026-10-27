@@ -148,17 +148,26 @@
             <h2 id="participantId">...</h2>
           </div>
           <div id="idEditContainer" class="hidden" style="margin-top:4px;">
-            <input type="text" id="editParticipantIdInput" style="font-size:18px; font-weight:700; text-transform:uppercase; padding:4px 8px; border:2px solid #2563eb; border-radius:6px; width:160px;" />
+            <input type="text" id="editParticipantIdInput" style="font-size:18px; font-weight:700; text-transform:uppercase; padding:4px 8px; border:2px solid #2563eb; border-radius:6px; width:160px;" autocomplete="off" />
           </div>
 
           <div id="nameViewContainer" style="margin-top:6px;">
             <p id="participantName" class="muted" style="font-size:18px; font-weight:600; color:#1e293b; margin:0;"></p>
           </div>
           <div id="nameEditContainer" class="hidden" style="margin-top:6px;">
-            <input type="text" id="editParticipantNameInput" placeholder="Participant Name" style="font-size:16px; font-weight:600; padding:6px 10px; border:2px solid #2563eb; border-radius:6px; width:220px;" />
+            <input type="text" id="editParticipantNameInput" placeholder="Participant Name" style="font-size:16px; font-weight:600; padding:6px 10px; border:2px solid #2563eb; border-radius:6px; width:220px;" autocomplete="off" />
           </div>
         </div>
         <div id="statusBadge" class="badge">0 / 3 completed</div>
+      </div>
+
+      <!-- Quick Room & Team Highlight Banner -->
+      <div id="roomHighlightBanner" class="hidden" style="margin:14px 0; padding:12px 14px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:12px; font-weight:700; color:#1e40af; text-transform:uppercase; letter-spacing:0.5px;">Allotted Room:</span>
+          <span id="roomHighlightBadge" style="background:#2563eb; color:#fff; font-weight:700; font-size:14px; padding:3px 10px; border-radius:6px;">LR...</span>
+        </div>
+        <div id="teamHighlightText" style="font-size:13px; color:#1e3a8a; font-weight:600;"></div>
       </div>
 
       <!-- Checklist Section (Kit, Accommodation, Food) -->
@@ -207,7 +216,7 @@
     </div>
   </div>
 
-  <script src="data/seed.js?v=8.1"></script>
-  <script src="participant.js?v=8.1"></script>
+  <script src="data/seed.js?v=8.2"></script>
+  <script src="participant.js?v=8.2"></script>
 </body>
 </html>
