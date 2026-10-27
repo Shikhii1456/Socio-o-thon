@@ -226,7 +226,12 @@ function parseParticipantsFromCSV(csvText) {
       if (!h || /last\s*updated/i.test(h) || /team/i.test(h)) continue;
       const val = r[c] ? r[c].trim() : "";
       if (val) {
-        fields[h] = val;
+        const upper = val.toUpperCase();
+        if (upper === "YES" || upper === "NO" || upper === "TRUE" || upper === "FALSE") {
+          status[h] = isTruthy(val);
+        } else {
+          fields[h] = val;
+        }
       }
     }
 
@@ -1543,6 +1548,16 @@ async function fetchParticipants() {
   {
     "id": "SOT099",
     "name": "On-Spot Participant 20",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {}
+  },
+  {
+    "id": "SOT100",
+    "name": "On-Spot Participant 21",
     "status": {
       "kit": false,
       "accommodation": false,

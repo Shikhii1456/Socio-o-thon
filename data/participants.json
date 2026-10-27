@@ -1225,5 +1225,15 @@
       "food": false
     },
     "fields": {}
+  },
+  {
+    "id": "SOT100",
+    "name": "On-Spot Participant 21",
+    "status": {
+      "kit": false,
+      "accommodation": false,
+      "food": false
+    },
+    "fields": {}
   }
 ]
