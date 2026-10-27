@@ -1298,7 +1298,7 @@ function parseParticipantsFromCSV(csvText) {
   const headers = rows[0].map(h => h.trim());
   const idCol = headers.findIndex(h => /participant\s*id/i.test(h));
   const nameCol = headers.findIndex(h => /^name$/i.test(h));
-    const kitCol = headers.findIndex(h => /kit/i.test(h));
+  const kitCol = headers.findIndex(h => /kit/i.test(h));
   const accCol = headers.findIndex(h => /accommodation/i.test(h));
   const foodCol = headers.findIndex(h => /food/i.test(h));
 
@@ -1316,11 +1316,17 @@ function parseParticipantsFromCSV(csvText) {
       food: foodCol !== -1 ? isTruthy(r[foodCol]) : isTruthy(r[5])
     };
 
+    const num = parseInt(String(id).replace(/\D/g, ""), 10) || 0;
+    const isOnSpot = num >= 80;
+
     const fields = {};
     for (let c = 0; c < headers.length; c++) {
       if (c === idCol || c === nameCol || c === kitCol || c === accCol || c === foodCol) continue;
       const h = headers[c];
       if (!h || /last\s*updated/i.test(h) || /team/i.test(h)) continue;
+      // Strip email and contact for on-spot participants (SOT080+)
+      if (isOnSpot && (/email|mail/i.test(h) || /contact|phone/i.test(h))) continue;
+
       const val = r[c] ? r[c].trim() : "";
       if (val) {
         const upper = val.toUpperCase();
@@ -1357,95 +1363,74 @@ async function syncParticipantToGoogleSheet(p) {
 }
 
 async function fetchParticipantsFromCloud() {
-  let baseList = [];
+  let list = [];
 
-  // 1. Fetch base imported list from data/participants.json
-  try {
-    const res = await fetch("./data/participants.json?_t=" + Date.now());
-    if (res.ok) {
-      const json = await res.json();
-      if (Array.isArray(json) && json.length > 0) {
-        baseList = json;
-      }
-    }
-  } catch (e) {}
-
-  if (baseList.length === 0) {
-    baseList = [...defaultSeed];
-  }
-
-  // 2. Fetch live Google Sheet CSV to overlay real-time status updates (kit/accommodation/food)
+  // 1. Fetch live Google Sheet CSV (primary attached real-time source)
   try {
     const res = await fetch(GOOGLE_SHEET_CSV_URL + "&_t=" + Date.now());
     if (res.ok) {
       const csv = await res.text();
       const parsed = parseParticipantsFromCSV(csv);
       if (parsed && parsed.length > 0) {
-        const sheetMap = new Map(parsed.map(p => [p.id.toUpperCase(), p]));
-        baseList = baseList.map(p => {
-          const fromSheet = sheetMap.get(p.id.toUpperCase());
-          if (fromSheet) {
-            return {
-              ...p,
-              status: fromSheet.status || p.status,
-              fields: { ...p.fields, ...fromSheet.fields }
-            };
-          }
-          return p;
-        });
-
-        // Add any newly created participants found in Google Sheet
-        parsed.forEach(sp => {
-          const isDeleted = sp.name && (/deleted/i.test(sp.name) || /not\s*paid/i.test(sp.name));
-          if (!isDeleted && !baseList.some(bp => bp.id.toUpperCase() === sp.id.toUpperCase())) {
-            baseList.push(sp);
-          }
-        });
+        list = parsed;
       }
     }
   } catch (err) {
-    console.warn("Could not load from Google Sheet CSV, using local sources:", err);
+    console.warn("Could not load from Google Sheet CSV, falling back to local:", err);
   }
 
-  // 3. Overlay any offline or local modifications / additions from localStorage
+  // If live sheet data is available, it is the primary attached source
+  if (list.length > 0) {
+    // Strip email and contact for all on-spot participants (SOT080+)
+    list.forEach(p => {
+      const num = parseInt(String(p.id).replace(/\D/g, ""), 10) || 0;
+      if (num >= 80 && p.fields) {
+        delete p.fields.Email;
+        delete p.fields.Contact;
+        delete p.fields["email"];
+        delete p.fields["contact"];
+      }
+    });
+
+    list.sort((a, b) => {
+      const numA = parseInt(String(a.id).replace(/\D/g, ""), 10) || 0;
+      const numB = parseInt(String(b.id).replace(/\D/g, ""), 10) || 0;
+      return numA - numB;
+    });
+
+    // Keep local cache perfectly synchronized with the sheet
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+    return list;
+  }
+
+  // Fallback 1: localStorage if offline
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (saved) {
     try {
       const localList = JSON.parse(saved);
       if (Array.isArray(localList) && localList.length > 0) {
-        const localMap = new Map(localList.map(p => [p.id.toUpperCase(), p]));
-        baseList = baseList.map(p => {
-          const fromLocal = localMap.get(p.id.toUpperCase());
-          if (fromLocal) {
-            return {
-              ...p,
-              ...fromLocal,
-              status: fromLocal.status || p.status,
-              fields: (fromLocal.fields !== undefined) ? fromLocal.fields : p.fields
-            };
-          }
-          return p;
-        });
-
-        // Crucial: Append any newly added participants stored in localStorage
-        localList.forEach(lp => {
-          if (!baseList.some(bp => bp.id.toUpperCase() === lp.id.toUpperCase())) {
-            baseList.push(lp);
+        localList.forEach(p => {
+          const num = parseInt(String(p.id).replace(/\D/g, ""), 10) || 0;
+          if (num >= 80 && p.fields) {
+            delete p.fields.Email;
+            delete p.fields.Contact;
           }
         });
+        return localList;
       }
     } catch (e) {}
   }
 
-  if (baseList.length > 0) {
-    baseList.sort((a, b) => {
-      const numA = parseInt(String(a.id).replace(/\D/g, ""), 10) || 0;
-      const numB = parseInt(String(b.id).replace(/\D/g, ""), 10) || 0;
-      return numA - numB;
-    });
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(baseList));
-    return baseList;
-  }
+  // Fallback 2: data/participants.json
+  try {
+    const res = await fetch("./data/participants.json?_t=" + Date.now());
+    if (res.ok) {
+      const json = await res.json();
+      if (Array.isArray(json) && json.length > 0) {
+        return json;
+      }
+    }
+  } catch (e) {}
 
   return defaultSeed;
 }

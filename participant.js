@@ -13,321 +13,7 @@ const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw7p21WbHu
 const LOCAL_STORAGE_KEY = "socioOthon_participants_v5";
 const AUTH_KEY = "socioOthon_admin_auth";
 
-// Extract participant ID from query param (?id=SOT001) or path (/p/SOT001)
-const urlParams = new URLSearchParams(window.location.search);
-let participantId = urlParams.get("id");
-
-if (!participantId) {
-  const pathParts = window.location.pathname.split("/").filter(Boolean);
-  const pIndex = pathParts.indexOf("p");
-  if (pIndex !== -1 && pathParts[pIndex + 1]) {
-    participantId = decodeURIComponent(pathParts[pIndex + 1]);
-  }
-}
-
-const participantPanel = document.getElementById("participantPanel");
-const notFoundPanel = document.getElementById("notFound");
-const editStatusBtn = document.getElementById("editStatusBtn");
-const saveButton = document.getElementById("saveButton");
-const authBanner = document.getElementById("authBanner");
-const authStatusText = document.getElementById("authStatusText");
-const unlockBtn = document.getElementById("unlockBtn");
-
-const addFieldBtn = document.getElementById("addFieldBtn");
-const addChecklistBtn = document.getElementById("addChecklistBtn");
-
-const pinModal = document.getElementById("pinModal");
-const modalPinInput = document.getElementById("modalPinInput");
-const modalPinError = document.getElementById("modalPinError");
-const submitPinBtn = document.getElementById("submitPinBtn");
-const cancelPinBtn = document.getElementById("cancelPinBtn");
-
-let isOrganizerUnlocked = false;
-let currentParticipant = null;
-
-function isOrganizerAuthenticated() {
-  return isOrganizerUnlocked;
-}
-
-function setEditModeEnabled(enabled) {
-  const idView = document.getElementById("idViewContainer");
-  const idEdit = document.getElementById("idEditContainer");
-  const nameView = document.getElementById("nameViewContainer");
-  const nameEdit = document.getElementById("nameEditContainer");
-  const editIdInput = document.getElementById("editParticipantIdInput");
-  const editNameInput = document.getElementById("editParticipantNameInput");
-
-  if (enabled) {
-    editStatusBtn.classList.add("hidden");
-    saveButton.classList.remove("hidden");
-    addFieldBtn.classList.remove("hidden");
-    addChecklistBtn.classList.remove("hidden");
-    authBanner.className = "auth-banner unlocked";
-    authStatusText.innerHTML = "✅ <strong>Organizer Mode:</strong> Name, ID & Info Editing Enabled";
-    unlockBtn.textContent = "Lock";
-
-    if (idView && idEdit) {
-      idView.classList.add("hidden");
-      idEdit.classList.remove("hidden");
-      if (editIdInput) editIdInput.value = currentParticipant.id;
-    }
-    if (nameView && nameEdit) {
-      nameView.classList.add("hidden");
-      nameEdit.classList.remove("hidden");
-      if (editNameInput) editNameInput.value = currentParticipant.name;
-    }
-  } else {
-    editStatusBtn.classList.remove("hidden");
-    saveButton.classList.add("hidden");
-    addFieldBtn.classList.add("hidden");
-    addChecklistBtn.classList.add("hidden");
-    authBanner.className = "auth-banner";
-    authStatusText.innerHTML = "👁️ <strong>Viewing Mode:</strong> Details visible (Read-only)";
-    unlockBtn.textContent = "🔒 Organizer Login";
-
-    if (idView && idEdit) {
-      idView.classList.remove("hidden");
-      idEdit.classList.add("hidden");
-    }
-    if (nameView && nameEdit) {
-      nameView.classList.remove("hidden");
-      nameEdit.classList.add("hidden");
-    }
-  }
-
-  renderChecklist();
-  renderCustomFields();
-}
-
-function openPinModal() {
-  pinModal.classList.remove("hidden");
-  modalPinInput.value = "";
-  modalPinError.textContent = "";
-  modalPinInput.focus();
-}
-
-function closePinModal() {
-  pinModal.classList.add("hidden");
-  modalPinInput.value = "";
-  modalPinError.textContent = "";
-}
-
-let partPinFailCount = 0;
-let partPinLockoutUntil = 0;
-let partInactivityTimer = null;
-
-function resetPartInactivityTimer() {
-  clearTimeout(partInactivityTimer);
-  if (isOrganizerUnlocked) {
-    partInactivityTimer = setTimeout(() => {
-      isOrganizerUnlocked = false;
-      setEditModeEnabled(false);
-      console.log("Organizer mode locked due to 10-minute inactivity.");
-    }, 10 * 60 * 1000);
-  }
-}
-
-["click", "keydown", "touchstart"].forEach(evt => {
-  window.addEventListener(evt, () => {
-    if (isOrganizerUnlocked) resetPartInactivityTimer();
-  }, { passive: true });
-});
-
-function verifyPin() {
-  const now = Date.now();
-  if (now < partPinLockoutUntil) {
-    const remaining = Math.ceil((partPinLockoutUntil - now) / 1000);
-    modalPinError.textContent = "Too many attempts. Locked for " + remaining + "s.";
-    return;
-  }
-
-  const entered = modalPinInput.value.trim();
-  if (entered === ADMIN_PIN) {
-    partPinFailCount = 0;
-    isOrganizerUnlocked = true;
-    closePinModal();
-    setEditModeEnabled(true);
-    resetPartInactivityTimer();
-  } else {
-    partPinFailCount++;
-    if (partPinFailCount >= 5) {
-      partPinLockoutUntil = Date.now() + 30000;
-      modalPinError.textContent = "5 incorrect attempts. Locked for 30s.";
-    } else {
-      modalPinError.textContent = "Incorrect PIN (" + (5 - partPinFailCount) + " attempts left).";
-    }
-    modalPinInput.value = "";
-    modalPinInput.focus();
-  }
-}
-
-function parseCSV(text) {
-  const lines = [];
-  let row = [''];
-  let inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    const next = text[i + 1];
-    if (c === '"') {
-      if (inQuotes && next === '"') {
-        row[row.length - 1] += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (c === ',' && !inQuotes) {
-      row.push('');
-    } else if ((c === '\r' || c === '\n') && !inQuotes) {
-      if (c === '\r' && next === '\n') i++;
-      lines.push(row);
-      row = [''];
-    } else {
-      row[row.length - 1] += c;
-    }
-  }
-  if (row.length > 1 || (row.length === 1 && row[0] !== '')) lines.push(row);
-  return lines;
-}
-
-function isTruthy(val) {
-  if (!val) return false;
-  const s = String(val).trim().toUpperCase();
-  return s === "YES" || s === "TRUE" || s === "1" || s === "CHECKED";
-}
-
-function parseParticipantsFromCSV(csvText) {
-  const rows = parseCSV(csvText);
-  if (!rows || rows.length < 2) return null;
-  const headers = rows[0].map(h => h.trim());
-  const idCol = headers.findIndex(h => /participant\s*id/i.test(h));
-  const nameCol = headers.findIndex(h => /^name$/i.test(h));
-    const kitCol = headers.findIndex(h => /kit/i.test(h));
-  const accCol = headers.findIndex(h => /accommodation/i.test(h));
-  const foodCol = headers.findIndex(h => /food/i.test(h));
-
-  const list = [];
-  for (let i = 1; i < rows.length; i++) {
-    const r = rows[i];
-    const rawId = (idCol !== -1 && r[idCol]) ? r[idCol].trim() : (r[0] ? r[0].trim() : "");
-    if (!rawId) continue;
-    const id = rawId.toUpperCase();
-    const name = (nameCol !== -1 && r[nameCol]) ? r[nameCol].trim() : (r[1] ? r[1].trim() : ("Participant " + id));
-    
-    const status = {
-      kit: kitCol !== -1 ? isTruthy(r[kitCol]) : isTruthy(r[3]),
-      accommodation: accCol !== -1 ? isTruthy(r[accCol]) : isTruthy(r[4]),
-      food: foodCol !== -1 ? isTruthy(r[foodCol]) : isTruthy(r[5])
-    };
-
-    const fields = {};
-    for (let c = 0; c < headers.length; c++) {
-      if (c === idCol || c === nameCol || c === kitCol || c === accCol || c === foodCol) continue;
-      const h = headers[c];
-      if (!h || /last\s*updated/i.test(h) || /team/i.test(h)) continue;
-      const val = r[c] ? r[c].trim() : "";
-      if (val) {
-        const upper = val.toUpperCase();
-        if (upper === "YES" || upper === "NO" || upper === "TRUE" || upper === "FALSE") {
-          status[h] = isTruthy(val);
-        } else {
-          fields[h] = val;
-        }
-      }
-    }
-
-    list.push({ id, name, status, fields });
-  }
-  return list;
-}
-
-async function fetchParticipants() {
-  let baseList = [];
-
-  // 1. Fetch base imported list from data/participants.json
-  try {
-    const res = await fetch("./data/participants.json?_t=" + Date.now());
-    if (res.ok) {
-      const json = await res.json();
-      if (Array.isArray(json) && json.length > 0) {
-        baseList = json;
-      }
-    }
-  } catch (e) {}
-
-  // 2. Fetch live Google Sheet CSV to overlay real-time status updates (kit/accommodation/food)
-  try {
-    const res = await fetch(GOOGLE_SHEET_CSV_URL + "&_t=" + Date.now());
-    if (res.ok) {
-      const csv = await res.text();
-      const parsed = parseParticipantsFromCSV(csv);
-      if (parsed && parsed.length > 0) {
-        const sheetMap = new Map(parsed.map(p => [p.id.toUpperCase(), p]));
-        baseList = baseList.map(p => {
-          const fromSheet = sheetMap.get(p.id.toUpperCase());
-          if (fromSheet) {
-            return {
-              ...p,
-              status: fromSheet.status || p.status,
-              fields: { ...p.fields, ...fromSheet.fields }
-            };
-          }
-          return p;
-        });
-
-        // Add newly created participants found in Google Sheet
-        parsed.forEach(sp => {
-          const isDeleted = sp.name && (/deleted/i.test(sp.name) || /not\s*paid/i.test(sp.name));
-          if (!isDeleted && !baseList.some(bp => bp.id.toUpperCase() === sp.id.toUpperCase())) {
-            baseList.push(sp);
-          }
-        });
-      }
-    }
-  } catch (err) {
-    console.warn("Could not load from Google Sheet CSV, using local sources:", err);
-  }
-
-  // 3. Overlay any offline or local modifications / additions from localStorage
-  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (saved) {
-    try {
-      const localList = JSON.parse(saved);
-      if (Array.isArray(localList) && localList.length > 0) {
-        const localMap = new Map(localList.map(p => [p.id.toUpperCase(), p]));
-        baseList = baseList.map(p => {
-          const fromLocal = localMap.get(p.id.toUpperCase());
-          if (fromLocal) {
-            return {
-              ...p,
-              ...fromLocal,
-              status: fromLocal.status || p.status,
-              fields: (fromLocal.fields !== undefined) ? fromLocal.fields : p.fields
-            };
-          }
-          return p;
-        });
-
-        // Crucial: Append any newly added participants stored in localStorage
-        localList.forEach(lp => {
-          if (!baseList.some(bp => bp.id.toUpperCase() === lp.id.toUpperCase())) {
-            baseList.push(lp);
-          }
-        });
-      }
-    } catch (e) {}
-  }
-
-  if (baseList.length > 0) {
-    baseList.sort((a, b) => {
-      const numA = parseInt(String(a.id).replace(/\D/g, ""), 10) || 0;
-      const numB = parseInt(String(b.id).replace(/\D/g, ""), 10) || 0;
-      return numA - numB;
-    });
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(baseList));
-    return baseList;
-  }
-
-  return [
+const defaultSeed = [
   {
     "id": "SOT001",
     "name": "Purushottam sam sunder",
@@ -1566,6 +1252,311 @@ async function fetchParticipants() {
     "fields": {}
   }
 ];
+
+// Extract participant ID from query param (?id=SOT001) or path (/p/SOT001)
+const urlParams = new URLSearchParams(window.location.search);
+let participantId = urlParams.get("id");
+
+if (!participantId) {
+  const pathParts = window.location.pathname.split("/").filter(Boolean);
+  const pIndex = pathParts.indexOf("p");
+  if (pIndex !== -1 && pathParts[pIndex + 1]) {
+    participantId = decodeURIComponent(pathParts[pIndex + 1]);
+  }
+}
+
+const participantPanel = document.getElementById("participantPanel");
+const notFoundPanel = document.getElementById("notFound");
+const editStatusBtn = document.getElementById("editStatusBtn");
+const saveButton = document.getElementById("saveButton");
+const authBanner = document.getElementById("authBanner");
+const authStatusText = document.getElementById("authStatusText");
+const unlockBtn = document.getElementById("unlockBtn");
+
+const addFieldBtn = document.getElementById("addFieldBtn");
+const addChecklistBtn = document.getElementById("addChecklistBtn");
+
+const pinModal = document.getElementById("pinModal");
+const modalPinInput = document.getElementById("modalPinInput");
+const modalPinError = document.getElementById("modalPinError");
+const submitPinBtn = document.getElementById("submitPinBtn");
+const cancelPinBtn = document.getElementById("cancelPinBtn");
+
+let isOrganizerUnlocked = false;
+let currentParticipant = null;
+
+function isOrganizerAuthenticated() {
+  return isOrganizerUnlocked;
+}
+
+function setEditModeEnabled(enabled) {
+  const idView = document.getElementById("idViewContainer");
+  const idEdit = document.getElementById("idEditContainer");
+  const nameView = document.getElementById("nameViewContainer");
+  const nameEdit = document.getElementById("nameEditContainer");
+  const editIdInput = document.getElementById("editParticipantIdInput");
+  const editNameInput = document.getElementById("editParticipantNameInput");
+
+  if (enabled) {
+    editStatusBtn.classList.add("hidden");
+    saveButton.classList.remove("hidden");
+    addFieldBtn.classList.remove("hidden");
+    addChecklistBtn.classList.remove("hidden");
+    authBanner.className = "auth-banner unlocked";
+    authStatusText.innerHTML = "✅ <strong>Organizer Mode:</strong> Name, ID & Info Editing Enabled";
+    unlockBtn.textContent = "Lock";
+
+    if (idView && idEdit) {
+      idView.classList.add("hidden");
+      idEdit.classList.remove("hidden");
+      if (editIdInput) editIdInput.value = currentParticipant.id;
+    }
+    if (nameView && nameEdit) {
+      nameView.classList.add("hidden");
+      nameEdit.classList.remove("hidden");
+      if (editNameInput) editNameInput.value = currentParticipant.name;
+    }
+  } else {
+    editStatusBtn.classList.remove("hidden");
+    saveButton.classList.add("hidden");
+    addFieldBtn.classList.add("hidden");
+    addChecklistBtn.classList.add("hidden");
+    authBanner.className = "auth-banner";
+    authStatusText.innerHTML = "👁️ <strong>Viewing Mode:</strong> Details visible (Read-only)";
+    unlockBtn.textContent = "🔒 Organizer Login";
+
+    if (idView && idEdit) {
+      idView.classList.remove("hidden");
+      idEdit.classList.add("hidden");
+    }
+    if (nameView && nameEdit) {
+      nameView.classList.remove("hidden");
+      nameEdit.classList.add("hidden");
+    }
+  }
+
+  renderChecklist();
+  renderCustomFields();
+}
+
+function openPinModal() {
+  pinModal.classList.remove("hidden");
+  modalPinInput.value = "";
+  modalPinError.textContent = "";
+  modalPinInput.focus();
+}
+
+function closePinModal() {
+  pinModal.classList.add("hidden");
+  modalPinInput.value = "";
+  modalPinError.textContent = "";
+}
+
+let partPinFailCount = 0;
+let partPinLockoutUntil = 0;
+let partInactivityTimer = null;
+
+function resetPartInactivityTimer() {
+  clearTimeout(partInactivityTimer);
+  if (isOrganizerUnlocked) {
+    partInactivityTimer = setTimeout(() => {
+      isOrganizerUnlocked = false;
+      setEditModeEnabled(false);
+      console.log("Organizer mode locked due to 10-minute inactivity.");
+    }, 10 * 60 * 1000);
+  }
+}
+
+["click", "keydown", "touchstart"].forEach(evt => {
+  window.addEventListener(evt, () => {
+    if (isOrganizerUnlocked) resetPartInactivityTimer();
+  }, { passive: true });
+});
+
+function verifyPin() {
+  const now = Date.now();
+  if (now < partPinLockoutUntil) {
+    const remaining = Math.ceil((partPinLockoutUntil - now) / 1000);
+    modalPinError.textContent = "Too many attempts. Locked for " + remaining + "s.";
+    return;
+  }
+
+  const entered = modalPinInput.value.trim();
+  if (entered === ADMIN_PIN) {
+    partPinFailCount = 0;
+    isOrganizerUnlocked = true;
+    closePinModal();
+    setEditModeEnabled(true);
+    resetPartInactivityTimer();
+  } else {
+    partPinFailCount++;
+    if (partPinFailCount >= 5) {
+      partPinLockoutUntil = Date.now() + 30000;
+      modalPinError.textContent = "5 incorrect attempts. Locked for 30s.";
+    } else {
+      modalPinError.textContent = "Incorrect PIN (" + (5 - partPinFailCount) + " attempts left).";
+    }
+    modalPinInput.value = "";
+    modalPinInput.focus();
+  }
+}
+
+function parseCSV(text) {
+  const lines = [];
+  let row = [''];
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    const next = text[i + 1];
+    if (c === '"') {
+      if (inQuotes && next === '"') {
+        row[row.length - 1] += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (c === ',' && !inQuotes) {
+      row.push('');
+    } else if ((c === '\r' || c === '\n') && !inQuotes) {
+      if (c === '\r' && next === '\n') i++;
+      lines.push(row);
+      row = [''];
+    } else {
+      row[row.length - 1] += c;
+    }
+  }
+  if (row.length > 1 || (row.length === 1 && row[0] !== '')) lines.push(row);
+  return lines;
+}
+
+function isTruthy(val) {
+  if (!val) return false;
+  const s = String(val).trim().toUpperCase();
+  return s === "YES" || s === "TRUE" || s === "1" || s === "CHECKED";
+}
+
+function parseParticipantsFromCSV(csvText) {
+  const rows = parseCSV(csvText);
+  if (!rows || rows.length < 2) return null;
+  const headers = rows[0].map(h => h.trim());
+  const idCol = headers.findIndex(h => /participant\s*id/i.test(h));
+  const nameCol = headers.findIndex(h => /^name$/i.test(h));
+  const kitCol = headers.findIndex(h => /kit/i.test(h));
+  const accCol = headers.findIndex(h => /accommodation/i.test(h));
+  const foodCol = headers.findIndex(h => /food/i.test(h));
+
+  const list = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    const rawId = (idCol !== -1 && r[idCol]) ? r[idCol].trim() : (r[0] ? r[0].trim() : "");
+    if (!rawId) continue;
+    const id = rawId.toUpperCase();
+    const name = (nameCol !== -1 && r[nameCol]) ? r[nameCol].trim() : (r[1] ? r[1].trim() : ("Participant " + id));
+    
+    const status = {
+      kit: kitCol !== -1 ? isTruthy(r[kitCol]) : isTruthy(r[3]),
+      accommodation: accCol !== -1 ? isTruthy(r[accCol]) : isTruthy(r[4]),
+      food: foodCol !== -1 ? isTruthy(r[foodCol]) : isTruthy(r[5])
+    };
+
+    const num = parseInt(String(id).replace(/\D/g, ""), 10) || 0;
+    const isOnSpot = num >= 80;
+
+    const fields = {};
+    for (let c = 0; c < headers.length; c++) {
+      if (c === idCol || c === nameCol || c === kitCol || c === accCol || c === foodCol) continue;
+      const h = headers[c];
+      if (!h || /last\s*updated/i.test(h) || /team/i.test(h)) continue;
+      // Strip email and contact for on-spot participants (SOT080+)
+      if (isOnSpot && (/email|mail/i.test(h) || /contact|phone/i.test(h))) continue;
+
+      const val = r[c] ? r[c].trim() : "";
+      if (val) {
+        const upper = val.toUpperCase();
+        if (upper === "YES" || upper === "NO" || upper === "TRUE" || upper === "FALSE") {
+          status[h] = isTruthy(val);
+        } else {
+          fields[h] = val;
+        }
+      }
+    }
+
+    list.push({ id, name, status, fields });
+  }
+  return list;
+}
+
+async function fetchParticipants() {
+  let list = [];
+
+  // 1. Fetch live Google Sheet CSV (primary attached real-time source)
+  try {
+    const res = await fetch(GOOGLE_SHEET_CSV_URL + "&_t=" + Date.now());
+    if (res.ok) {
+      const csv = await res.text();
+      const parsed = parseParticipantsFromCSV(csv);
+      if (parsed && parsed.length > 0) {
+        list = parsed;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not load from Google Sheet CSV, falling back to local:", err);
+  }
+
+  // If live sheet data is available, it is the primary attached source
+  if (list.length > 0) {
+    // Strip email and contact for all on-spot participants (SOT080+)
+    list.forEach(p => {
+      const num = parseInt(String(p.id).replace(/\D/g, ""), 10) || 0;
+      if (num >= 80 && p.fields) {
+        delete p.fields.Email;
+        delete p.fields.Contact;
+        delete p.fields["email"];
+        delete p.fields["contact"];
+      }
+    });
+
+    list.sort((a, b) => {
+      const numA = parseInt(String(a.id).replace(/\D/g, ""), 10) || 0;
+      const numB = parseInt(String(b.id).replace(/\D/g, ""), 10) || 0;
+      return numA - numB;
+    });
+
+    // Keep local cache perfectly synchronized with the sheet
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+    return list;
+  }
+
+  // Fallback 1: localStorage if offline
+  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (saved) {
+    try {
+      const localList = JSON.parse(saved);
+      if (Array.isArray(localList) && localList.length > 0) {
+        localList.forEach(p => {
+          const num = parseInt(String(p.id).replace(/\D/g, ""), 10) || 0;
+          if (num >= 80 && p.fields) {
+            delete p.fields.Email;
+            delete p.fields.Contact;
+          }
+        });
+        return localList;
+      }
+    } catch (e) {}
+  }
+
+  // Fallback 2: data/participants.json
+  try {
+    const res = await fetch("./data/participants.json?_t=" + Date.now());
+    if (res.ok) {
+      const json = await res.json();
+      if (Array.isArray(json) && json.length > 0) {
+        return json;
+      }
+    }
+  } catch (e) {}
+
+  return defaultSeed;
 }
 
 // ── Real-Time Sync to Google Sheet ──
@@ -1797,6 +1788,14 @@ async function loadParticipant() {
 
   if (!currentParticipant.fields) currentParticipant.fields = {};
   if (!currentParticipant.status) currentParticipant.status = {};
+
+  const numCurrent = parseInt(String(currentParticipant.id).replace(/\D/g, ""), 10) || 0;
+  if (numCurrent >= 80 && currentParticipant.fields) {
+    delete currentParticipant.fields.Email;
+    delete currentParticipant.fields.Contact;
+    delete currentParticipant.fields["email"];
+    delete currentParticipant.fields["contact"];
+  }
 
   participantPanel.classList.remove("hidden");
   notFoundPanel.classList.add("hidden");
