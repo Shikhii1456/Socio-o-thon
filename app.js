@@ -1355,6 +1355,10 @@ async function fetchParticipantsFromCloud() {
     }
   } catch (e) {}
 
+  if (baseList.length === 0) {
+    baseList = [...defaultSeed];
+  }
+
   // 2. Fetch live Google Sheet CSV to overlay real-time status updates (kit/accommodation/food)
   try {
     const res = await fetch(GOOGLE_SHEET_CSV_URL + "&_t=" + Date.now());
@@ -1362,46 +1366,58 @@ async function fetchParticipantsFromCloud() {
       const csv = await res.text();
       const parsed = parseParticipantsFromCSV(csv);
       if (parsed && parsed.length > 0) {
-        if (baseList.length === 0) {
-          baseList = parsed;
-        } else {
-          const sheetMap = new Map(parsed.map(p => [p.id.toUpperCase(), p]));
-          baseList = baseList.map(p => {
-            const fromSheet = sheetMap.get(p.id.toUpperCase());
-            if (fromSheet) {
-              return {
-                ...p,
-                status: fromSheet.status || p.status,
-                fields: { ...fromSheet.fields, ...p.fields }
-              };
-            }
-            return p;
-          });
-        }
+        const sheetMap = new Map(parsed.map(p => [p.id.toUpperCase(), p]));
+        baseList = baseList.map(p => {
+          const fromSheet = sheetMap.get(p.id.toUpperCase());
+          if (fromSheet) {
+            return {
+              ...p,
+              status: fromSheet.status || p.status,
+              fields: { ...fromSheet.fields, ...p.fields }
+            };
+          }
+          return p;
+        });
+
+        // Add any newly created participants found in Google Sheet
+        parsed.forEach(sp => {
+          const isDeleted = sp.name && (/deleted/i.test(sp.name) || /not\s*paid/i.test(sp.name));
+          if (!isDeleted && !baseList.some(bp => bp.id.toUpperCase() === sp.id.toUpperCase())) {
+            baseList.push(sp);
+          }
+        });
       }
     }
   } catch (err) {
     console.warn("Could not load from Google Sheet CSV, using local sources:", err);
   }
 
-  // 3. Overlay any offline or local modifications from localStorage
+  // 3. Overlay any offline or local modifications / additions from localStorage
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (saved) {
     try {
       const localList = JSON.parse(saved);
       if (Array.isArray(localList) && localList.length > 0) {
-        if (baseList.length === 0) {
-          baseList = localList;
-        } else {
-          const localMap = new Map(localList.map(p => [p.id.toUpperCase(), p]));
-          baseList = baseList.map(p => {
-            const fromLocal = localMap.get(p.id.toUpperCase());
-            if (fromLocal && fromLocal.status) {
-              return { ...p, ...fromLocal };
-            }
-            return p;
-          });
-        }
+        const localMap = new Map(localList.map(p => [p.id.toUpperCase(), p]));
+        baseList = baseList.map(p => {
+          const fromLocal = localMap.get(p.id.toUpperCase());
+          if (fromLocal) {
+            return {
+              ...p,
+              ...fromLocal,
+              status: fromLocal.status || p.status,
+              fields: { ...p.fields, ...fromLocal.fields }
+            };
+          }
+          return p;
+        });
+
+        // Crucial: Append any newly added participants stored in localStorage
+        localList.forEach(lp => {
+          if (!baseList.some(bp => bp.id.toUpperCase() === lp.id.toUpperCase())) {
+            baseList.push(lp);
+          }
+        });
       }
     } catch (e) {}
   }
@@ -1431,19 +1447,21 @@ async function getParticipants() {
 async function addParticipant(id, name) {
   const list = await fetchParticipantsFromCloud();
   const existing = list.find(p => p.id.toUpperCase() === id.toUpperCase());
-  if (!existing) {
-    recordState(list);
-    const newParticipant = {
-      id: id.toUpperCase(),
-      name: name || `Participant ${id.toUpperCase()}`,
-      status: { kit: false, accommodation: false, food: false },
-      fields: {}
-    };
-    list.push(newParticipant);
-    await saveParticipantsToCloud(list);
-    await syncParticipantToGoogleSheet(newParticipant);
+  if (existing) {
+    alert("Participant with ID " + id.toUpperCase() + " already exists!");
+    return { ok: false, error: "Duplicate ID" };
   }
-  return { ok: true };
+  recordState(list);
+  const newParticipant = {
+    id: id.toUpperCase(),
+    name: name || ("Participant " + id.toUpperCase()),
+    status: { kit: false, accommodation: false, food: false },
+    fields: {}
+  };
+  list.push(newParticipant);
+  await saveParticipantsToCloud(list);
+  await syncParticipantToGoogleSheet(newParticipant);
+  return { ok: true, participant: newParticipant };
 }
 
 async function updateParticipantInfo(oldId, newId, newName) {
@@ -1752,22 +1770,29 @@ cancelDashPinBtn.addEventListener("click", () => {
 addParticipantBtn.addEventListener("click", async () => {
   if (!isOrganizerUnlocked) return;
   const nextNum = allParticipants.length + 1;
-  const defaultId = `SOT${String(nextNum).padStart(3, "0")}`;
+  const defaultId = "SOT" + String(nextNum).padStart(3, "0");
   
-  const id = prompt("Enter Participant ID (e.g. SOT128):", defaultId);
-  if (!id) return;
+  const id = prompt("Enter Participant ID (e.g. " + defaultId + "):", defaultId);
+  if (!id || !id.trim()) return;
   
-  const name = prompt("Enter Participant Name:", `Participant ${id.trim().toUpperCase()}`);
-  if (!name) return;
+  const name = prompt("Enter Participant Name:", "Participant " + id.trim().toUpperCase());
+  if (!name || !name.trim()) return;
 
   addParticipantBtn.textContent = "Adding...";
   addParticipantBtn.disabled = true;
 
-  await addParticipant(id.trim().toUpperCase(), name.trim());
-  await init();
-
-  addParticipantBtn.textContent = "➕ Add Participant";
-  addParticipantBtn.disabled = false;
+  try {
+    const res = await addParticipant(id.trim().toUpperCase(), name.trim());
+    if (res && res.ok) {
+      await init();
+    }
+  } catch (err) {
+    console.error("Add participant failed:", err);
+    alert("Error adding participant: " + err.message);
+  } finally {
+    addParticipantBtn.textContent = "➕ Add Participant";
+    addParticipantBtn.disabled = false;
+  }
 });
 
 const exportBtn = document.getElementById("exportCsvBtn");

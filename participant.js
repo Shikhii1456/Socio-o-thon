@@ -216,46 +216,58 @@ async function fetchParticipants() {
       const csv = await res.text();
       const parsed = parseParticipantsFromCSV(csv);
       if (parsed && parsed.length > 0) {
-        if (baseList.length === 0) {
-          baseList = parsed;
-        } else {
-          const sheetMap = new Map(parsed.map(p => [p.id.toUpperCase(), p]));
-          baseList = baseList.map(p => {
-            const fromSheet = sheetMap.get(p.id.toUpperCase());
-            if (fromSheet) {
-              return {
-                ...p,
-                status: fromSheet.status || p.status,
-                fields: { ...fromSheet.fields, ...p.fields }
-              };
-            }
-            return p;
-          });
-        }
+        const sheetMap = new Map(parsed.map(p => [p.id.toUpperCase(), p]));
+        baseList = baseList.map(p => {
+          const fromSheet = sheetMap.get(p.id.toUpperCase());
+          if (fromSheet) {
+            return {
+              ...p,
+              status: fromSheet.status || p.status,
+              fields: { ...fromSheet.fields, ...p.fields }
+            };
+          }
+          return p;
+        });
+
+        // Add newly created participants found in Google Sheet
+        parsed.forEach(sp => {
+          const isDeleted = sp.name && (/deleted/i.test(sp.name) || /not\s*paid/i.test(sp.name));
+          if (!isDeleted && !baseList.some(bp => bp.id.toUpperCase() === sp.id.toUpperCase())) {
+            baseList.push(sp);
+          }
+        });
       }
     }
   } catch (err) {
     console.warn("Could not load from Google Sheet CSV, using local sources:", err);
   }
 
-  // 3. Overlay any offline or local modifications from localStorage
+  // 3. Overlay any offline or local modifications / additions from localStorage
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (saved) {
     try {
       const localList = JSON.parse(saved);
       if (Array.isArray(localList) && localList.length > 0) {
-        if (baseList.length === 0) {
-          baseList = localList;
-        } else {
-          const localMap = new Map(localList.map(p => [p.id.toUpperCase(), p]));
-          baseList = baseList.map(p => {
-            const fromLocal = localMap.get(p.id.toUpperCase());
-            if (fromLocal && fromLocal.status) {
-              return { ...p, ...fromLocal };
-            }
-            return p;
-          });
-        }
+        const localMap = new Map(localList.map(p => [p.id.toUpperCase(), p]));
+        baseList = baseList.map(p => {
+          const fromLocal = localMap.get(p.id.toUpperCase());
+          if (fromLocal) {
+            return {
+              ...p,
+              ...fromLocal,
+              status: fromLocal.status || p.status,
+              fields: { ...p.fields, ...fromLocal.fields }
+            };
+          }
+          return p;
+        });
+
+        // Crucial: Append any newly added participants stored in localStorage
+        localList.forEach(lp => {
+          if (!baseList.some(bp => bp.id.toUpperCase() === lp.id.toUpperCase())) {
+            baseList.push(lp);
+          }
+        });
       }
     } catch (e) {}
   }
