@@ -250,7 +250,33 @@ function parseCSV(text) {
 function isTruthy(val) {
   if (!val) return false;
   const s = String(val).trim().toUpperCase();
-  return s === "YES" || s === "TRUE" || s === "1" || s === "CHECKED";
+  if (s === "NO" || s === "FALSE" || s === "0" || s === "-" || s === "UNCHECKED") return false;
+  return (
+    s === "YES" ||
+    s.startsWith("YES") ||
+    s === "TRUE" ||
+    s === "1" ||
+    s === "CHECKED" ||
+    s === "Y" ||
+    s === "DONE" ||
+    s === "RECEIVED" ||
+    s === "✓" ||
+    s === "✔"
+  );
+}
+
+function isChecklistKey(key) {
+  if (!key) return false;
+  const k = key.trim().toLowerCase();
+  return (
+    k.includes("kit") ||
+    k.includes("accommodation") ||
+    k.includes("food") ||
+    k.includes("breakfast") ||
+    k.includes("lunch") ||
+    k.includes("dinner") ||
+    k.includes("attendance")
+  );
 }
 
 function parseGvizTable(data) {
@@ -261,9 +287,6 @@ function parseGvizTable(data) {
   const idCol = cols.findIndex(h => /participant\s*id/i.test(h));
   const teamIdCol = cols.findIndex(h => /^team\s*id$/i.test(h) || /socio\s*team\s*id/i.test(h));
   const nameCol = cols.findIndex(h => /^name$/i.test(h));
-  const kitCol = cols.findIndex(h => /kit/i.test(h));
-  const accCol = cols.findIndex(h => /accommodation/i.test(h));
-  const foodCol = cols.findIndex(h => /food/i.test(h));
   
   const list = [];
   rows.forEach(r => {
@@ -281,21 +304,9 @@ function parseGvizTable(data) {
     let teamId = getVal(teamIdCol) || '';
     if (teamId === '-') teamId = '';
     
-    function isTruthy(val) {
-      if (!val) return false;
-      const s = String(val).trim().toUpperCase();
-      return s === 'YES' || s === 'TRUE' || s === '1' || s === 'CHECKED' || s === 'Y' || s === 'DONE' || s === 'RECEIVED' || s === '✓' || s === '✔';
-    }
-    
-    const status = {
-      kit: isTruthy(getVal(kitCol)),
-      accommodation: isTruthy(getVal(accCol)),
-      food: isTruthy(getVal(foodCol))
-    };
-    
     const fields = {};
     cols.forEach((colName, cIdx) => {
-      if (cIdx === idCol || cIdx === nameCol || cIdx === kitCol || cIdx === accCol || cIdx === foodCol) return;
+      if (cIdx === idCol || cIdx === nameCol) return;
       if (!colName || /last\s*updated/i.test(colName)) return;
       const val = getVal(cIdx);
       if (val && val !== '-') {
@@ -307,8 +318,36 @@ function parseGvizTable(data) {
       teamId = fields['Socio Team ID'] || fields['Team ID'] || '';
     }
 
-    const ab2 = fields['AB2 (SOCI-O-THON)'] || fields['AB2'] || '';
-    if (ab2) fields['AB2 (SOCI-O-THON)'] = ab2;
+    if (fields['AB2 (SOCI-O-THON) (2nd Floor)'] && !fields['AB2 (SOCI-O-THON)']) {
+      fields['AB2 (SOCI-O-THON)'] = fields['AB2 (SOCI-O-THON) (2nd Floor)'];
+    }
+
+    const defaultChecks = [
+      'Kit Received',
+      'Accommodation',
+      'Food Received (Breakfast)',
+      'Food Received (Lunch)',
+      'Food Received (Dinner)'
+    ];
+
+    const status = {};
+    defaultChecks.forEach(dk => {
+      if (!fields[dk]) {
+        const match = Object.keys(fields).find(k => k.toLowerCase() === dk.toLowerCase());
+        fields[dk] = match ? fields[match] : 'NO';
+      }
+      status[dk] = isTruthy(fields[dk]);
+    });
+
+    Object.keys(fields).forEach(k => {
+      if (isChecklistKey(k) && status[k] === undefined) {
+        status[k] = isTruthy(fields[k]);
+      }
+    });
+
+    status.kit = !!status['Kit Received'];
+    status.accommodation = !!status['Accommodation'];
+    status.food = !!status['Food Received (Breakfast)'] || !!status['Food Received (Lunch)'] || !!status['Food Received (Dinner)'];
     
     list.push({ id, name, teamId, status, fields });
   });
@@ -362,9 +401,6 @@ function parseParticipantsFromCSV(csvText) {
   const idCol = headers.findIndex(h => /participant\s*id/i.test(h));
   const teamIdCol = headers.findIndex(h => /^team\s*id$/i.test(h) || /socio\s*team\s*id/i.test(h));
   const nameCol = headers.findIndex(h => /^name$/i.test(h));
-  const kitCol = headers.findIndex(h => /kit/i.test(h));
-  const accCol = headers.findIndex(h => /accommodation/i.test(h));
-  const foodCol = headers.findIndex(h => /food/i.test(h));
 
   const list = [];
   for (let i = 1; i < rows.length; i++) {
@@ -375,27 +411,15 @@ function parseParticipantsFromCSV(csvText) {
     const name = (nameCol !== -1 && r[nameCol]) ? r[nameCol].trim() : (r[1] ? r[1].trim() : ("Participant " + id));
     let teamId = (teamIdCol !== -1 && r[teamIdCol]) ? r[teamIdCol].trim() : "";
     if (teamId === '-') teamId = '';
-    
-    const status = {
-      kit: kitCol !== -1 ? isTruthy(r[kitCol]) : isTruthy(r[3]),
-      accommodation: accCol !== -1 ? isTruthy(r[accCol]) : isTruthy(r[4]),
-      food: foodCol !== -1 ? isTruthy(r[foodCol]) : isTruthy(r[5])
-    };
 
     const fields = {};
     for (let c = 0; c < headers.length; c++) {
-      if (c === idCol || c === nameCol || c === kitCol || c === accCol || c === foodCol) continue;
+      if (c === idCol || c === nameCol) continue;
       const h = headers[c];
       if (!h || /last\s*updated/i.test(h)) continue;
-
       const val = r[c] ? r[c].trim() : "";
       if (val && val !== '-') {
-        const upper = val.toUpperCase();
-        if (upper === "YES" || upper === "NO" || upper === "TRUE" || upper === "FALSE") {
-          status[h] = isTruthy(val);
-        } else {
-          fields[h] = val;
-        }
+        fields[h] = val;
       }
     }
 
@@ -403,8 +427,36 @@ function parseParticipantsFromCSV(csvText) {
       teamId = fields['Socio Team ID'] || fields['Team ID'] || '';
     }
 
-    const ab2 = fields['AB2 (SOCI-O-THON)'] || fields['AB2'] || '';
-    if (ab2) fields['AB2 (SOCI-O-THON)'] = ab2;
+    if (fields['AB2 (SOCI-O-THON) (2nd Floor)'] && !fields['AB2 (SOCI-O-THON)']) {
+      fields['AB2 (SOCI-O-THON)'] = fields['AB2 (SOCI-O-THON) (2nd Floor)'];
+    }
+
+    const defaultChecks = [
+      'Kit Received',
+      'Accommodation',
+      'Food Received (Breakfast)',
+      'Food Received (Lunch)',
+      'Food Received (Dinner)'
+    ];
+
+    const status = {};
+    defaultChecks.forEach(dk => {
+      if (!fields[dk]) {
+        const match = Object.keys(fields).find(k => k.toLowerCase() === dk.toLowerCase());
+        fields[dk] = match ? fields[match] : 'NO';
+      }
+      status[dk] = isTruthy(fields[dk]);
+    });
+
+    Object.keys(fields).forEach(k => {
+      if (isChecklistKey(k) && status[k] === undefined) {
+        status[k] = isTruthy(fields[k]);
+      }
+    });
+
+    status.kit = !!status['Kit Received'];
+    status.accommodation = !!status['Accommodation'];
+    status.food = !!status['Food Received (Breakfast)'] || !!status['Food Received (Lunch)'] || !!status['Food Received (Dinner)'];
 
     list.push({ id, name, teamId, status, fields });
   }
@@ -506,70 +558,135 @@ async function syncToGoogleSheet(participant, newStatus, fields) {
   }
 }
 
-// ── Rendering Checklist (Default + Custom Checkboxes) ──
+// ── Rendering Checklist (Converted into Fields Attached to Checkboxes) ──
 function renderChecklist() {
   const container = document.getElementById("checklistContainer");
   if (!container || !currentParticipant) return;
   container.innerHTML = "";
 
   const status = currentParticipant.status || {};
+  const fields = currentParticipant.fields || {};
   const unlocked = isOrganizerAuthenticated();
 
-  const defaultKeys = [
-    { key: "kit", label: "Kit received", desc: "Mark when kit has been handed over." },
-    { key: "accommodation", label: "Accommodation", desc: "Mark when accommodation is assigned/confirmed." },
-    { key: "food", label: "Food arrangement", desc: "Mark when food coupon/token is issued." }
+  const standardKeys = [
+    "Kit Received",
+    "Accommodation",
+    "Food Received (Breakfast)",
+    "Food Received (Lunch)",
+    "Food Received (Dinner)"
   ];
 
-  const allChecks = [...defaultKeys];
-  Object.keys(status).forEach(k => {
-    if (!defaultKeys.some(d => d.key === k)) {
-      allChecks.push({ key: k, label: k, desc: "Custom attendance item: " + k });
+  const checkKeyMap = new Map();
+  standardKeys.forEach(k => checkKeyMap.set(k, k));
+
+  Object.keys(fields).forEach(k => {
+    if (isChecklistKey(k)) {
+      if (!checkKeyMap.has(k)) checkKeyMap.set(k, k);
     }
   });
 
-  allChecks.forEach(item => {
-    const isChecked = !!status[item.key];
-    const row = document.createElement("label");
-    row.className = "check-row";
+  Object.keys(status).forEach(k => {
+    if (k !== "kit" && k !== "accommodation" && k !== "food") {
+      if (!checkKeyMap.has(k)) checkKeyMap.set(k, k);
+    }
+  });
 
-    const deleteBtn = unlocked
-      ? '<button type="button" class="field-del-btn" data-del-check="' + escapeHtml(item.key) + '" title="Delete this check item">🗑️</button>'
-      : "";
+  const allChecks = Array.from(checkKeyMap.keys());
 
-    const labelContent = unlocked
-      ? `<div style="flex:1; display:flex; flex-direction:column; gap:2px; margin-left:6px;">
-           <input type="text" class="check-label-input" data-original-key="${escapeHtml(item.key)}" value="${escapeHtml(item.label)}" style="font-weight:700; font-size:14px; color:#0f172a; border:1px dashed #93c5fd; background:#fff; padding:4px 8px; border-radius:6px; width:92%;" title="Click to edit checkbox name" placeholder="Checkbox Name..." />
-           <small style="color:#64748b; font-size:11px;">${escapeHtml(item.desc)}</small>
-         </div>`
-      : `<span style="flex:1; margin-left:6px;">
-           <strong>${escapeHtml(item.label)}</strong>
-           <small>${escapeHtml(item.desc)}</small>
-         </span>`;
+  allChecks.forEach(key => {
+    let contentVal = fields[key];
+    if (contentVal === undefined || contentVal === null || contentVal === "") {
+      contentVal = status[key] ? "YES" : "NO";
+    }
+    const isChecked = isTruthy(contentVal) || !!status[key];
 
-    row.innerHTML = `
-      <input type="checkbox" id="check_${encodeURIComponent(item.key)}" data-check-key="${escapeHtml(item.key)}" ${isChecked ? 'checked' : ''} ${unlocked ? '' : 'disabled'} />
-      ${labelContent}
-      ${deleteBtn}
-    `;
+    const row = document.createElement("div");
+    row.className = "field-row check-row";
+
+    if (unlocked) {
+      row.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px; width:48%; min-width:150px;">
+          <input type="checkbox" id="check_${encodeURIComponent(key)}" data-check-key="${escapeHtml(key)}" ${isChecked ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer; margin:0; flex-shrink:0;" />
+          <input type="text" class="field-name-input check-name-input" data-original-key="${escapeHtml(key)}" value="${escapeHtml(key)}" placeholder="Checkbox Name..." style="font-weight:700; font-size:13px; color:#1e40af; border:1px dashed #93c5fd; background:#fff; padding:4px 8px; border-radius:6px; width:100%;" title="Click to edit checkbox name" />
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; flex:1; justify-content:flex-end;">
+          <input type="text" class="field-input check-field-input" data-check-key="${escapeHtml(key)}" value="${escapeHtml(contentVal)}" placeholder="Value (YES/NO)..." style="width:100%; padding:5px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; text-align:right;" />
+          <button type="button" class="field-del-btn" data-del-check="${escapeHtml(key)}" title="Delete this check item">🗑️</button>
+        </div>
+      `;
+    } else {
+      const valColor = isChecked ? "#059669" : "#64748b";
+      row.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px;">
+          <input type="checkbox" id="check_${encodeURIComponent(key)}" data-check-key="${escapeHtml(key)}" ${isChecked ? 'checked' : ''} disabled style="width:18px; height:18px; cursor:default; margin:0; flex-shrink:0;" />
+          <span class="field-label">${escapeHtml(key)}</span>
+        </div>
+        <span class="field-value" style="font-weight:600; color:${valColor};">${escapeHtml(contentVal)}</span>
+      `;
+    }
     container.appendChild(row);
   });
 
-  container.querySelectorAll("[data-del-check]").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      const k = btn.dataset.delCheck;
-      if (confirm('Remove checklist item "' + k + '"?')) {
-        delete currentParticipant.status[k];
-        renderChecklist();
+  if (unlocked) {
+    container.querySelectorAll('input[type="checkbox"]').forEach(c => {
+      c.addEventListener("change", (e) => {
+        const isNowChecked = e.target.checked;
+        const row = e.target.closest(".field-row");
+        const valInput = row ? row.querySelector(".check-field-input") : null;
+        const key = e.target.dataset.checkKey;
+        if (valInput) {
+          if (isNowChecked) {
+            if (!valInput.value || !isTruthy(valInput.value)) {
+              valInput.value = "YES";
+            }
+          } else {
+            valInput.value = "NO";
+          }
+          if (currentParticipant.fields) {
+            currentParticipant.fields[key] = valInput.value;
+          }
+        }
+        if (currentParticipant.status) {
+          currentParticipant.status[key] = isNowChecked;
+        }
         updateBadge();
-      }
+      });
     });
-  });
 
-  container.querySelectorAll('input[type="checkbox"]').forEach(input => {
-    input.addEventListener("change", updateBadge);
-  });
+    container.querySelectorAll(".check-field-input").forEach(valInput => {
+      valInput.addEventListener("input", (e) => {
+        const row = e.target.closest(".field-row");
+        const checkbox = row ? row.querySelector('input[type="checkbox"]') : null;
+        const key = valInput.dataset.checkKey;
+        const newVal = e.target.value.trim();
+        const isNowTruthy = isTruthy(newVal);
+        if (checkbox) {
+          checkbox.checked = isNowTruthy;
+        }
+        if (currentParticipant.status) {
+          currentParticipant.status[key] = isNowTruthy;
+        }
+        if (currentParticipant.fields) {
+          currentParticipant.fields[key] = newVal;
+        }
+        updateBadge();
+      });
+    });
+
+    container.querySelectorAll("[data-del-check]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const k = btn.dataset.delCheck;
+        if (confirm('Remove checklist item "' + k + '"?')) {
+          delete currentParticipant.status[k];
+          delete currentParticipant.fields[k];
+          if (!currentParticipant._deletedChecks) currentParticipant._deletedChecks = [];
+          if (!currentParticipant._deletedChecks.includes(k)) currentParticipant._deletedChecks.push(k);
+          renderChecklist();
+          updateBadge();
+        }
+      });
+    });
+  }
 
   updateBadge();
 }
@@ -594,8 +711,10 @@ function renderCustomFields() {
   const unlocked = isOrganizerAuthenticated();
 
   // Find Room, Team ID, and Theme for Highlight Banner
-  const roomVal = fields["AB2 (SOCI-O-THON)"] || fields["AB2"] || "";
-  const teamVal = fields["Team ID"] || currentParticipant.teamId || "";
+  const ab2Val = fields["AB2 (SOCI-O-THON)"] || fields["AB2 (SOCI-O-THON) (2nd Floor)"] || fields["AB2"] || "";
+  const roomAllotedVal = fields["Room Alloted"] || "";
+  const roomVal = ab2Val || roomAllotedVal || "";
+  const teamVal = fields["Socio Team ID"] || fields["Team ID"] || currentParticipant.teamId || "";
   const themeVal = fields["Theme"] || "";
 
   // Update prominent room banner
@@ -609,27 +728,32 @@ function renderCustomFields() {
       const textParts = [];
       if (themeVal && themeVal !== "-") textParts.push(`Theme: ${themeVal}`);
       if (teamVal && teamVal !== "-") textParts.push(`Team: ${teamVal}`);
+      if (roomAllotedVal && roomAllotedVal !== "-" && roomAllotedVal !== ab2Val) {
+        textParts.push(`Hostel: ${roomAllotedVal}`);
+      }
       teamText.textContent = textParts.join(" | ");
     } else {
       roomBanner.classList.add("hidden");
     }
   }
 
-  // Deduplicate keys: avoid showing both "AB2" and "AB2 (SOCI-O-THON)", or phantom "Team ID"
+  // Deduplicate and filter out checklist keys to prevent duplication
   const keys = Object.keys(fields).filter(k => {
-    if (k.toLowerCase() === "ab2" && fields["AB2 (SOCI-O-THON)"]) return false;
+    if (isChecklistKey(k)) return false;
+    if (k.toLowerCase() === "ab2" && (fields["AB2 (SOCI-O-THON)"] || fields["AB2 (SOCI-O-THON) (2nd Floor)"])) return false;
+    if (k.toLowerCase() === "ab2 (soci-o-thon)" && fields["AB2 (SOCI-O-THON) (2nd Floor)"]) return false;
     if (k.toLowerCase() === "team id" && fields["Socio Team ID"]) return false;
     return true;
   });
 
   if (keys.length === 0) {
-    container.innerHTML = `<div style="font-size:13px; color:#94a3b8; padding:8px 0;">No extra fields added yet.</div>`;
+    container.innerHTML = `<div style="font-size:13px; color:#94a3b8; padding:8px 0;">No extra info fields added yet.</div>`;
     return;
   }
 
   keys.forEach(k => {
     let displayLabel = k;
-    if (k === "AB2" || k === "AB2 (SOCI-O-THON)") {
+    if (k.includes("AB2 (SOCI-O-THON)")) {
       displayLabel = "Allotted Room (AB2)";
     }
     const val = fields[k] || "";
@@ -706,7 +830,9 @@ if (addChecklistBtn) {
 
     const key = checkName.trim();
     if (!currentParticipant.status) currentParticipant.status = {};
+    if (!currentParticipant.fields) currentParticipant.fields = {};
     currentParticipant.status[key] = false;
+    currentParticipant.fields[key] = "NO";
     renderChecklist();
   });
 }
@@ -823,29 +949,34 @@ if (saveButton) {
     saveButton.disabled = true;
     saveButton.textContent = "Saving...";
 
-    // Collect all checkbox statuses & editable checkbox names
+    // Collect all checkbox statuses, values & editable checkbox names
     const updatedStatus = {};
+    const updatedFields = {};
     const deletedChecks = currentParticipant._deletedChecks || [];
+    const deletedFields = currentParticipant._deletedFields || [];
+
     document.querySelectorAll('#checklistContainer .check-row').forEach(row => {
       const c = row.querySelector('input[type="checkbox"]');
       if (!c) return;
-      const labelInput = row.querySelector('.check-label-input');
+      const nameInput = row.querySelector('.check-name-input');
+      const valInput = row.querySelector('.check-field-input');
       const origKey = c.dataset.checkKey || c.id.replace("check_", "");
       let finalKey = origKey;
-      if (labelInput && labelInput.value.trim()) {
-        finalKey = labelInput.value.trim();
+      if (nameInput && nameInput.value.trim()) {
+        finalKey = nameInput.value.trim();
       }
       if (finalKey !== origKey && !deletedChecks.includes(origKey)) {
         deletedChecks.push(origKey);
       }
-      updatedStatus[finalKey] = c.checked;
+      let finalVal = valInput ? valInput.value.trim() : (c.checked ? "YES" : "NO");
+      if (!finalVal) {
+        finalVal = c.checked ? "YES" : "NO";
+      }
+      updatedStatus[finalKey] = isTruthy(finalVal) || c.checked;
+      updatedFields[finalKey] = finalVal;
     });
-    currentParticipant.status = updatedStatus;
-    currentParticipant._deletedChecks = deletedChecks;
 
     // Collect all custom fields & editable field names
-    const updatedFields = {};
-    const deletedFields = currentParticipant._deletedFields || [];
     document.querySelectorAll('#customFieldsContainer .field-row').forEach(row => {
       const nameInput = row.querySelector('.field-name-input');
       const valInput = row.querySelector('.field-input');
@@ -860,16 +991,25 @@ if (saveButton) {
       }
       updatedFields[finalKey] = valInput.value.trim();
     });
-    currentParticipant.fields = { ...updatedFields };
+
+    // Backward compatibility aliases
+    updatedStatus.kit = !!updatedStatus["Kit Received"];
+    updatedStatus.accommodation = !!updatedStatus["Accommodation"];
+    updatedStatus.food = !!updatedStatus["Food Received (Breakfast)"] || !!updatedStatus["Food Received (Lunch)"] || !!updatedStatus["Food Received (Dinner)"];
+
+    currentParticipant.status = updatedStatus;
+    currentParticipant.fields = updatedFields;
+    currentParticipant._deletedChecks = deletedChecks;
     currentParticipant._deletedFields = deletedFields;
 
     // For Google Sheet sync, pass empty string for any explicitly deleted or renamed fields so the cell is blanked!
     const syncFields = { ...updatedFields };
-    if (currentParticipant._deletedFields && Array.isArray(currentParticipant._deletedFields)) {
-      currentParticipant._deletedFields.forEach(k => {
-        if (!syncFields[k]) syncFields[k] = "";
-      });
-    }
+    deletedFields.forEach(k => {
+      if (!syncFields[k]) syncFields[k] = "";
+    });
+    deletedChecks.forEach(k => {
+      if (!syncFields[k]) syncFields[k] = "";
+    });
 
     // Collect edited Name, ID if in organizer mode
     const editIdInput = document.getElementById("editParticipantIdInput");

@@ -84,7 +84,33 @@ function parseCSV(text) {
 function isTruthy(val) {
   if (!val) return false;
   const s = String(val).trim().toUpperCase();
-  return s === "YES" || s === "TRUE" || s === "1" || s === "CHECKED" || s === "Y" || s === "DONE" || s === "RECEIVED" || s === "✓" || s === "✔";
+  if (s === "NO" || s === "FALSE" || s === "0" || s === "-" || s === "UNCHECKED") return false;
+  return (
+    s === "YES" ||
+    s.startsWith("YES") ||
+    s === "TRUE" ||
+    s === "1" ||
+    s === "CHECKED" ||
+    s === "Y" ||
+    s === "DONE" ||
+    s === "RECEIVED" ||
+    s === "✓" ||
+    s === "✔"
+  );
+}
+
+function isChecklistKey(key) {
+  if (!key) return false;
+  const k = key.trim().toLowerCase();
+  return (
+    k.includes("kit") ||
+    k.includes("accommodation") ||
+    k.includes("food") ||
+    k.includes("breakfast") ||
+    k.includes("lunch") ||
+    k.includes("dinner") ||
+    k.includes("attendance")
+  );
 }
 
 function parseGvizTable(data) {
@@ -95,9 +121,6 @@ function parseGvizTable(data) {
   const idCol = cols.findIndex(h => /participant\s*id/i.test(h));
   const teamIdCol = cols.findIndex(h => /^team\s*id$/i.test(h) || /socio\s*team\s*id/i.test(h));
   const nameCol = cols.findIndex(h => /^name$/i.test(h));
-  const kitCol = cols.findIndex(h => /kit/i.test(h));
-  const accCol = cols.findIndex(h => /accommodation/i.test(h));
-  const foodCol = cols.findIndex(h => /food/i.test(h));
   
   const list = [];
   rows.forEach(r => {
@@ -115,15 +138,9 @@ function parseGvizTable(data) {
     let teamId = getVal(teamIdCol) || '';
     if (teamId === '-') teamId = '';
     
-    const status = {
-      kit: isTruthy(getVal(kitCol)),
-      accommodation: isTruthy(getVal(accCol)),
-      food: isTruthy(getVal(foodCol))
-    };
-    
     const fields = {};
     cols.forEach((colName, cIdx) => {
-      if (cIdx === idCol || cIdx === nameCol || cIdx === kitCol || cIdx === accCol || cIdx === foodCol) return;
+      if (cIdx === idCol || cIdx === nameCol) return;
       if (!colName || /last\s*updated/i.test(colName)) return;
       const val = getVal(cIdx);
       if (val && val !== '-') {
@@ -135,8 +152,36 @@ function parseGvizTable(data) {
       teamId = fields['Socio Team ID'] || fields['Team ID'] || '';
     }
 
-    const ab2 = fields['AB2 (SOCI-O-THON)'] || fields['AB2'] || '';
-    if (ab2) fields['AB2 (SOCI-O-THON)'] = ab2;
+    if (fields['AB2 (SOCI-O-THON) (2nd Floor)'] && !fields['AB2 (SOCI-O-THON)']) {
+      fields['AB2 (SOCI-O-THON)'] = fields['AB2 (SOCI-O-THON) (2nd Floor)'];
+    }
+
+    const defaultChecks = [
+      'Kit Received',
+      'Accommodation',
+      'Food Received (Breakfast)',
+      'Food Received (Lunch)',
+      'Food Received (Dinner)'
+    ];
+
+    const status = {};
+    defaultChecks.forEach(dk => {
+      if (!fields[dk]) {
+        const match = Object.keys(fields).find(k => k.toLowerCase() === dk.toLowerCase());
+        fields[dk] = match ? fields[match] : 'NO';
+      }
+      status[dk] = isTruthy(fields[dk]);
+    });
+
+    Object.keys(fields).forEach(k => {
+      if (isChecklistKey(k) && status[k] === undefined) {
+        status[k] = isTruthy(fields[k]);
+      }
+    });
+
+    status.kit = !!status['Kit Received'];
+    status.accommodation = !!status['Accommodation'];
+    status.food = !!status['Food Received (Breakfast)'] || !!status['Food Received (Lunch)'] || !!status['Food Received (Dinner)'];
     
     list.push({ id, name, teamId, status, fields });
   });
@@ -190,9 +235,6 @@ function parseParticipantsFromCSV(csvText) {
   const idCol = headers.findIndex(h => /participant\s*id/i.test(h));
   const teamIdCol = headers.findIndex(h => /^team\s*id$/i.test(h) || /socio\s*team\s*id/i.test(h));
   const nameCol = headers.findIndex(h => /^name$/i.test(h));
-  const kitCol = headers.findIndex(h => /kit/i.test(h));
-  const accCol = headers.findIndex(h => /accommodation/i.test(h));
-  const foodCol = headers.findIndex(h => /food/i.test(h));
 
   const list = [];
   for (let i = 1; i < rows.length; i++) {
@@ -203,27 +245,15 @@ function parseParticipantsFromCSV(csvText) {
     const name = (nameCol !== -1 && r[nameCol]) ? r[nameCol].trim() : (r[1] ? r[1].trim() : ("Participant " + id));
     let teamId = (teamIdCol !== -1 && r[teamIdCol]) ? r[teamIdCol].trim() : "";
     if (teamId === '-') teamId = '';
-    
-    const status = {
-      kit: kitCol !== -1 ? isTruthy(r[kitCol]) : isTruthy(r[3]),
-      accommodation: accCol !== -1 ? isTruthy(r[accCol]) : isTruthy(r[4]),
-      food: foodCol !== -1 ? isTruthy(r[foodCol]) : isTruthy(r[5])
-    };
 
     const fields = {};
     for (let c = 0; c < headers.length; c++) {
-      if (c === idCol || c === nameCol || c === kitCol || c === accCol || c === foodCol) continue;
+      if (c === idCol || c === nameCol) continue;
       const h = headers[c];
       if (!h || /last\s*updated/i.test(h)) continue;
-
       const val = r[c] ? r[c].trim() : "";
       if (val && val !== '-') {
-        const upper = val.toUpperCase();
-        if (upper === "YES" || upper === "NO" || upper === "TRUE" || upper === "FALSE") {
-          status[h] = isTruthy(val);
-        } else {
-          fields[h] = val;
-        }
+        fields[h] = val;
       }
     }
 
@@ -231,8 +261,36 @@ function parseParticipantsFromCSV(csvText) {
       teamId = fields['Socio Team ID'] || fields['Team ID'] || '';
     }
 
-    const ab2 = fields['AB2 (SOCI-O-THON)'] || fields['AB2'] || '';
-    if (ab2) fields['AB2 (SOCI-O-THON)'] = ab2;
+    if (fields['AB2 (SOCI-O-THON) (2nd Floor)'] && !fields['AB2 (SOCI-O-THON)']) {
+      fields['AB2 (SOCI-O-THON)'] = fields['AB2 (SOCI-O-THON) (2nd Floor)'];
+    }
+
+    const defaultChecks = [
+      'Kit Received',
+      'Accommodation',
+      'Food Received (Breakfast)',
+      'Food Received (Lunch)',
+      'Food Received (Dinner)'
+    ];
+
+    const status = {};
+    defaultChecks.forEach(dk => {
+      if (!fields[dk]) {
+        const match = Object.keys(fields).find(k => k.toLowerCase() === dk.toLowerCase());
+        fields[dk] = match ? fields[match] : 'NO';
+      }
+      status[dk] = isTruthy(fields[dk]);
+    });
+
+    Object.keys(fields).forEach(k => {
+      if (isChecklistKey(k) && status[k] === undefined) {
+        status[k] = isTruthy(fields[k]);
+      }
+    });
+
+    status.kit = !!status['Kit Received'];
+    status.accommodation = !!status['Accommodation'];
+    status.food = !!status['Food Received (Breakfast)'] || !!status['Food Received (Lunch)'] || !!status['Food Received (Dinner)'];
 
     list.push({ id, name, teamId, status, fields });
   }
@@ -525,9 +583,9 @@ function render(list) {
     const card = document.createElement("article");
     card.className = "participant-card";
 
-    const checks = p.status ? Object.values(p.status) : [];
-    const completed = checks.filter(Boolean).length;
-    const totalChecks = checks.length || 3;
+    const checkKeys = p.status ? Object.keys(p.status).filter(k => k !== "kit" && k !== "accommodation" && k !== "food") : [];
+    const totalChecks = checkKeys.length || 5;
+    const completed = checkKeys.filter(k => p.status[k]).length;
     const statusClass = (completed === totalChecks && totalChecks > 0) ? "complete" : "";
     const pUrl = participantUrl(p.id);
 
@@ -536,8 +594,13 @@ function render(list) {
       fieldsHtml = `<div style="font-size:12px; color:#64748b; margin-top:6px; line-height:1.4; text-align:left;">`;
       Object.entries(p.fields).forEach(([k, v]) => {
         if (!v || v === "-") return;
+        if (isChecklistKey(k)) return;
         if (k.toLowerCase() === "team id" && p.fields["Socio Team ID"]) return;
-        fieldsHtml += `<div><strong>${escapeHtml(k)}:</strong> ${escapeHtml(v)}</div>`;
+        if (k.toLowerCase() === "ab2" && (p.fields["AB2 (SOCI-O-THON)"] || p.fields["AB2 (SOCI-O-THON) (2nd Floor)"])) return;
+        if (k.toLowerCase() === "ab2 (soci-o-thon)" && p.fields["AB2 (SOCI-O-THON) (2nd Floor)"]) return;
+        let displayLabel = k;
+        if (k.includes("AB2 (SOCI-O-THON)")) displayLabel = "Allotted Room (AB2)";
+        fieldsHtml += `<div><strong>${escapeHtml(displayLabel)}:</strong> ${escapeHtml(v)}</div>`;
       });
       fieldsHtml += `</div>`;
     }
